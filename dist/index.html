@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Selected projects by Xiaoheng Hu." />
+    <title>Xiaoheng Hu — Selected Work</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230c1d30'/%3E%3Cpath d='M17 17v30M17 32h30M47 17v30' stroke='%234ce0c1' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Xiaoheng Hu home">XH<span>_</span></a>
+      <nav aria-label="Main navigation">
+        <a href="#work" data-i18n="navWork">Work</a>
+        <a href="#about" data-i18n="navAbout">About</a>
+      </nav>
+      <button class="language-toggle" type="button" aria-label="Switch language"><span>中</span><span>/</span><span>EN</span></button>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <p class="eyebrow" data-i18n="eyebrow">Selected work · 2026</p>
+        <h1 id="hero-title" data-i18n="heroTitle">Building systems that turn complex signals into useful experiences.</h1>
+        <p class="hero-copy" data-i18n="heroCopy">A selection of work across computer vision, operating systems, machine learning, and product engineering.</p>
+        <a class="hero-link" href="#work" data-i18n="viewProjects">Explore projects <span aria-hidden="true">↓</span></a>
+      </section>
+
+      <section class="work-section" id="work" aria-labelledby="work-heading">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="workLabel">01 / Selected projects</p>
+          <h2 id="work-heading" data-i18n="workHeading">From physical data to digital tools.</h2>
+        </div>
+        <div class="projects" id="projects"></div>
+      </section>
+
+      <section class="about" id="about">
+        <p class="eyebrow" data-i18n="aboutLabel">02 / Focus</p>
+        <p data-i18n="aboutText">I enjoy connecting technical systems with clear, usable interfaces: computer vision pipelines, secure embedded systems, data-driven models, and editing tools for real teams.</p>
+      </section>
+    </main>
+
+    <footer>
+      <span>© <span id="year"></span> Xiaoheng Hu</span>
+      <span data-i18n="footer">Portfolio materials are presented in Chinese and English.</span>
+    </footer>
+    <script src="app.js"></script>
+  </body>
+</html>

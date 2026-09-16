@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="胡晓亨的个人作品集" />
+    <title>胡晓亨 — Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Press+Start+2P&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="computer" aria-label="胡晓亨个人作品集桌面">
+      <div class="screen-glow"></div>
+      <div class="scanlines"></div>
+      <header class="topbar">
+        <div class="brand"><span class="brand-mark">⌘</span> xiaohengOS v1.0</div>
+        <p>A CURIOUS DEV IN A LARGE WORLD</p>
+        <div class="top-actions" aria-hidden="true"><span>─</span><span>□</span><span>×</span></div>
+      </header>
+
+      <aside class="desktop-icons" aria-label="桌面文件夹">
+        <button class="folder selected" data-section="projects"><span class="folder-icon"></span><span>Projects</span></button>
+        <button class="folder" data-section="about"><span class="folder-icon"></span><span>About</span></button>
+        <button class="folder" data-section="experience"><span class="folder-icon"></span><span>Experience</span></button>
+        <button class="folder" data-section="contact"><span class="folder-icon"></span><span>Contact</span></button>
+      </aside>
+
+      <section class="desktop" aria-live="polite">
+        <div class="stars" aria-hidden="true"></div>
+        <section class="window projects-window is-open" data-window="projects">
+          <div class="titlebar"><span class="window-icon">▣</span><span class="window-title">/Projects</span><div class="window-controls"><button aria-label="最小化窗口">−</button><button aria-label="最大化窗口">□</button><button aria-label="关闭窗口">×</button></div></div>
+          <div class="window-body projects-grid">
+            <div class="project-placeholder"><div class="empty-folder-icon"></div><h2>Project files are being organized.</h2><p>COMING SOON_</p></div>
+          </div>
+        </section>
+
+        <section class="window text-window" data-window="about">
+          <div class="titlebar"><span class="window-icon">▣</span><span class="window-title">/About</span><div class="window-controls"><button aria-label="最小化窗口">−</button><button aria-label="最大化窗口">□</button><button aria-label="关闭窗口">×</button></div></div>
+          <div class="window-body terminal-copy"><p><span>$</span> whoami</p><h1>胡晓亨 / XiaoHeng Hu</h1><p>一个热衷于把复杂技术做成清晰体验的开发者。</p><p class="dim">兴趣：AI 产品、计算机视觉、交互式工具与可靠系统。</p></div>
+        </section>
+        <section class="window text-window" data-window="experience">
+          <div class="titlebar"><span class="window-icon">▣</span><span class="window-title">/Experience</span><div class="window-controls"><button aria-label="最小化窗口">−</button><button aria-label="最大化窗口">□</button><button aria-label="关闭窗口">×</button></div></div>
+          <div class="window-body terminal-copy"><p><span>$</span> cat experience.log</p><h1>Building across domains.</h1><p>从机器学习与计算机视觉，到机器人仿真和 Web 产品，我喜欢在技术与真实使用场景之间搭建桥梁。</p><p class="dim">完整经历将在这里持续更新。</p></div>
+        </section>
+        <section class="window text-window" data-window="contact">
+          <div class="titlebar"><span class="window-icon">▣</span><span class="window-title">/Contact</span><div class="window-controls"><button aria-label="最小化窗口">−</button><button aria-label="最大化窗口">□</button><button aria-label="关闭窗口">×</button></div></div>
+          <div class="window-body terminal-copy"><p><span>$</span> open contact</p><h1>Let's make something useful.</h1><p>欢迎通过邮件或 LinkedIn 联系我。</p><a href="mailto:hello@example.com">hello@example.com ↗</a><p class="dim">请在上线前替换为你的真实联系方式。</p></div>
+        </section>
+
+      </section>
+
+      <footer class="terminal"><span class="prompt-icon">›_</span><span>xiaoheng@portfolio:~$</span><span class="cursor"></span><span class="status">⌁ &nbsp; <span id="date"></span> &nbsp; <span id="clock"></span></span></footer>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
