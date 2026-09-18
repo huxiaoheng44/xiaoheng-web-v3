@@ -2,7 +2,7 @@ import type { AgentEvent } from './GhostChat';
 const base=(import.meta as ImportMeta & {env:Record<string,string>}).env.VITE_GHOST_API_URL||'';
 export class GhostTransport {
   token=''; configured=false;
-  async session(signal?:AbortSignal){if(this.token)return;const r=await fetch(`${base}/api/session`,{method:'POST',signal});if(!r.ok)throw new Error('Ghost server unavailable / 后端未连接');const data=await r.json();this.token=data.token;this.configured=data.configured;}
+  async session(signal?:AbortSignal){if(import.meta.env.VITE_GHOST_STATIC_MODE==='true')throw new Error('AI chat is offline on this preview. Please explore the folders. / 当前为静态展示版，AI 后端尚未部署，请直接浏览文件夹。');if(this.token)return;const r=await fetch(`${base}/api/session`,{method:'POST',signal});if(!r.ok)throw new Error('Ghost server unavailable / 后端未连接');const data=await r.json();this.token=data.token;this.configured=data.configured;}
   async request(path:string,body?:unknown,signal?:AbortSignal,method='POST'){
     await this.session(signal);
     const r=await fetch(`${base}/api${path}`,{method,headers:{'Content-Type':'application/json',Authorization:`Bearer ${this.token}`},body:body===undefined?undefined:JSON.stringify(body),signal});

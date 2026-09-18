@@ -103,3 +103,13 @@ npm run backend:smoke
 Vite 开发服务器只允许前端、公开内容与依赖目录，不直接提供 backend/ 或 knowledge/ 文件。
 
 [后端详细说明](backend/README.md) · [前端说明](frontend/README.md)
+
+## GitHub Pages 个人主页
+
+公开地址：https://huxiaoheng44.github.io/
+
+源码保留在 `huxiaoheng44/xiaoheng-web-v3`；`huxiaoheng44/huxiaoheng44.github.io` 只存放构建后的静态文件，通过 `main` 分支根目录发布。当前不部署 Python 后端。
+
+构建静态展示版时设置 `VITE_GHOST_STATIC_MODE=true` 再运行 `npm run build`。只将 `build/` 内容发布到主页仓库，并保留 `.nojekyll`；不能上传源码目录、`.env` 或后端数据库。这个版本不会向 `/api` 发送聊天或浏览轨迹请求，本地开发仍可连接后端。
+
+两个仓库目前不会自动同步；修改源码后需要重新构建并发布静态文件。
