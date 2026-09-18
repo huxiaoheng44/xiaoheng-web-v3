@@ -1,0 +1,30 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+const browser = await chromium.launch({ channel: 'msedge', headless: true });
+try {
+ const page = await browser.newPage({viewport:{width:1440,height:960}});
+ await page.goto('http://127.0.0.1:5173');
+ await page.locator('.boot-overlay').waitFor();
+ assert(await page.locator('.os-shell').evaluate(e=>e.inert));
+ await page.screenshot({path:'test-results/boot-start.png'});
+ await page.locator('.boot-overlay').waitFor({state:'detached'});
+ assert.equal(await page.locator('.os-shell').evaluate(e=>e.inert),false);
+ await page.screenshot({path:'test-results/desk-motion.png'});
+ assert.equal(await page.locator('.stage').evaluate(e=>getComputedStyle(e,'::before').animationName),'coffee-steam');
+ const keyboard=await page.locator('.keyboard-object').boundingBox();
+ const stage=await page.locator('.stage').boundingBox();
+ assert(keyboard.width/stage.width>.52);
+ assert(keyboard.x+keyboard.width/2<stage.x+stage.width*.4);
+ await page.reload();
+ await page.locator('.boot-overlay').waitFor();
+ await page.locator('.boot-skip').click();
+ assert.equal(await page.locator('.boot-overlay').count(),0);
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.reload();
+ await page.locator('.boot-overlay').waitFor({state:'detached'});
+ assert.equal(await page.locator('.stage').evaluate(e=>getComputedStyle(e,'::before').animationName),'none');
+ await page.setViewportSize({width:390,height:844});
+ assert.equal(await page.locator('.stage').evaluate(e=>getComputedStyle(e,'::before').display),'none');
+ console.log('PASS: boot, reload replay, skip, keyboard layout, steam, reduced motion, mobile.');
+} finally { await browser.close(); }
+import './test-workspace.mjs';

@@ -1,0 +1,19 @@
+.stage{--keyboard-x:39%;--keyboard-w:53%;--mouse-w:9.5%}
+.mouse-object{transform:translateX(-50%);top:79%;width:9.5%}
+/* Two staggered, stepped wisps anchored to the cup, not the viewport. */
+.stage::before,.stage::after{content:'';position:absolute;pointer-events:none;z-index:4;left:calc(var(--mug-x) - 3%);top:calc(var(--mug-y) - 5%);width:1.5%;height:8%;background:#cbd0c4;clip-path:polygon(40% 0,70% 0,70% 20%,45% 20%,45% 40%,75% 40%,75% 60%,50% 60%,50% 80%,30% 80%,30% 100%,5% 100%,5% 75%,25% 75%,25% 55%,50% 55%,50% 45%,20% 45%,20% 15%,40% 15%);opacity:0;animation:coffee-steam 3.8s linear infinite}
+.stage::after{left:calc(var(--mug-x) - .5%);height:6%;animation-delay:-1.9s}
+@keyframes coffee-steam{0%{transform:translate(0,15%) scaleX(.7);opacity:0}25%{opacity:.3}65%{opacity:.18}100%{transform:translate(25%,-65%) scaleX(1.2);opacity:0}}
+.boot-overlay{position:absolute;inset:3px;z-index:50;overflow:hidden;background:#080c09;color:#c6cebb;display:grid;place-items:center;animation:boot-exit .3s ease 1.9s both}
+.boot-overlay::before{content:'';position:absolute;inset:0;background:#cbd6c2;pointer-events:none;animation:crt-start .65s ease-out both}
+.boot-copy{width:76%;font-family:monospace;font-size:clamp(9px,1.1vw,15px);line-height:1.8;animation:boot-text .3s ease .45s both}
+.boot-brand{font-size:1.65em;letter-spacing:-.04em}.boot-brand>span{display:block;font-size:.4em;letter-spacing:.2em;color:#86957e}.boot-copy p{margin:2em 0 1em}.boot-copy small{font-size:.75em;letter-spacing:.1em;color:#86957e}
+.boot-progress{height:8px;border:1px solid #64715d;padding:1px;margin-bottom:1em}.boot-progress>span{display:block;height:100%;background:repeating-linear-gradient(90deg,#b6c0aa 0 7px,transparent 7px 10px);transform-origin:left;animation:boot-load 1.3s steps(12,end) .5s both}
+.boot-skip{position:absolute;right:12px;bottom:12px;background:transparent;color:#929f86;border:1px solid #465040;padding:5px 8px;font:10px monospace;cursor:pointer}.boot-skip:focus-visible{outline:2px solid #c6cebb}
+@keyframes crt-start{0%{transform:scale(.01,.003);opacity:1}40%{transform:scale(1,.003);opacity:.8}75%{transform:scale(1,1);opacity:.12}100%{transform:scale(1,1);opacity:0}}
+@keyframes boot-text{from{opacity:0}to{opacity:1}}
+@keyframes boot-load{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes boot-exit{from{opacity:1}to{opacity:0}}
+@media(min-width:701px) and (max-width:1000px){.stage{--keyboard-x:37%;--keyboard-w:59%;--mouse-w:10%}}
+@media(max-width:700px){.stage::before,.stage::after{display:none}.boot-copy{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.stage::before,.stage::after{animation:none;opacity:0}.boot-overlay,.boot-copy,.boot-progress>span{animation:none}.boot-overlay::before{display:none}}

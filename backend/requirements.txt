@@ -1,0 +1,9 @@
+fastapi==0.141.1
+uvicorn==0.53.0
+langgraph==1.2.11
+openai==2.54.0
+python-dotenv==1.2.3
+jieba==0.42.1
+httpx==0.28.1
+pytest==9.1.1
+pytest-asyncio==1.4.0

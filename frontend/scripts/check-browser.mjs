@@ -1,0 +1,71 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+import { mkdir } from 'node:fs/promises';
+
+await mkdir('test-results', { recursive: true });
+const browser = await chromium.launch({ channel: 'msedge', headless: true });
+const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
+const errors = [], requests = [];
+page.on('pageerror', error => errors.push(error.message));
+page.on('request', req => requests.push(req.url()));
+await page.goto('http://127.0.0.1:5173');
+await page.waitForFunction(() => [...document.images].every(i => i.complete && i.naturalWidth));
+await page.screenshot({ path: 'test-results/desktop.png', fullPage: true });
+const monitor = await page.locator('.monitor-object').boundingBox();
+assert(Math.abs(monitor.x + monitor.width / 2 - 720) < 2);
+const ghost = await page.locator('.ghost-overlay').boundingBox();
+await page.mouse.move(ghost.x - 30, ghost.y);
+await page.waitForFunction(() => document.querySelector('.ghost-overlay').dataset.mode === 'move');
+await page.mouse.move(2, 2);
+await page.waitForTimeout(12500);
+assert.match(await page.locator('.ghost-bubble').textContent(), /Try a folder/);
+for (const name of ['Projects', 'About', 'Experience', 'Contact']) {
+  await page.getByRole('button', { name, exact: true }).click();
+  const window = page.getByRole('region', { name, exact: true });
+  await window.waitFor({ state: 'visible' });
+  await page.getByRole('button', { name: `maximize ${name}`, exact: true }).click();
+  assert(await window.evaluate(e => e.classList.contains('maximized')));
+  await page.getByRole('button', { name: `maximize ${name}`, exact: true }).click();
+  await page.getByRole('button', { name: `minimize ${name}`, exact: true }).click();
+  await window.waitFor({ state: 'hidden' });
+  await page.getByRole('button', { name: `Restore ${name}`, exact: true }).click();
+  await window.waitFor({ state: 'visible' });
+  await page.getByRole('button', { name: `close ${name}`, exact: true }).click();
+  await window.waitFor({ state: 'detached' });
+}
+await page.getByRole('button', { name: 'Projects', exact: true }).hover();
+await page.waitForFunction(() => document.querySelector('.ghost-overlay').dataset.mode === 'point');
+await page.getByRole('button', { name: 'Projects', exact: true }).click();
+await page.mouse.move(10, 10);
+await page.screenshot({ path: 'test-results/window.png', fullPage: true });
+await page.getByRole('button', { name: 'Switch to Chinese' }).click();
+assert.equal(await page.locator('html').getAttribute('lang'), 'zh-CN');
+await page.getByRole('region', { name: '项目', exact: true }).waitFor();
+await page.emulateMedia({ reducedMotion: 'reduce' });
+await page.mouse.move(0, 0);
+await page.waitForFunction(() => document.querySelector('.ghost-overlay').dataset.reduced === 'true');
+await page.waitForFunction(() => !document.querySelector('.portfolio-scene').classList.contains('screen-focused'));
+await page.waitForTimeout(100);
+const before = await page.locator('.ghost-overlay').getAttribute('style');
+await page.waitForTimeout(700);
+assert.equal(await page.locator('.ghost-overlay').getAttribute('style'), before);
+await page.screenshot({ path: 'test-results/reduced-motion.png', fullPage: true });
+for (const [name, width, height] of [['tablet', 820, 1180], ['mobile', 390, 844], ['small-mobile', 320, 640]]) {
+  await page.setViewportSize({ width, height });
+  await page.waitForTimeout(100);
+  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+  assert(await page.evaluate(() => {
+    const area = document.querySelector('.desktop-area').getBoundingClientRect();
+    const contact = document.querySelector('[data-guide="contact"]').getBoundingClientRect();
+    return contact.bottom <= area.bottom;
+  }));
+  await page.screenshot({ path: `test-results/${name}.png`, fullPage: true });
+  await page.getByRole('button', { name: '关闭项目' }).click();
+  await page.getByRole('button', { name: '项目', exact: true }).click();
+}
+assert.equal(await page.locator('a[href$=".pdf"]').count(), 0);
+assert(!requests.some(url => /\/api\/chat|api\.openai/.test(url)));
+assert.deepEqual(errors, []);
+await browser.close();
+console.log('PASS: desktop lifecycle, hover, language, reduced motion, tablet/mobile, no model calls; screenshots in test-results/');
+import './test-workspace.mjs';

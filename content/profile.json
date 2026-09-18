@@ -1,0 +1,422 @@
+{
+  "name": "Xiaoheng Hu",
+  "location": "Munich, Germany",
+  "email": "huxiaoheng33@gmail.com",
+  "linkedIn": "https://www.linkedin.com/in/xiaohenghu",
+  "languages": {
+    "English": "C1 - Advanced",
+    "Chinese": "Native",
+    "German": "A2 - Basic"
+  },
+  "summary": "Software engineer with experience across fullstack product development, AI/LLM applications, internal developer platforms, CI/CD, cloud deployment, and MLOps-adjacent artifact/data workflows.",
+  "experience": [
+    {
+      "date": "Apr 2026 - Jul 2026",
+      "company": "Digital Product School / UnternehmerTUM & MULTIVAC",
+      "location": "Munich, Germany",
+      "role": "System Engineer, PingPong Vision",
+      "summary": "Built and deployed a smart monitoring agent system, turning factory research and real machine testing into a continuous machine-state tracking, persistent storage, and alert-ready monitoring workflow for MULTIVAC.",
+      "highlights": [
+        "Translated insights from 15+ factory visits and manufacturing-company interviews into a smart monitoring agent concept for continuous machine-state tracking and operator-aware alerts.",
+        "Built a low-overhead monitoring workflow with persistent machine-state storage, structured event logs, and alert-ready abnormal-state detection.",
+        "Implemented an edge-device-to-backend data pipeline connecting cameras and ESP32/MQTT current and photoelectric sensors with FastAPI WebSocket/MJPEG streaming, Flask REST APIs, TimescaleDB, and a React/Vite dashboard.",
+        "Developed AI-assisted perception and reliability guardrails including perspective correction, value normalization, retry/backoff, failure-window auto-stop, rate caps, and unreadable-value handling.",
+        "Containerized the service architecture with Docker/Docker Compose and deployed it via Coolify behind a reverse proxy with backend-only secret handling.",
+        "Built event-driven monitoring logic for operator actions, camera movement, screen-state changes, and abnormal readings, enabling alert-ready workflows successfully tested on real MULTIVAC machines."
+      ],
+      "technologies": [
+        "React",
+        "Vite",
+        "Tailwind CSS",
+        "ECharts",
+        "FastAPI",
+        "Flask",
+        "WebSocket",
+        "MJPEG streaming",
+        "TimescaleDB",
+        "PostgreSQL",
+        "Google Gemini",
+        "OpenCV",
+        "Docker",
+        "Docker Compose",
+        "Coolify"
+      ]
+    },
+    {
+      "date": "Dec 2024 - Mar 2026",
+      "company": "Infineon Technologies",
+      "location": "Neubiberg, Germany",
+      "role": "Platform Engineer (Working Student)",
+      "summary": "Worked on a Backstage-based internal developer platform and cloud-native platform operations, connecting developer experience, CI/CD templates, service catalog onboarding, OpenShift deployment, and platform integrations.",
+      "highlights": [
+        "Maintained and evolved a Backstage-based internal developer platform serving 20+ internal engineering teams, including version upgrades, plugin evaluation, configuration, and alignment with upstream platform changes.",
+        "Designed golden path templates reused 100+ times to automate service scaffolding, repository setup, CI/CD best practices, Helm-based deployment patterns, and standardized onboarding for engineering teams.",
+        "Built templates that helped internal teams bootstrap production-ready services with standardized project structure and dev/prod deployment practices.",
+        "Supported cloud-native deployment and lifecycle operations on OpenShift, including Helm-based staged deployments, configuration updates, patching, decommissioning, and GitOps-oriented workflows.",
+        "Improved service and documentation discoverability by onboarding projects into the centralized software catalog and enhancing Backstage-native search functionality.",
+        "Supported developer productivity through platform integrations, service catalog metadata, and reusable onboarding workflows."
+      ],
+      "technologies": [
+        "Backstage",
+        "OpenShift",
+        "Kubernetes",
+        "ArgoCD",
+        "GitOps",
+        "Helm",
+        "GitLab CI",
+        "Bitbucket",
+        "Docker",
+        "Prometheus",
+        "Grafana",
+        "CI/CD templates",
+        "Developer portals"
+      ]
+    },
+    {
+      "date": "Jul 2024 - Dec 2024",
+      "company": "Innocoso",
+      "location": "Oberhaching, Germany",
+      "role": "Fullstack Developer (Working Student)",
+      "summary": "Built an AI-augmented smart ERP platform with order-management workflows, RAG-backed order Q&A, user-role logic, and operational dashboard data.",
+      "highlights": [
+        "Built an AI-augmented smart ERP platform used by 200+ internal employees, including an order-focused RAG question-answering workflow.",
+        "Implemented document parsing, structure-aware semantic chunking, intelligent retrieval, and PDF auto-generation workflows for order documents and business records.",
+        "Designed REST API endpoints, relational data models, validation logic, and business rules for orders, users, roles, dashboards, and RAG-backed knowledge workflows.",
+        "Implemented authentication, role-based access control, and permission-aware workflows across multiple enterprise user roles.",
+        "Developed backend-driven data aggregation and dashboard features that transformed production, order, and document data into operational decision-support views.",
+        "Built analytics and visualization features based on messy business data to surface actionable operational insights.",
+        "Containerized application services and contributed to CI/CD workflows for reproducible build, test, and deployment processes.",
+        "Worked with Docker, Docker Compose, Nginx, AWS EC2/GCP, security group configuration, environment variables, and runtime troubleshooting depending on deployment context."
+      ],
+      "technologies": [
+        "Python",
+        "Django",
+        "PostgreSQL",
+        "React",
+        "TypeScript",
+        "REST APIs",
+        "RAG",
+        "Semantic chunking",
+        "Document parsing",
+        "PDF generation",
+        "Authentication",
+        "RBAC",
+        "Docker",
+        "Docker Compose",
+        "GitHub Actions",
+        "AWS EC2",
+        "GCP",
+        "Nginx"
+      ]
+    },
+    {
+      "date": "Sep 2021 - Jul 2022",
+      "company": "Huawei",
+      "location": "Hangzhou, China",
+      "role": "Software Engineer (Compiler / LLVM / CI)",
+      "summary": "Worked on scientific computation workloads, Linux compatibility, compiler build environments, and CI/CD workflows.",
+      "highlights": [
+        "Contributed to optimizing Fortran-based scientific and meteorological computation workloads, focusing on numerical performance and stability.",
+        "Optimized scientific computation workloads and resolved Linux compatibility issues in compiler build environments.",
+        "Investigated and resolved cross-platform build, dependency, installation, and compatibility issues across Linux environments.",
+        "Maintained Jenkins and GitLab CI pipelines for compiler build, test, and release workflows.",
+        "Collaborated with development and QA teams to diagnose build failures and improve reliability of automated validation workflows."
+      ],
+      "technologies": [
+        "C++",
+        "Fortran workloads",
+        "LLVM/compiler workflows",
+        "Linux",
+        "Jenkins",
+        "GitLab CI",
+        "Scientific computation",
+        "Build systems"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "date": "Oct 2023 - Mar 2026",
+      "title": "M.Sc. Informatics",
+      "school": "Technical University of Munich",
+      "location": "Munich, Germany",
+      "grade": "2.2",
+      "courses": [
+        "Cloud Information Systems",
+        "Advanced Computer Networking",
+        "Natural Language Processing",
+        "Multiple View Geometry",
+        "Distributed Systems & Software Engineering",
+        "Computer Vision II: 3D Scanning & Motion Capture"
+      ]
+    },
+    {
+      "date": "Sep 2017 - Jul 2021",
+      "title": "B.Sc. Software Engineering",
+      "school": "Wuhan University of Technology",
+      "location": "Wuhan, China",
+      "grade": "1.6 (German system, converted from 91.03/100)",
+      "courses": [
+        "Data Structures & Algorithms",
+        "Operating Systems",
+        "Computer Architecture",
+        "Database Systems",
+        "Network Principles",
+        "Software Engineering"
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "date": "Mar 2025 - Oct 2025",
+      "title": "Structured Intermediate Representations for LLM Code Generation",
+      "org": "Master Thesis, Technical University of Munich",
+      "summary": "Researched structured intermediate representations for improving LLM code generation accuracy, controllability, and reasoning.",
+      "details": [
+        "Designed and evaluated a two-stage LLM code-generation pipeline (Problem -> IR -> Code) to improve reasoning, planning, and controllability.",
+        "Developed structured intermediate representations including YAML, Mermaid, pseudo-code, and a custom DSL to guide model outputs.",
+        "Compared different representation formats under controlled prompt settings and evaluation workflows.",
+        "Improved LLM code-generation performance by 12-14% on complex tasks while keeping prompt and token overhead controlled."
+      ],
+      "technologies": [
+        "LLM code generation",
+        "Prompt engineering",
+        "LLM evaluation",
+        "YAML",
+        "Mermaid",
+        "Pseudo-code",
+        "Custom DSL",
+        "Python"
+      ]
+    },
+    {
+      "date": "Mar 2026 - Apr 2026",
+      "title": "Web Harvest RAG",
+      "org": "Personal Project",
+      "summary": "Built a config-driven full-stack RAG chatbot and retrieval experimentation lab for website/PDF knowledge-base ingestion, querying, and evaluation.",
+      "details": [
+        "Built a Next.js/React + FastAPI RAG application for ingesting websites and PDFs into Supabase pgvector with source-grounded chat answers.",
+        "Implemented one-click URL ingestion, HTML/PDF scraping, chunking, embeddings, source management, chat persistence, and Docker Compose deployment.",
+        "Added a retrieval lab comparing fixed vs. structural chunking, FAISS vector search, BM25, linear hybrid fusion, RRF, reranking, and query rewriting.",
+        "Evaluated retrieval on MULTIVAC and NFCorpus corpora, reaching 96.7% recall@5 on MULTIVAC with structural chunking and hybrid retrieval.",
+        "Built LLM-as-judge faithfulness evaluation and error analysis workflows to separate retrieval quality from answer-generation quality."
+      ],
+      "technologies": [
+        "Python",
+        "TypeScript",
+        "Next.js",
+        "FastAPI",
+        "RAG",
+        "Embeddings",
+        "Supabase pgvector",
+        "FAISS",
+        "Vector retrieval",
+        "Hybrid retrieval",
+        "BM25",
+        "Docker Compose",
+        "Document preprocessing",
+        "HTML/PDF scraping",
+        "Retrieval evaluation",
+        "Source-grounded generation",
+        "REST/API workflows"
+      ]
+    },
+    {
+      "date": "Sep 2024 - Feb 2025",
+      "title": "Multi-Agent System for Automated Software Development",
+      "org": "TUM-DI-LAB & Reply",
+      "summary": "Built a LangGraph/LangChain-based multi-agent system coordinating planning, task execution, ticket workflows, and software-delivery orchestration.",
+      "details": [
+        "Built a LangGraph-based 4-agent system for operation engineers, product managers, supervisors, and execution agents across two software-delivery workflows.",
+        "Developed LangChain and GraphQL tool integrations for ticket creation, modification, progress tracking, and cross-agent orchestration, achieving 83%+ task success rate.",
+        "Integrated GraphQL APIs for dashboard and ticket workflows.",
+        "Deployed service components on AWS using EC2, API Gateway, Lambda, and Bedrock with sandboxed secrets management.",
+        "Contributed to AWS infrastructure setup and API Gateway endpoints for serverless function triggers.",
+        "Supported IAM role separation, sandboxed secrets handling, logging, and reproducible service deployment.",
+        "Integrated Terraform, Terragrunt, and CloudFormation-based infrastructure workflows for reproducible AWS environments and operation-agent-driven deployment automation."
+      ],
+      "technologies": [
+        "LangGraph",
+        "LangChain",
+        "Agentic workflows",
+        "GraphQL",
+        "AWS Bedrock",
+        "AWS EC2",
+        "AWS Lambda",
+        "API Gateway",
+        "Terraform",
+        "Terragrunt",
+        "CloudFormation",
+        "IAM"
+      ]
+    },
+    {
+      "date": "May 2024 - Oct 2024",
+      "title": "Personal Website Development - huxiaoheng.com",
+      "org": "Personal Project",
+      "summary": "Built and deployed a full-stack portfolio website for projects, blogs, and demos.",
+      "details": [
+        "Built RESTful backend services with Express.js and MongoDB for project, blog, and demo content management.",
+        "Integrated the API with a React frontend.",
+        "Built the stack with React, Express.js, MongoDB, Docker, Nginx, and GCP.",
+        "Structured reusable frontend and backend modules for project demos, blog content, maintainability, and deployment.",
+        "Configured Nginx as reverse proxy and deployed with Docker on Google Cloud."
+      ],
+      "technologies": [
+        "React",
+        "Express.js",
+        "MongoDB",
+        "Docker",
+        "Nginx",
+        "GCP",
+        "REST APIs"
+      ]
+    },
+    {
+      "date": "Oct 2023 - Feb 2024",
+      "title": "Python Artifact Logger & Viewer Module",
+      "org": "Personal Project",
+      "summary": "Built an artifact tracking module and Flask viewer for experiment outputs across local, cloud, and database-backed storage.",
+      "details": [
+        "Built a Python artifact tracking module for experiment outputs across local storage, AWS S3, and database-backed metadata.",
+        "Developed a Python module for real-time management of training artifacts, supporting local, AWS cloud, and database storage options.",
+        "Implemented a Flask backend for querying, comparing, and visualizing experiment artifacts through dashboard views.",
+        "Built a Flask backend for dashboard views, artifact queries, and cloud data access.",
+        "Designed storage abstractions for reproducible artifact management and extension toward model or dataset registry workflows.",
+        "Integrated Dynatrace hooks for backend availability monitoring and alert-oriented observability."
+      ],
+      "technologies": [
+        "Python",
+        "Flask",
+        "AWS S3",
+        "Local storage",
+        "Databases",
+        "Artifact tracking",
+        "Experiment management",
+        "Dynatrace"
+      ]
+    },
+    {
+      "date": "Feb 2023 - Aug 2023",
+      "title": "Drone Simulator Project",
+      "org": "Academic Project",
+      "summary": "Built parts of a drone control/simulation system involving PX4 autopilot, seL4 microkernel OS, Raspberry Pi, and C++ sensor-data proxying.",
+      "details": [
+        "Constructed a drone control system integrated with PX4 autopilot and a companion application based on the seL4 microkernel running on a Raspberry Pi.",
+        "Developed a C++ proxy for sensor data transmission to the companion computer.",
+        "Transformed raw sensor payloads into structured data types for control and monitoring workflows."
+      ],
+      "technologies": [
+        "C++",
+        "PX4",
+        "seL4",
+        "Raspberry Pi",
+        "Sensor data",
+        "Embedded systems"
+      ]
+    }
+  ],
+  "skills": {
+    "programmingLanguages": [
+      "Python",
+      "TypeScript",
+      "JavaScript",
+      "C++",
+      "Java"
+    ],
+    "backendAndApis": [
+      "Django",
+      "Flask",
+      "Node.js",
+      "Express.js",
+      "REST APIs",
+      "GraphQL",
+      "Authentication",
+      "RBAC",
+      "Data validation",
+      "Business logic"
+    ],
+    "frontend": [
+      "React",
+      "Next.js",
+      "TypeScript",
+      "JavaScript",
+      "Tailwind CSS",
+      "Dashboards",
+      "Data visualization",
+      "Responsive UI"
+    ],
+    "databasesAndData": [
+      "PostgreSQL",
+      "MongoDB",
+      "MySQL",
+      "Relational data modeling",
+      "Metadata tracking",
+      "Large file handling",
+      "Document preprocessing",
+      "BM25",
+      "Vector retrieval"
+    ],
+    "aiLlmEngineering": [
+      "LangChain",
+      "LangGraph",
+      "RAG systems",
+      "Agentic workflows",
+      "Prompt engineering",
+      "LLM evaluation",
+      "Embeddings",
+      "Hybrid retrieval",
+      "Source-grounded generation",
+      "LLM code generation"
+    ],
+    "cloudDevOpsPlatform": [
+      "AWS",
+      "AWS Bedrock",
+      "EC2",
+      "Lambda",
+      "API Gateway",
+      "IAM",
+      "CloudWatch",
+      "GCP",
+      "Docker",
+      "Docker Compose",
+      "Helm",
+      "Kubernetes",
+      "OpenShift",
+      "ArgoCD",
+      "GitOps",
+      "GitHub Actions",
+      "GitLab CI",
+      "Jenkins",
+      "Nginx",
+      "Backstage",
+      "Prometheus",
+      "Grafana",
+      "Dynatrace",
+      "Terraform",
+      "Terragrunt",
+      "CloudFormation"
+    ],
+    "mlopsDataops": [
+      "Artifact tracking",
+      "Experiment management",
+      "Reproducibility",
+      "Dataset preprocessing",
+      "Model registry concepts",
+      "MLflow/W&B basics",
+      "Airflow/Prefect basics",
+      "AWS S3",
+      "Object/local storage",
+      "Storage abstractions"
+    ],
+    "collaborationAndTools": [
+      "GitHub",
+      "Linear",
+      "Figma",
+      "Codex",
+      "Claude",
+      "CI/CD workflows",
+      "Developer productivity tooling"
+    ]
+  }
+}

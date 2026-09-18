@@ -1,0 +1,12 @@
+.stage{transform-origin:0 0;transition:transform 850ms cubic-bezier(.22,1,.36,1);will-change:transform}
+.portfolio-scene{height:100svh;min-height:0;overflow:hidden}
+.page-header,.scene-caption{transition:opacity .4s ease;pointer-events:none}
+.screen-focused .page-header,.screen-focused .scene-caption{opacity:0}
+.desktop-folders{width:65px;top:12px;bottom:8px;gap:0;display:grid;grid-template-rows:repeat(8,minmax(0,1fr));align-items:center}
+.folder{gap:4px;font-size:8px;justify-self:stretch}
+.folder-icon:not(.large){width:23px;height:17px;box-shadow:inset 1px 1px #bdc3b5,1px 1px #000}
+.folder-icon:not(.large):before{width:9px;height:4px;top:-4px}
+.folder>span:last-child{padding:0 2px;line-height:1.25}
+.window-layer{left:78px}
+@media(max-width:700px){.portfolio-scene{height:auto;min-height:100svh}.stage{transform:none!important;will-change:auto}.desktop-folders{width:57px;top:16px;grid-template-rows:repeat(8,minmax(44px,1fr))}.folder{font-size:9px;min-height:44px}.window-layer{left:65px}}
+@media(prefers-reduced-motion:reduce){.stage,.page-header,.scene-caption{transition:none}}

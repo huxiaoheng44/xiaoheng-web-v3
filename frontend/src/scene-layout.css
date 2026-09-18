@@ -1,0 +1,15 @@
+/* Independent object coordinates: change these variables to rearrange the scene. */
+.stage{--monitor-x:50%;--monitor-y:4%;--monitor-w:78%;--monitor-h:76%;--keyboard-x:46%;--keyboard-y:78%;--keyboard-w:44%;--mouse-x:75%;--mouse-y:81%;--mouse-w:8%;--mug-x:84%;--mug-y:70%;--mug-w:11%;width:min(1440px,140svh);max-width:100%;aspect-ratio:3/2;margin:auto}
+.monitor-object{position:absolute;left:var(--monitor-x);top:var(--monitor-y);width:var(--monitor-w);height:var(--monitor-h);transform:translateX(-50%);z-index:2}
+.monitor-art{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+.monitor-screen{left:7.4%;top:13.3%;width:85.2%;height:67.5%;padding:3px}
+.desk-surface{position:absolute;left:0;right:0;top:78%;bottom:0;background:repeating-linear-gradient(0deg,#20211f 0 4px,#10110f 4px 12px);opacity:.65;mask-image:linear-gradient(transparent,#000 20%,#000 70%,transparent)}
+.desk-object{position:absolute;image-rendering:pixelated;transform:translateX(-50%);height:auto;z-index:3}
+.keyboard-object{left:var(--keyboard-x);top:var(--keyboard-y);width:var(--keyboard-w)}
+.mouse-object{left:var(--mouse-x);top:var(--mouse-y);width:var(--mouse-w);transform:translateX(-50%) rotate(180deg)}
+.mug-object{left:var(--mug-x);top:var(--mug-y);width:var(--mug-w)}
+.empty-state>*{flex-shrink:0}
+.empty-state{justify-content:safe center}
+.window-toolbar,.window-footer,.window-title{flex-shrink:0}
+@media(min-width:701px) and (max-width:1000px){.stage{width:100%;aspect-ratio:6/5;margin:auto;--monitor-w:92%;--monitor-h:80%;--monitor-y:1%;--keyboard-y:82%;--keyboard-w:53%;--mug-x:92%;--mug-w:9%;--mouse-x:80%}.desktop-folders{gap:13px;top:14px}.folder{font-size:9px}.desktop-greeting{top:22%}.desktop-greeting h1{font-size:26px}.desktop-instruction{margin-top:16px}.empty-state{justify-content:flex-start;padding-top:18px}.empty-state .large{flex-shrink:0}}
+@media(max-width:700px){.stage{width:100%;max-width:100%;aspect-ratio:auto;margin:0}.monitor-art,.desk-object,.desk-surface{display:none}.monitor-object{position:relative;left:auto;top:auto;width:100%;height:auto;transform:none}.monitor-screen{position:relative;left:auto;top:auto;width:100%;height:calc(100svh - 172px);min-height:410px;padding:0}}

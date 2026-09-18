@@ -1,0 +1,18 @@
+{
+  "name": "xiaoheng-portfolio-workspace",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "workspaces": ["frontend"],
+  "scripts": {
+    "dev": "npm run dev --workspace frontend",
+    "build": "npm run build --workspace frontend",
+    "preview": "npm run preview --workspace frontend",
+    "test": "npm run test --workspace frontend",
+    "test:browser": "node frontend/scripts/check-agent.mjs && node frontend/scripts/check-agent-boundaries.mjs && node frontend/scripts/check-content.mjs",
+    "backend:dev": "python backend/run.py dev",
+    "backend:index": "python backend/run.py index",
+    "backend:test": "python backend/run.py test",
+    "backend:smoke": "python backend/run.py smoke"
+  }
+}

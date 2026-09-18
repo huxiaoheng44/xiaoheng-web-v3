@@ -1,0 +1,1 @@
+"""Layered Ghost application."""
