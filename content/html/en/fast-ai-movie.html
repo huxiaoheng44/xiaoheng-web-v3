@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAST AI Movie Web</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← All projects</a><a class="lang" href="../zh/fast-ai-movie.html">中文</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">Web application · FAST AI Movies</p>
+  <h1>FAST AI Movie Web</h1>
+  <p class="lead">A web platform that turns text and images into customized training videos with an AI speaker – and lets users edit every part of the generated video.</p>
+  <ul class="tags"><li>Frontend</li><li>Reusable components</li><li>Video editing</li><li>AI video generation</li></ul>
+</header>
+
+<figure>
+  <video controls preload="metadata" src="../../videos/FASTAIMOVIE.mp4"></video>
+  <figcaption>Video demo</figcaption>
+</figure>
+
+<h2>Project overview</h2>
+<ol class="flow">
+  <li>Input text and images</li><li class="arrow">→</li><li>Choose a speaker for the video</li><li class="arrow">→</li><li>Customized training video</li>
+</ol>
+<figure class="fig-md">
+  <img src="../assets/FASTAIMOVIE/p02.webp" alt="Illustration: upload text, logo, fonts and images, then receive a training video">
+</figure>
+
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/FASTAIMOVIE/p03.webp" alt="Five steps: configure corporate design, upload product sheets and compliance regulations, configure additional settings, generate video, keep video up to date"></figure>
+  <div>
+    <h3 style="margin-top:0">User workflow</h3>
+    <ol>
+      <li>Configure corporate design</li>
+      <li>Upload existing product sheets, compliance regulations, …</li>
+      <li>Configure additional settings</li>
+      <li>Generate the video</li>
+      <li>Keep the video up to date</li>
+    </ol>
+    <h3>Our work</h3>
+    <p>Generating videos and making them editable – including chapter texts, audio, slides, icons and quizzes – plus corporate design configuration, admin settings, asset management and internal visualization.</p>
+  </div>
+</div>
+
+<h2>Chapter edit function</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p05.webp" alt="Edit Video screen with numbered controls for chapters and subchapters">
+</figure>
+<div class="table-wrap"><table>
+  <thead><tr><th>#</th><th>Control</th></tr></thead>
+  <tbody>
+    <tr><td>①</td><td>Add a new subchapter (major)</td></tr>
+    <tr><td>②</td><td>Choose a subchapter title</td></tr>
+    <tr><td>③</td><td>A: move subchapter up · B: move subchapter down · C: add a new subchapter</td></tr>
+    <tr><td>④</td><td>Delete a subchapter</td></tr>
+    <tr><td>⑤</td><td>Play audio</td></tr>
+    <tr><td>⑥</td><td>Choose a chapter title</td></tr>
+    <tr><td>⑦</td><td>Delete the whole chapter</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Chapter overview function</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p06.webp" alt="Chapter overview side panel with highlighted current subchapter">
+</figure>
+<ol>
+  <li>Click to collapse or expand the chapter overview.</li>
+  <li>The currently viewed subchapter is highlighted.</li>
+  <li>Click to jump to the corresponding subchapter.</li>
+</ol>
+
+<h2>Image component function</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p07.webp" alt="Image list panel with upload, edit, delete and drag-to-insert controls">
+</figure>
+<ol>
+  <li>Upload an image from local storage.</li>
+  <li>Click to edit an image.</li>
+  <li>Delete an image.</li>
+  <li>Drag an image from the image list into the text area to insert it.</li>
+</ol>
+
+<h2>Image edit function</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p08.webp" alt="Image editor with focus areas, delete, save, replace buttons and settings panel">
+</figure>
+<ol>
+  <li>Edit focus areas – move, resize and delete.</li>
+  <li>Delete the current image.</li>
+  <li>Duplicate as a new image with the current changes.</li>
+  <li>Replace the current image with the current changes.</li>
+  <li>Add a new focus area.</li>
+  <li>Edit image settings (border color, background style, image type: full-screen / half-screen / small corner, visualization time).</li>
+</ol>
+
+<h2>Integration of reusable components</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p09.webp" alt="New Video page reusing the textarea and image components">
+</figure>
+<ol>
+  <li>Editable textarea component.</li>
+  <li>Image component (with drag-to-insert and image editing).</li>
+</ol>
+
+<footer>Converted from the project presentation (FASTAIMOVIE.pdf).</footer>
+</main>
+</body>
+</html>

@@ -30,7 +30,7 @@ for (let row=0; row<4; row++) for (let col=0; col<4; col++) {
   const frame=await sharp(trimmed).resize(24,26,{fit:'contain',background:{r:0,g:0,b:0,alpha:0},kernel:'nearest'}).png().toBuffer();
   frames.push({input:frame,left:col*32+4,top:row*32+3});
 }
-await sharp({create:{width:128,height:128,channels:4,background:{r:0,g:0,b:0,alpha:0}}}).composite(frames).png().toFile('public/assets/ghost-sprites-v3.png');
-await sharp('public/assets/ghost-sprites-v3.png').extract({left:0,top:0,width:32,height:32}).resize(256,256,{kernel:'nearest'}).png().toFile('test-results/ghost-v3-preview.png');
+await sharp({create:{width:128,height:128,channels:4,background:{r:0,g:0,b:0,alpha:0}}}).composite(frames).png().toFile('public/assets/crt-agent-sprites-v3.png');
+await sharp('public/assets/crt-agent-sprites-v3.png').extract({left:0,top:0,width:32,height:32}).resize(256,256,{kernel:'nearest'}).png().toFile('../artifacts/test-results/ghost-v3-preview.png');
 console.log('Prepared round ghost: 24x26 silhouette, 32x32 cells, 16 frames.');
 import './asset-workspace.mjs';

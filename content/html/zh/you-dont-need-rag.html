@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You Don't Need RAG</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← 全部项目</a><a class="lang" href="../en/you-dont-need-rag.html">English</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">工具 · 知识库导出</p>
+  <h1>You Don’t Need RAG</h1>
+  <p class="lead">粘贴一组 URL，得到一个干净的文本文件，或一个结构化、可直接用于 RAG 的 ZIP——按你的知识库实际需要来选。这个工具基于一个简单的判断：大多数“你需要 RAG”的问题，其实都装得进上下文窗口。</p>
+  <ul class="tags"><li>Next.js 15</li><li>React 19</li><li>Python 爬虫</li><li>无向量数据库</li><li>无嵌入</li></ul>
+  <div class="links">
+    <a href="https://rag.huxiaoheng.com"><span>在线演示</span>rag.huxiaoheng.com</a>
+    <a href="https://github.com/huxiaoheng44/You-Don-t-Need-RAG"><span>源码</span>github.com/huxiaoheng44/You-Don-t-Need-RAG</a>
+  </div>
+</header>
+
+<h2>为什么做这个：RAG 已经成了万能答案</h2>
+<p>要查询文档？RAG。要回答关于某个网站的问题？RAG。要给聊天机器人提供上下文？RAG。这种模式确有价值——但也伴随着一长串实实在在的代价。</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>代价</th><th>问题所在</th></tr></thead>
+  <tbody>
+    <tr><td><strong>分块会丢信息</strong></td><td>把文档切成固定大小的块，会破坏跨段落的上下文。模型只能看到碎片。</td></tr>
+    <tr><td><strong>检索并不完美</strong></td><td>嵌入相似度不等于语义相关——模型照样会基于错误的分块自信作答。</td></tr>
+    <tr><td><strong>运维负担重</strong></td><td>嵌入模型、向量数据库、数据摄取管道、检索层——每一环都可能悄无声息地出错或漂移。</td></tr>
+    <tr><td><strong>评估困难</strong></td><td>没有一个显而易见的质量指标。幻觉可能来自技术栈的任何一层。</td></tr>
+    <tr><td><strong>延迟累加</strong></td><td>每次查询都要先做一次嵌入请求和向量检索，LLM 才能看到第一个 token。</td></tr>
+  </tbody>
+</table></div>
+<blockquote>“工程师的本能是去找最复杂的工具。但复杂性本身就是负担，而不是解决方案。”</blockquote>
+
+<h2>真正的解法：现代 LLM 已经能装下整个知识库</h2>
+<p>GPT-4o、Claude、Gemini 1.5 Pro 都支持 128K 到 1M+ token 的上下文窗口。一个 300 KB 的文本文件大约是 75K token。不分块，不检索，不搭管道。直接粘贴即可。</p>
+<div class="stats">
+  <div class="stat"><b>128K–1M</b><span>现代 LLM 的上下文 token 数</span></div>
+  <div class="stat"><b>75K</b><span>一个 300 KB 文本文件的 token 数</span></div>
+</div>
+<ol class="flow">
+  <li><strong>第 1 步</strong>——抓取 URL，提取干净可读的内容</li><li class="arrow">→</li>
+  <li><strong>第 2 步</strong>——测量抓取内容的实际大小</li><li class="arrow">→</li>
+  <li><strong>决策</strong>——装得进上下文窗口？粘贴纯文本文件。确实很大 / 实时更新 / 多租户？导出 RAG ZIP。</li>
+</ol>
+
+<h2>使用方式：四步完成，无需配置</h2>
+<figure>
+  <img src="../assets/YouDontNeedRAG/p04.webp" alt="两张截图：添加数据源和审核数据源">
+</figure>
+<div class="grid">
+  <div class="card"><h4><span class="n">01</span>添加数据源</h4><p>粘贴任何包含链接的内容——列表、邮件、Markdown 文档——所有 URL 都会被自动提取。也支持本地文件（PDF、TXT、MD、JSON、CSV）。</p></div>
+  <div class="card"><h4><span class="n">02</span>审核</h4><p>开始抓取前，URL 和上传的文件会分别列出——确认之前不会执行任何操作。</p></div>
+  <div class="card"><h4><span class="n">03</span>抓取</h4><p>抓取内容并测量其真实大小。</p></div>
+  <div class="card"><h4><span class="n">04</span>导出</h4><p>根据内容的实际大小，选择纯文本或 RAG ZIP。</p></div>
+</div>
+
+<h2>输出：两种格式，按实际大小推荐</h2>
+<p>工具会测量实际抓取到的内容，并告诉你哪种格式合适——不需要你去猜。</p>
+<div class="pair">
+  <div class="card">
+    <h4>纯文本</h4>
+    <p><code>knowledge_base.txt</code>——直接粘贴到任意 LLM</p>
+<pre><code>=== Page Title ===
+URL: https://example.com
+Scraped: 2026-01-01T00:00:00Z
+
+Full page content here...
+
+---
+
+=== Next Page ===
+...</code></pre>
+    <span class="badge">内容装得进上下文窗口时推荐</span>
+  </div>
+  <div class="card">
+    <h4>RAG ZIP</h4>
+    <p><code>knowledge_base.zip</code>——可直接进入嵌入管道</p>
+<pre><code>knowledge_base.zip
+├── manifest.json   # id, url, title, char_count
+└── pages/
+    ├── example-com-abc123.json
+    ├── example-com-docs-def456.json
+    └── ...</code></pre>
+    <span class="badge">确实需要 RAG 时推荐</span>
+  </div>
+</div>
+
+<h2>并不反对 RAG：什么时候真的需要 RAG</h2>
+<p>这个工具不是反 RAG，而是讲求务实。以下情况下 RAG 才是正确选择：</p>
+<ul>
+  <li>知识库确实很大——数百万 token，而不是几千。</li>
+  <li>需要在实时更新的语料上实现亚秒级检索。</li>
+  <li>需要在许多不同用户的私有数据集之间检索。</li>
+  <li>查询非常具体，完整文档上下文大部分都会是噪声。</li>
+</ul>
+<div class="callout"><p><em>“其他所有情况——先试试纯文本文件。”</em></p></div>
+
+<h2>技术栈</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>组件</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>Next.js 15</td><td>App Router，React 19</td></tr>
+    <tr><td>Python 爬虫</td><td>requests、BeautifulSoup、markdownify、pdfplumber</td></tr>
+    <tr><td>基于文件的任务</td><td>异步抓取任务存放在 <code>data/jobs/&lt;uuid&gt;</code></td></tr>
+    <tr><td>纯文本输出</td><td>单个拼接好的 <code>.txt</code>，可直接粘贴</td></tr>
+    <tr><td>RAG ZIP 输出</td><td><code>manifest.json</code> + 每页一个 JSON，通过 <code>zipfile</code> 打包</td></tr>
+    <tr><td>无向量数据库</td><td>这正是项目的意义——默认零基础设施</td></tr>
+  </tbody>
+</table></div>
+
+<footer>根据项目演示文稿（YouDontNeedRAG.pdf）转换。</footer>
+</main>
+</body>
+</html>

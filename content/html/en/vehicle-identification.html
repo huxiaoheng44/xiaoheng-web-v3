@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vehicle Noise Classification</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← All projects</a><a class="lang" href="../zh/vehicle-identification.html">中文</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">Müller-BBM Industry Solutions GmbH · Federal Department of Environment · TUM 1.000+ Project</p>
+  <h1>Determining the Noise Behaviour of the German Vehicle Fleet by Measurement</h1>
+  <p class="lead">Classifying passenger cars (PKW), heavy vehicles (LKW) and other vehicles from roadside acoustic measurements – data analysis, feature engineering and two machine-learning approaches, built in a five-day project week.</p>
+  <ul class="tags"><li>Python</li><li>pandas</li><li>TensorFlow / Keras</li><li>Transformer</li><li>Dense NN</li><li>KNN</li><li>Acoustics</li></ul>
+</header>
+
+<h2>Project of the Federal Department of Environment</h2>
+<p>Determine the <strong>noise behaviour</strong> of the German vehicle fleet by making measurements at <strong>30 different locations</strong>.</p>
+<div class="callout"><p><strong>Project aim:</strong> develop a classification method for passenger cars and heavy vehicles in order to distinguish them.</p></div>
+<figure class="fig-md">
+  <img src="../assets/VehicleIdentification/p02.webp" alt="Roadside microphone mast → sound signal → car or truck">
+  <figcaption>Roadside measurement → acoustic signal → vehicle class</figcaption>
+</figure>
+
+<h2>Timeline</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Day</th><th>Activities</th></tr></thead>
+  <tbody>
+    <tr><td>Day 1 – 08/01</td><td>Kick-off · introduction to the problem · project management · data processing: analyse data distribution and use different data features · machine learning: try different models</td></tr>
+    <tr><td>Day 2 – 09/01</td><td>Continue with data processing · machine learning: build one big model</td></tr>
+    <tr><td>Day 3 – 10/01</td><td>Continue with data processing · model training · model testing · performance analysis · look into further approaches · <strong>reflection meeting</strong></td></tr>
+    <tr><td>Day 4 – 11/01</td><td>Look deeper into further approaches · analyse results · documentation</td></tr>
+    <tr><td>Day 5 – 12/01</td><td>Presentation · poster creation</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Problem approach</h2>
+<ol class="flow">
+  <li>Data</li><li class="arrow">→</li><li>Data processing</li><li class="arrow">+</li><li>Build ML models</li><li class="arrow">→</li>
+  <li>Model training</li><li class="arrow">⇄</li><li>Model validation &amp; parameter adjustment</li><li class="arrow">→</li><li>Model testing</li><li class="arrow">→</li><li>Presentation of results</li>
+</ol>
+<figure>
+  <img src="../assets/VehicleIdentification/p04.webp" alt="Workflow icons from data to presentation of results">
+</figure>
+
+<h2>Captured data</h2>
+<p>Each pass-by record contains 34 fields. The fields highlighted in the original slide (outlined below) were the ones selected for modelling.</p>
+<figure>
+  <img src="../assets/VehicleIdentification/p05.webp" alt="List of 34 captured data fields with descriptions; selected fields highlighted">
+  <figcaption>All captured fields (selected fields highlighted)</figcaption>
+</figure>
+<h3>Examples</h3>
+<figure>
+  <img src="../assets/VehicleIdentification/p06.webp" alt="Three plots: level of the pass-by over time, third-octave spectrum, and localization trajectory">
+  <figcaption>Level of the pass-by · third-octave spectrum · localization trajectory</figcaption>
+</figure>
+<ul>
+  <li><code>Lmax</code>: maximum sound pressure level (max of the <code>levelTime</code> curve)
+    <ul><li><code>T_6</code>: width of the peak in the <code>levelTime</code> curve at (Lmax − 6) dB</li></ul></li>
+  <li><code>thirdSpectrum</code>: third-octave spectrum measured in a short time interval around the time of maximum sound level</li>
+  <li><code>trajectory</code>: measure of vehicle localization (angle between the microphone-pair axis and the direction of sound)</li>
+</ul>
+
+<h2>Data processing</h2>
+<h3>Slope of trajectory as an additional feature</h3>
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p07.webp" alt="Localization trajectories of a PKW and an LKW, and the point-wise slope of the trajectory"></figure>
+  <div>
+    <ul>
+      <li>LKWs are longer ⇒ slower increase of the localization angle.</li>
+      <li>The point-wise slope of <code>trajectory</code> can be used as an additional data feature.</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Filtering out noise in level-time curves</h3>
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p08.webp" alt="Level-time curve with the T_6 interval at 6 dB below the peak highlighted in green, other regions in red"></figure>
+  <div>
+    <ul>
+      <li>Cropping <code>levelTime</code> data to the T_6 interval helps remove noise produced by non-target cars in the audio recordings.</li>
+      <li>This should be handled carefully for closely following cars (their peaks might not be resolved by the 6 dB criterion).</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Removing features by normalization</h3>
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p09.webp" alt="Scatter plot of Lmax vs. velocity for PKW, LKW and else with regression curves"><figcaption>Lmax vs. velocity with regression curves</figcaption></figure>
+  <div>
+    <ul>
+      <li>The maximum sound pressure level (Lmax) increases linearly with lg(velocity).</li>
+      <li>The feature <code>velocity</code> can be discarded if Lmax values are normalized by lg(velocity).</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Vehicle class distribution</h3>
+<figure class="fig-md">
+  <img src="../assets/VehicleIdentification/p10.webp" alt="Bar chart of vehicle class occurrences; PKW about 30,000, LKW about 3,500, other classes small">
+  <figcaption>PKW dominates the dataset (~30,000 samples); LKW is second (~3,500)</figcaption>
+</figure>
+
+<h3>Filtering features</h3>
+<p><code>df</code> – all data points, all features (40114 × <strong>34</strong>) → <code>filtered_df</code> – all data points, suggested features (40114 × <strong>9</strong>):</p>
+<p><code>ID</code> · <code>MP</code> · <code>Lmax1</code> · <code>levelTime1</code> · <code>T6_1</code> · <code>thirdSpectrum1</code> · <code>trajectory</code> · <code>radarPulses</code> · <code>vehicleClass</code></p>
+
+<h3>Adjusting the class distribution</h3>
+<p>The data table is shuffled, then an equal number of data points is extracted for each class, giving <code>filtered_final_df</code> with an equal ratio <code>Else : LKW : PKW</code> (<strong>10563</strong> × 9).</p>
+<figure>
+  <img src="../assets/VehicleIdentification/p12.webp" alt="Shuffled data table excerpt, class distribution before and after balancing">
+  <figcaption>Shuffled table and class distribution before / after balancing</figcaption>
+</figure>
+
+<h3>Normalization</h3>
+<ul>
+  <li><strong>Single values:</strong> find min and max in the column and normalize as <code>new_x = (x − min) / (max − min)</code>.</li>
+  <li><strong>Arrays:</strong> divide each value in every array by the maximum value found in the column.</li>
+</ul>
+<p>Locations with special conditions were removed:</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Location</th><th>Condition</th></tr></thead>
+  <tbody>
+    <tr><td>MP 30, MP 5</td><td>Road surface</td></tr>
+    <tr><td>MP 12, MP 13</td><td>Winter</td></tr>
+  </tbody>
+</table></div>
+
+<h3>Datasets</h3>
+<p class="table-note">Status: <span style="opacity:.6">designed</span> (grey), created, <strong>used</strong> (highlighted).</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Name</th><th>Description</th><th class="num">Size</th></tr></thead>
+  <tbody>
+    <tr><td>ID1</td><td>all data points, all features</td><td class="num">29882 × 34</td></tr>
+    <tr><td>ID2</td><td>all data points, selected features</td><td class="num">39676 × 9</td></tr>
+    <tr class="dim"><td>ID3</td><td>all data points, all features, 3 classes</td><td class="num"></td></tr>
+    <tr class="hl"><td>ID4</td><td>all data points, selected features, 3 vehicle classes</td><td class="num">39676 × 9</td></tr>
+    <tr class="dim"><td>ID5</td><td>all features, 3 equally distributed vehicle classes</td><td class="num"></td></tr>
+    <tr class="hl"><td>ID6</td><td>selected features, 3 equally distributed vehicle classes</td><td class="num">10419 × 9</td></tr>
+    <tr class="dim"><td>ID7</td><td>all features, 3 equally distributed classes, special locations in bottom rows</td><td class="num"></td></tr>
+    <tr><td>ID8</td><td>selected features, 3 equally distributed vehicle classes, special locations in bottom rows</td><td class="num">10419 × 9</td></tr>
+    <tr class="hl"><td>ID9</td><td>selected features, 3 equally distributed vehicle classes, special locations excluded</td><td class="num">9873 × 9</td></tr>
+    <tr class="dim"><td>ID10</td><td>selected features, 3 equally distributed vehicle classes, additional features</td><td class="num"></td></tr>
+  </tbody>
+</table></div>
+
+<h2>Approach 1: neural network</h2>
+<p>Model 1 is a Transformer applied to the <code>levelTime1</code> sequence; its output is combined with the other parameters and fed into Model 2, a dense neural network that outputs one of three classes: <code>PKW</code>, <code>LKW</code> or <code>ELSE</code>.</p>
+<figure>
+  <img src="../assets/VehicleIdentification/p15.webp" alt="Model 1 Transformer on levelTime1 feeding Model 2 dense neural network with other parameters, outputs PKW, LKW, ELSE">
+</figure>
+<figure>
+  <img src="../assets/VehicleIdentification/p16.webp" alt="Keras model graph: input → multi-head attention → layer normalization → global max pooling, concatenated with second input → dense/dropout layers → 3 outputs">
+  <figcaption>Keras model graph. Input 1 – a 24-band third-octave spectrum (24×1) → multi-head attention → layer normalization → global max pooling (1); input 2 – two scalar features (Lmax / velocity) → concatenate (3) → Dense(64) → Dropout → Dense(64) → Dropout → Dense(3)</figcaption>
+</figure>
+
+<h3>Model testing</h3>
+<figure>
+  <img src="../assets/VehicleIdentification/p17.webp" alt="Epoch loss falling from ~0.8 to ~0.62 and epoch accuracy rising to ~0.70 over 15 epochs">
+  <figcaption>Epoch loss and accuracy – epochs = 15, batch_size = 64, learning_rate = 1e-2</figcaption>
+</figure>
+
+<h3>Test accuracy</h3>
+<p class="table-note">Confusion matrix from test group ID 2 (rows = true labels, columns = predicted labels).</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>True \ Predicted</th><th class="num">LKW</th><th class="num">PKW</th><th class="num">Else</th><th class="num">True positive rate</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">LKW</th><td class="num best">1574</td><td class="num">22</td><td class="num">125</td><td class="num">91.4 %</td></tr>
+    <tr><th scope="row">PKW</th><td class="num">16</td><td class="num best">1470</td><td class="num">210</td><td class="num">86.7 %</td></tr>
+    <tr><th scope="row">Else</th><td class="num">267</td><td class="num">824</td><td class="num best">600</td><td class="num">35.5 %</td></tr>
+  </tbody>
+</table></div>
+<p class="table-note">For the “Else” class, 48.7 % are misclassified as PKW and 15.8 % as LKW.</p>
+<figure class="fig-md">
+  <img src="../assets/VehicleIdentification/p18.webp" alt="Confusion matrix heat map with true positive rates">
+</figure>
+
+<h3>Results</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>Group</th><th class="num">Accuracy</th><th class="num">PKW (TPR)</th><th class="num">LKW (TPR)</th><th class="num">Else (TPR)</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td>Model validation – train and test <em>with</em> special roads</td><td class="num">0.7091</td><td class="num">0.867</td><td class="num">0.914</td><td class="num">0.355</td></tr>
+    <tr><td>Train with special roads, test on all datasets</td><td class="num best">0.7637</td><td class="num">0.836</td><td class="num">0.938</td><td class="num">0.362</td></tr>
+    <tr class="hl"><td>Model validation – train and test <em>without</em> special roads</td><td class="num">0.7062</td><td class="num">0.866</td><td class="num">0.922</td><td class="num">0.354</td></tr>
+    <tr><td>Train with special roads, test without special roads</td><td class="num">0.6759</td><td class="num">0.941</td><td class="num">0.965</td><td class="num">0.118</td></tr>
+    <tr><td>Train without special roads, test with special roads</td><td class="num" style="color:var(--warn);font-weight:700">0.4532</td><td class="num">0.914</td><td class="num">0.765</td><td class="num">0.45</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li>Robust classification between LKW (trucks) and PKW (cars) on the given datasets.</li>
+  <li>A noticeable limitation when identifying the “Else” group, evidenced by its lower true positive rate.</li>
+  <li>The model trained with special-road data performs well on the other datasets, but not the other way round. Using the dataset with special roads for training is recommended.</li>
+</ul>
+
+<h2>Approach 2: conventional ML – K-Nearest Neighbors</h2>
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p21.webp" alt="KNN illustration: a point P with arrows to its nearest neighbours in classes A, B and C"><figcaption>KNN illustration (source: medium.com/@sachinsoni600517)</figcaption></figure>
+  <div>
+    <p><strong>Three classes:</strong> PKW, LKW, Else</p>
+    <p><strong>Input:</strong> float array</p>
+    <p><strong>Output:</strong> classification index</p>
+  </div>
+</div>
+
+<h3>Testing results</h3>
+<p class="table-note">Full input = <code>levelTime1</code>, <code>trajectory</code>, <code>thirdSpectrum1</code>, <code>T6_1</code>, <code>Lmax1</code>, <code>RadarPulse</code>.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Training size</th><th>Dataset</th><th>Input</th><th class="num">All</th><th class="num">LKW</th><th class="num">PKW</th><th class="num">Else</th></tr></thead>
+  <tbody>
+    <tr><td>(23243, 188)</td><td>ID4_normalized.csv</td><td>full input</td><td class="num best">0.81524</td><td class="num">0.81905</td><td class="num best">0.94997</td><td class="num">0.23712</td></tr>
+    <tr><td>(6130, 188) – three classes equally distributed</td><td>ID6_normalized.csv</td><td>full input</td><td class="num">0.69073</td><td class="num">0.91007</td><td class="num">0.72144</td><td class="num">0.43209</td></tr>
+    <tr><td>(5794, 188) – special locations removed</td><td>ID9_normalized.csv</td><td>full input</td><td class="num">0.70075</td><td class="num">0.90214</td><td class="num">0.74240</td><td class="num">0.45900</td></tr>
+    <tr><td>(6130, 24)</td><td>ID6_normalized.csv</td><td><code>thirdSpectrum1</code> only</td><td class="num">0.69195</td><td class="num best">0.91223</td><td class="num">0.67797</td><td class="num best">0.47761</td></tr>
+    <tr><td>(2043, 188) – reduced training size</td><td>ID6_normalized.csv</td><td>full input</td><td class="num">0.67813</td><td class="num">0.90214</td><td class="num">0.74240</td><td class="num">0.45900</td></tr>
+    <tr><td>(8173, 188) – increased training size</td><td>ID6_normalized.csv</td><td>full input</td><td class="num">0.69814</td><td class="num">0.91079</td><td class="num">0.73252</td><td class="num">0.45152</td></tr>
+  </tbody>
+</table></div>
+<p class="table-note">The high overall accuracy of ID4 reflects its unbalanced class distribution (dominated by PKW); its “Else” rate is the lowest.</p>
+<ul>
+  <li>Commendable performance with a small dataset; as the volume of data increases, the model improves slightly.</li>
+  <li>The model is good at distinguishing PKW and LKW, but its ability to recognise the “Else” category is relatively weak.</li>
+  <li>The <code>thirdSpectrum</code> feature plays a crucial role in the model’s performance.</li>
+</ul>
+
+<h2>Final results</h2>
+<div class="pair">
+  <ul>
+    <li>Two machine-learning approaches to classify the vehicles</li>
+    <li>Several data-processing steps to improve the classification</li>
+    <li>Improvement of soft skills</li>
+    <li>A poster giving an overview of the project week</li>
+  </ul>
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p25.webp" alt="Project poster" style="max-width:280px"><figcaption>Project poster</figcaption></figure>
+</div>
+
+<h2>Conclusion</h2>
+<ul>
+  <li>The dataset contains a lot of information and measurements.</li>
+  <li>Vehicle classes are unevenly distributed → this gives a false impression of a high-performing model.</li>
+  <li>In-depth analysis of the recorded data has much potential (sound pressure level vs. velocity, …).</li>
+  <li>Model fine-tuning has some impact.</li>
+  <li>Both models classify well between LKW and PKW.</li>
+  <li>The “Else” group is difficult to classify.</li>
+</ul>
+<h2>Outlook</h2>
+<ul>
+  <li>Put more focus on data processing, especially physical analyses.</li>
+  <li>Increase the number of relevant features.</li>
+  <li>Investigate whether some features can be excluded due to missing impact.</li>
+  <li>Determine features for distinguishing between LKW and Else.</li>
+  <li>Collect more data from under-represented classes for training.</li>
+</ul>
+
+<footer>Converted from the project presentation (VehicleIdentification.pdf).</footer>
+</main>
+</body>
+</html>

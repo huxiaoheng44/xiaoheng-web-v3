@@ -10,9 +10,8 @@ dist/
 Thumbs.db
 .sites-runtime/
 node_modules/
-build/
+artifacts/
 *.tsbuildinfo
-test-results/
 playwright-report/
 .env
 backend/.venv/

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FAST AI Movie Web</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← 全部项目</a><a class="lang" href="../en/fast-ai-movie.html">English</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">Web 应用 · FAST AI Movies</p>
+  <h1>FAST AI Movie Web</h1>
+  <p class="lead">一个把文字和图片转化为带 AI 讲解员的定制培训视频的 Web 平台——用户可以编辑生成视频的每一个部分。</p>
+  <ul class="tags"><li>前端</li><li>可复用组件</li><li>视频编辑</li><li>AI 视频生成</li></ul>
+</header>
+
+<figure>
+  <video controls preload="metadata" src="../../videos/FASTAIMOVIE.mp4"></video>
+  <figcaption>视频演示</figcaption>
+</figure>
+
+<h2>项目概览</h2>
+<ol class="flow">
+  <li>输入文字和图片</li><li class="arrow">→</li><li>为视频选择讲解员</li><li class="arrow">→</li><li>定制化培训视频</li>
+</ol>
+<figure class="fig-md">
+  <img src="../assets/FASTAIMOVIE/p02.webp" alt="插图：上传文字、Logo、字体和图片，生成培训视频">
+</figure>
+
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/FASTAIMOVIE/p03.webp" alt="五个步骤：配置企业设计、上传产品资料和合规条例、配置附加设置、生成视频、保持视频更新"></figure>
+  <div>
+    <h3 style="margin-top:0">用户流程</h3>
+    <ol>
+      <li>配置企业视觉设计（Corporate Design）</li>
+      <li>上传已有的产品说明书、合规条例等</li>
+      <li>配置附加设置</li>
+      <li>生成视频</li>
+      <li>保持视频内容最新</li>
+    </ol>
+    <h3>我们的工作</h3>
+    <p>生成视频并使其可编辑——包括章节文字、音频、幻灯片、图标和测验题——以及企业设计配置、管理员设置、素材管理和内部可视化。</p>
+  </div>
+</div>
+
+<h2>章节编辑功能</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p05.webp" alt="视频编辑界面，章节和子章节控件带编号标注">
+</figure>
+<div class="table-wrap"><table>
+  <thead><tr><th>编号</th><th>功能</th></tr></thead>
+  <tbody>
+    <tr><td>①</td><td>新增子章节（major）</td></tr>
+    <tr><td>②</td><td>选择子章节标题</td></tr>
+    <tr><td>③</td><td>A：子章节上移 · B：子章节下移 · C：新增子章节</td></tr>
+    <tr><td>④</td><td>删除子章节</td></tr>
+    <tr><td>⑤</td><td>播放音频</td></tr>
+    <tr><td>⑥</td><td>选择章节标题</td></tr>
+    <tr><td>⑦</td><td>删除整个章节</td></tr>
+  </tbody>
+</table></div>
+
+<h2>章节概览功能</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p06.webp" alt="章节概览侧栏，当前子章节高亮显示">
+</figure>
+<ol>
+  <li>点击折叠或展开章节概览。</li>
+  <li>高亮显示当前正在查看的子章节。</li>
+  <li>点击跳转到对应的子章节。</li>
+</ol>
+
+<h2>图片组件功能</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p07.webp" alt="图片列表面板，含上传、编辑、删除和拖拽插入">
+</figure>
+<ol>
+  <li>从本地上传图片。</li>
+  <li>点击编辑图片。</li>
+  <li>删除图片。</li>
+  <li>将图片从图片列表拖入文本区域即可插入。</li>
+</ol>
+
+<h2>图片编辑功能</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p08.webp" alt="图片编辑器，包含焦点区域、删除、保存、替换按钮和设置面板">
+</figure>
+<ol>
+  <li>编辑焦点区域——移动、缩放和删除。</li>
+  <li>删除当前图片。</li>
+  <li>基于当前修改复制出一张新图片。</li>
+  <li>用当前修改替换原图片。</li>
+  <li>新增焦点区域。</li>
+  <li>编辑图片设置（边框颜色、背景样式、图片类型：全屏 / 半屏 / 小角落、展示时机）。</li>
+</ol>
+
+<h2>可复用组件的集成</h2>
+<figure>
+  <img src="../assets/FASTAIMOVIE/p09.webp" alt="新建视频页面复用了文本框组件和图片组件">
+</figure>
+<ol>
+  <li>可编辑的文本框组件。</li>
+  <li>图片组件（支持拖拽插入和图片编辑）。</li>
+</ol>
+
+<footer>根据项目演示文稿（FASTAIMOVIE.pdf）转换。</footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,13 @@
+DOOM (doom-crt) — bundled third-party game
+==========================================
+
+index.html is the unmodified prebuilt web build of "doom-crt" by Mattias Gustavsson,
+downloaded from https://mattiasgustavsson.com/wasm/doom-crt/ on 2026-10-02.
+
+Source code: https://github.com/mattiasgustavsson/doom-crt
+Engine: fork of id Software's DOOM source release.
+Copyright (c) ZeniMax Media Inc. Licensed under the GNU General Public License 2.0.
+The complete corresponding source is available at the repository above.
+
+Game data: the embedded doom1.wad is the freely distributable DOOM shareware
+episode ("Knee-Deep in the Dead"), distributed unmodified.

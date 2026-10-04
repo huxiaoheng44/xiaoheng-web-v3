@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>You Don't Need RAG</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← All projects</a><a class="lang" href="../zh/you-dont-need-rag.html">中文</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">Tool · Knowledge-base export</p>
+  <h1>You Don’t Need RAG</h1>
+  <p class="lead">Paste a list of URLs, get one clean text file or a structured RAG-ready ZIP – whichever your knowledge base actually needs. A tool built on a simple bet: most “you need RAG” problems fit in a context window.</p>
+  <ul class="tags"><li>Next.js 15</li><li>React 19</li><li>Python scraper</li><li>No vector DB</li><li>No embeddings</li></ul>
+  <div class="links">
+    <a href="https://rag.huxiaoheng.com"><span>Live demo</span>rag.huxiaoheng.com</a>
+    <a href="https://github.com/huxiaoheng44/You-Don-t-Need-RAG"><span>Source</span>github.com/huxiaoheng44/You-Don-t-Need-RAG</a>
+  </div>
+</header>
+
+<h2>Why this exists: RAG has become the default answer to everything</h2>
+<p>Need to query your docs? RAG. Answer questions about a website? RAG. Give context to a chatbot? RAG. The pattern has real merits – but a long tail of real costs.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Cost</th><th>Why it hurts</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Chunking is lossy</strong></td><td>Splitting documents into fixed-size chunks destroys context that spans paragraphs. The model only sees fragments.</td></tr>
+    <tr><td><strong>Retrieval is imperfect</strong></td><td>Embedding similarity does not equal semantic relevance – the model confidently answers from the wrong chunk anyway.</td></tr>
+    <tr><td><strong>Operationally heavy</strong></td><td>An embedding model, a vector database, an ingestion pipeline, a retrieval layer – every piece can fail or drift silently.</td></tr>
+    <tr><td><strong>Evaluation is hard</strong></td><td>No single obvious quality metric. Hallucinations can trace back to any layer of the stack.</td></tr>
+    <tr><td><strong>Latency adds up</strong></td><td>Every query needs an embedding round-trip plus a vector search before the LLM sees a token.</td></tr>
+  </tbody>
+</table></div>
+<blockquote>“The engineering tendency is to reach for the most sophisticated tool available. The complexity was the overhead, not the solution.”</blockquote>
+
+<h2>The real fix: modern LLMs already fit the whole knowledge base</h2>
+<p>GPT-4o, Claude and Gemini 1.5 Pro support 128K to 1M+ token context windows. A 300 KB text file is roughly 75K tokens. No chunking. No retrieval. No pipeline. Just paste.</p>
+<div class="stats">
+  <div class="stat"><b>128K–1M</b><span>tokens of context in modern LLMs</span></div>
+  <div class="stat"><b>75K</b><span>tokens in a 300 KB text file</span></div>
+</div>
+<ol class="flow">
+  <li><strong>Step 1</strong> – scrape the URLs, extract clean readable content</li><li class="arrow">→</li>
+  <li><strong>Step 2</strong> – measure the actual size of the scraped content</li><li class="arrow">→</li>
+  <li><strong>Decision</strong> – fits a context window? paste the plain-text file. Genuinely large / live-updating / multi-tenant? export the RAG ZIP.</li>
+</ol>
+
+<h2>How it works: four steps, no configuration</h2>
+<figure>
+  <img src="../assets/YouDontNeedRAG/p04.webp" alt="Two screenshots: Add sources step and Review sources step">
+</figure>
+<div class="grid">
+  <div class="card"><h4><span class="n">01</span>Add sources</h4><p>Paste anything with links in it – a list, an email, a markdown doc – and every URL is extracted automatically. Local files (PDF, TXT, MD, JSON, CSV) work too.</p></div>
+  <div class="card"><h4><span class="n">02</span>Review</h4><p>URLs and uploaded files are listed separately before scraping starts – nothing runs until you confirm.</p></div>
+  <div class="card"><h4><span class="n">03</span>Scrape</h4><p>The content is scraped and its real size measured.</p></div>
+  <div class="card"><h4><span class="n">04</span>Export</h4><p>Choose plain text or the RAG ZIP, based on the actual content size.</p></div>
+</div>
+
+<h2>Output: two formats, recommended by actual size</h2>
+<p>The tool measures the real scraped content and tells you which format fits – it doesn’t make you guess.</p>
+<div class="pair">
+  <div class="card">
+    <h4>Plain Text</h4>
+    <p><code>knowledge_base.txt</code> – paste directly into any LLM</p>
+<pre><code>=== Page Title ===
+URL: https://example.com
+Scraped: 2026-01-01T00:00:00Z
+
+Full page content here...
+
+---
+
+=== Next Page ===
+...</code></pre>
+    <span class="badge">Recommended when it fits a context window</span>
+  </div>
+  <div class="card">
+    <h4>RAG ZIP</h4>
+    <p><code>knowledge_base.zip</code> – ready for an embedding pipeline</p>
+<pre><code>knowledge_base.zip
+├── manifest.json   # id, url, title, char_count
+└── pages/
+    ├── example-com-abc123.json
+    ├── example-com-docs-def456.json
+    └── ...</code></pre>
+    <span class="badge">Recommended when RAG is actually the right tool</span>
+  </div>
+</div>
+
+<h2>Not anti-RAG: when you actually do need RAG</h2>
+<p>This tool isn’t anti-RAG; it’s pro-pragmatism. RAG is the right call when:</p>
+<ul>
+  <li>Your knowledge base is genuinely large – millions of tokens, not thousands.</li>
+  <li>You need sub-second retrieval over a live-updating corpus.</li>
+  <li>You want to retrieve across many different users’ private datasets.</li>
+  <li>Your queries are specific enough that full-document context would mostly be noise.</li>
+</ul>
+<div class="callout"><p><em>“For everything else – try the plain text file first.”</em></p></div>
+
+<h2>Stack: everything that shipped</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Component</th><th>Details</th></tr></thead>
+  <tbody>
+    <tr><td>Next.js 15</td><td>App Router, React 19</td></tr>
+    <tr><td>Python scraper</td><td>requests, BeautifulSoup, markdownify, pdfplumber</td></tr>
+    <tr><td>File-based jobs</td><td>Async scraping jobs in <code>data/jobs/&lt;uuid&gt;</code></td></tr>
+    <tr><td>Plain text output</td><td>Single concatenated <code>.txt</code>, paste-ready</td></tr>
+    <tr><td>RAG ZIP output</td><td><code>manifest.json</code> + per-page JSON via <code>zipfile</code></td></tr>
+    <tr><td>No vector DB</td><td>The point of the project – zero infrastructure by default</td></tr>
+  </tbody>
+</table></div>
+
+<footer>Converted from the project presentation (YouDontNeedRAG.pdf).</footer>
+</main>
+</body>
+</html>

@@ -8,8 +8,8 @@ root=Path(__file__).resolve().parents[1]
 python=root/'backend/.venv'/('Scripts/python.exe' if os.name=='nt' else 'bin/python')
 commands={
     'dev':['-m','uvicorn','backend.main:app','--host','127.0.0.1','--port','8000'],
-    'index':['-m','backend.app.knowledge.store'],
-    'test':['-m','pytest','backend/tests','-q'],
+    'index':['-m','backend.app.knowledge.store'], # Refreshes the current default-branch snapshot only; no Git history.
+    'test':['-m','pytest','backend/tests','-q','-o','cache_dir=artifacts/pytest-cache'],
     'smoke':['-m','backend.smoke'],
 }
 if len(sys.argv)!=2 or sys.argv[1] not in commands: raise SystemExit('Usage: python backend/run.py dev|index|test|smoke')

@@ -1,75 +1,70 @@
 from typing import Literal
 from pydantic import BaseModel, Field, ConfigDict, model_validator
 
-PROJECTS = ['3d-reconstruction', 'drone-simulator', 'fast-ai-movie', 'vehicle-identification']
-FOLDERS = ['projects', 'about', 'experience', 'contact']
-TABS = ['profile', 'experience', 'education', 'skills', 'research']
-NAV = {'openWindow', 'openProject', 'selectAboutTab', 'scrollToSection'}
+PRESENTATION_CAPABILITIES = {'highlight', 'guideTo'}
+PRESENTATION_STATES = {'idle', 'observing', 'thinking', 'speaking', 'guiding', 'dozing', 'sleeping', 'waking'}
 
 class Strict(BaseModel):
     model_config = ConfigDict(extra='forbid')
 
+class TargetNames(Strict):
+    en: str = Field(min_length=1, max_length=120)
+    zh: str = Field(min_length=1, max_length=120)
+
 class Target(Strict):
     id: str = Field(max_length=160, pattern=r'^[a-zA-Z0-9:_-]+$')
-    label: str = Field(max_length=180)
-    visible: bool
-    rect: list[float] = Field(min_length=4, max_length=4)
-    excerpt: str = Field(default='', max_length=500)
+    available: bool
+    visible: bool | None = None
+    guideable: bool | None = None
+    capabilities: list[Literal['highlight', 'guideTo']] = Field(default_factory=list, max_length=2)
+    names: TargetNames
+    projectId: str | None = Field(default=None, max_length=100, pattern=r'^[a-z0-9-]+$')
+    tag: str | None = Field(default=None, max_length=120)
 
 class PageContext(Strict):
     language: Literal['en', 'zh']
     contextVersion: int = Field(ge=0)
     activeWindow: str | None = Field(default=None, max_length=100)
+    activePanel: str = Field(default='', max_length=100)
     windows: list[str] = Field(default_factory=list, max_length=8)
     aboutTab: str = Field(default='profile', max_length=30)
     targets: list[Target] = Field(default_factory=list, max_length=100)
 
-class Point(Strict):
-    x: float = Field(ge=0, le=1)
-    y: float = Field(ge=0, le=1)
-    t: float = Field(ge=0)
-
 class BehaviorEvent(Strict):
-    type: Literal['click', 'hover', 'visit', 'scroll', 'visibility']
+    type: Literal['click', 'hover', 'dwell', 'visit', 'visibility']
     target: str = Field(max_length=160)
+    projectId: str | None = Field(default=None, max_length=100, pattern=r'^[a-z0-9-]+$')
+    tag: str | None = Field(default=None, max_length=120)
     duration: float = Field(default=0, ge=0, le=7200000)
-    value: float = Field(default=0, ge=0, le=1)
 
 class Behavior(Strict):
+    route: str = Field(max_length=100)
+    window: str | None = Field(default=None, max_length=100)
+    activePanel: str = Field(default='', max_length=100)
+    locale: Literal['en', 'zh']
+    dnd: bool = False
+    proactiveCount: int = Field(default=0, ge=0, le=2)
     events: list[BehaviorEvent] = Field(default_factory=list, max_length=60)
-    trajectory: list[Point] = Field(default_factory=list, max_length=20)
     idleSeconds: float = Field(default=0, ge=0, le=7200)
 
 class ChatRequest(Strict):
     requestId: str = Field(min_length=8, max_length=80)
     message: str = Field(default='', max_length=4000)
+    messageLocale: Literal['en', 'zh'] | None = None
     pageContext: PageContext
-    companion: bool = False
-    quiet: bool = False
+    dnd: bool = False
+    guideStep: bool = False
     behavior: Behavior | None = None
-    @model_validator(mode='after')
-    def consent(self):
-        if not self.companion:
-            self.behavior = None
-        return self
 
-class Action(Strict):
-    type: Literal['moveGhost', 'playGesture', 'highlightTarget', 'openWindow', 'openProject', 'selectAboutTab', 'scrollToSection', 'showHint']
+class PresentationInstruction(Strict):
+    """A display-only instruction. The client remains authoritative over targets."""
+    type: Literal['speak', 'setState', 'highlight', 'guideTo', 'showHint', 'showRecommendation']
     target: str = Field(default='', max_length=160, pattern=r'^[a-zA-Z0-9:_-]*$')
     value: str = Field(default='', max_length=200)
     @model_validator(mode='after')
     def allowed(self):
-        if self.type == 'openWindow' and self.target not in FOLDERS: raise ValueError('Unknown folder')
-        if self.type == 'openProject' and self.target not in PROJECTS: raise ValueError('Unknown project')
-        if self.type == 'selectAboutTab' and self.target not in TABS: raise ValueError('Unknown About tab')
-        if self.type == 'playGesture' and self.value not in ['idle','look','point','think','nod']: raise ValueError('Unknown gesture')
-        if self.type == 'showHint' and not self.value.strip(): raise ValueError('Empty hint')
+        if self.type in PRESENTATION_CAPABILITIES and not self.target: raise ValueError('Target required')
+        if self.type in {'speak', 'showHint', 'showRecommendation'} and not self.value.strip(): raise ValueError('Text required')
+        if self.type == 'setState' and self.value not in PRESENTATION_STATES: raise ValueError('Unknown presentation state')
+        if self.type not in PRESENTATION_CAPABILITIES and self.target: raise ValueError('Target is not allowed for this instruction')
         return self
-
-class ResumeRequest(Strict):
-    requestId: str = Field(min_length=8, max_length=80)
-    actionId: str = Field(max_length=80)
-    approved: bool | None = None
-    status: Literal['success', 'failed', 'cancelled'] | None = None
-    detail: str = Field(default='', max_length=300)
-    pageContext: PageContext

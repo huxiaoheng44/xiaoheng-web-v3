@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>车辆噪声分类</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← 全部项目</a><a class="lang" href="../en/vehicle-identification.html">English</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">Müller-BBM Industry Solutions GmbH · 德国联邦环境部项目 · TUM 1.000+ Project</p>
+  <h1>通过测量确定德国车队的噪声特性</h1>
+  <p class="lead">基于路边声学测量数据，区分小汽车（PKW）、重型车辆（LKW）和其他车辆——在为期五天的项目周中完成了数据分析、特征工程以及两种机器学习方法。</p>
+  <ul class="tags"><li>Python</li><li>pandas</li><li>TensorFlow / Keras</li><li>Transformer</li><li>全连接神经网络</li><li>KNN</li><li>声学</li></ul>
+</header>
+
+<h2>德国联邦环境部项目</h2>
+<p>在 <strong>30 个不同地点</strong>进行测量，以确定德国车队的<strong>噪声特性</strong>。</p>
+<div class="callout"><p><strong>项目目标：</strong>开发一种能够区分小汽车和重型车辆的分类方法。</p></div>
+<figure class="fig-md">
+  <img src="../assets/VehicleIdentification/p02.webp" alt="路边麦克风杆 → 声音信号 → 小汽车或卡车">
+  <figcaption>路边测量 → 声学信号 → 车辆类别</figcaption>
+</figure>
+
+<h2>时间安排</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>日期</th><th>工作内容</th></tr></thead>
+  <tbody>
+    <tr><td>第 1 天 – 1月8日</td><td>项目启动 · 问题介绍 · 项目管理 · 数据处理：分析数据分布、尝试不同的数据特征 · 机器学习：尝试不同模型</td></tr>
+    <tr><td>第 2 天 – 1月9日</td><td>继续数据处理 · 机器学习：构建一个整体大模型</td></tr>
+    <tr><td>第 3 天 – 1月10日</td><td>继续数据处理 · 模型训练 · 模型测试 · 性能分析 · 探索其他方法 · <strong>复盘会议</strong></td></tr>
+    <tr><td>第 4 天 – 1月11日</td><td>深入探索其他方法 · 分析结果 · 撰写文档</td></tr>
+    <tr><td>第 5 天 – 1月12日</td><td>项目展示 · 制作海报</td></tr>
+  </tbody>
+</table></div>
+
+<h2>解决思路</h2>
+<ol class="flow">
+  <li>数据</li><li class="arrow">→</li><li>数据处理</li><li class="arrow">+</li><li>构建机器学习模型</li><li class="arrow">→</li>
+  <li>模型训练</li><li class="arrow">⇄</li><li>模型验证与参数调整</li><li class="arrow">→</li><li>模型测试</li><li class="arrow">→</li><li>结果展示</li>
+</ol>
+<figure>
+  <img src="../assets/VehicleIdentification/p04.webp" alt="从数据到结果展示的流程图标">
+</figure>
+
+<h2>采集的数据</h2>
+<p>每条车辆通过记录包含 34 个字段。原幻灯片中被框出的字段即为建模时选用的特征。</p>
+<figure>
+  <img src="../assets/VehicleIdentification/p05.webp" alt="34 个采集字段及说明，选用字段被高亮">
+  <figcaption>全部采集字段（高亮为选用字段）</figcaption>
+</figure>
+<h3>数据示例</h3>
+<figure>
+  <img src="../assets/VehicleIdentification/p06.webp" alt="三幅图：车辆通过时的声级随时间变化、三分之一倍频程频谱、定位轨迹">
+  <figcaption>通过声级 · 三分之一倍频程频谱 · 定位轨迹</figcaption>
+</figure>
+<ul>
+  <li><code>Lmax</code>：最大声压级（<code>levelTime</code> 曲线的最大值）
+    <ul><li><code>T_6</code>：<code>levelTime</code> 曲线在 (Lmax − 6) dB 处的峰宽</li></ul></li>
+  <li><code>thirdSpectrum</code>：在最大声级时刻附近一个短时间段内测得的三分之一倍频程频谱</li>
+  <li><code>trajectory</code>：车辆定位量（麦克风对轴线与声音方向之间的夹角）</li>
+</ul>
+
+<h2>数据处理</h2>
+<h3>将轨迹斜率作为额外特征</h3>
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p07.webp" alt="小汽车和卡车的定位轨迹，以及轨迹的逐点斜率"></figure>
+  <div>
+    <ul>
+      <li>卡车车身更长 ⇒ 定位角增长更慢。</li>
+      <li>逐点计算的 <code>trajectory</code> 斜率可以作为额外的数据特征。</li>
+    </ul>
+  </div>
+</div>
+
+<h3>过滤声级-时间曲线中的噪声</h3>
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p08.webp" alt="声级-时间曲线，峰值下 6 dB 的 T_6 区间以绿色标出，其余部分为红色"></figure>
+  <div>
+    <ul>
+      <li>将 <code>levelTime</code> 数据裁剪到 T_6 区间，有助于去除录音中非目标车辆产生的噪声。</li>
+      <li>对于紧随其后的车辆需谨慎处理（6 dB 准则可能无法分辨两个峰）。</li>
+    </ul>
+  </div>
+</div>
+
+<h3>通过归一化去掉特征</h3>
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p09.webp" alt="PKW、LKW 和其他车辆的 Lmax 与车速散点图及回归曲线"><figcaption>Lmax 与车速的散点图及回归曲线</figcaption></figure>
+  <div>
+    <ul>
+      <li>最大声压级（Lmax）随 lg(车速) 线性增长。</li>
+      <li>若用 lg(车速) 对 Lmax 进行归一化，就可以舍弃 <code>velocity</code> 特征。</li>
+    </ul>
+  </div>
+</div>
+
+<h3>车辆类别分布</h3>
+<figure class="fig-md">
+  <img src="../assets/VehicleIdentification/p10.webp" alt="车辆类别出现次数柱状图；PKW 约 30000，LKW 约 3500，其他类别很少">
+  <figcaption>PKW 在数据集中占绝对多数（约 30000 条），LKW 次之（约 3500 条）</figcaption>
+</figure>
+
+<h3>特征筛选</h3>
+<p><code>df</code>——全部数据点、全部特征（40114 × <strong>34</strong>）→ <code>filtered_df</code>——全部数据点、建议特征（40114 × <strong>9</strong>）：</p>
+<p><code>ID</code> · <code>MP</code> · <code>Lmax1</code> · <code>levelTime1</code> · <code>T6_1</code> · <code>thirdSpectrum1</code> · <code>trajectory</code> · <code>radarPulses</code> · <code>vehicleClass</code></p>
+
+<h3>调整类别分布</h3>
+<p>先打乱数据表，再为每个类别抽取相同数量的数据点，得到类别比例 <code>Else : LKW : PKW</code> 相等的 <code>filtered_final_df</code>（<strong>10563</strong> × 9）。</p>
+<figure>
+  <img src="../assets/VehicleIdentification/p12.webp" alt="打乱后的数据表片段，以及平衡前后的类别分布">
+  <figcaption>打乱后的数据表，以及平衡前后的类别分布</figcaption>
+</figure>
+
+<h3>归一化</h3>
+<ul>
+  <li><strong>单个数值：</strong>求出该列的最小值和最大值，按 <code>new_x = (x − min) / (max − min)</code> 归一化。</li>
+  <li><strong>数组：</strong>将每个数组中的每个值除以该列中出现的最大值。</li>
+</ul>
+<p>剔除具有特殊条件的测量地点：</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>地点</th><th>特殊条件</th></tr></thead>
+  <tbody>
+    <tr><td>MP 30、MP 5</td><td>路面</td></tr>
+    <tr><td>MP 12、MP 13</td><td>冬季</td></tr>
+  </tbody>
+</table></div>
+
+<h3>数据集</h3>
+<p class="table-note">状态：<span style="opacity:.6">已设计</span>（灰色）、已创建、<strong>已使用</strong>（高亮）。</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>名称</th><th>说明</th><th class="num">规模</th></tr></thead>
+  <tbody>
+    <tr><td>ID1</td><td>全部数据点，全部特征</td><td class="num">29882 × 34</td></tr>
+    <tr><td>ID2</td><td>全部数据点，选定特征</td><td class="num">39676 × 9</td></tr>
+    <tr class="dim"><td>ID3</td><td>全部数据点，全部特征，3 个类别</td><td class="num"></td></tr>
+    <tr class="hl"><td>ID4</td><td>全部数据点，选定特征，3 个车辆类别</td><td class="num">39676 × 9</td></tr>
+    <tr class="dim"><td>ID5</td><td>全部特征，3 个均匀分布的车辆类别</td><td class="num"></td></tr>
+    <tr class="hl"><td>ID6</td><td>选定特征，3 个均匀分布的车辆类别</td><td class="num">10419 × 9</td></tr>
+    <tr class="dim"><td>ID7</td><td>全部特征，3 个均匀分布的类别，特殊地点数据放在末尾</td><td class="num"></td></tr>
+    <tr><td>ID8</td><td>选定特征，3 个均匀分布的车辆类别，特殊地点数据放在末尾</td><td class="num">10419 × 9</td></tr>
+    <tr class="hl"><td>ID9</td><td>选定特征，3 个均匀分布的车辆类别，剔除特殊地点</td><td class="num">9873 × 9</td></tr>
+    <tr class="dim"><td>ID10</td><td>选定特征，3 个均匀分布的车辆类别，附加特征</td><td class="num"></td></tr>
+  </tbody>
+</table></div>
+
+<h2>方法一：神经网络</h2>
+<p>模型 1 是作用于 <code>levelTime1</code> 序列的 Transformer；其输出与其他参数合并后输入模型 2——一个全连接神经网络，输出三个类别之一：<code>PKW</code>、<code>LKW</code> 或 <code>ELSE</code>。</p>
+<figure>
+  <img src="../assets/VehicleIdentification/p15.webp" alt="模型 1 Transformer 处理 levelTime1，与其他参数一起输入模型 2 全连接网络，输出 PKW、LKW、ELSE">
+</figure>
+<figure>
+  <img src="../assets/VehicleIdentification/p16.webp" alt="Keras 模型结构图：输入 → 多头注意力 → 层归一化 → 全局最大池化，与第二个输入拼接 → 全连接/Dropout 层 → 3 个输出">
+  <figcaption>Keras 模型结构。输入 1——24 个频带的三分之一倍频程频谱（24×1）→ 多头注意力 → 层归一化 → 全局最大池化（1）；输入 2——两个标量特征（Lmax / 车速）→ 拼接（3）→ Dense(64) → Dropout → Dense(64) → Dropout → Dense(3)</figcaption>
+</figure>
+
+<h3>模型测试</h3>
+<figure>
+  <img src="../assets/VehicleIdentification/p17.webp" alt="15 个 epoch 内损失从约 0.8 降至约 0.62，准确率升至约 0.70">
+  <figcaption>每轮损失与准确率——epochs = 15，batch_size = 64，learning_rate = 1e-2</figcaption>
+</figure>
+
+<h3>测试准确率</h3>
+<p class="table-note">来自测试组 ID 2 的混淆矩阵（行 = 真实标签，列 = 预测标签）。</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>真实 \ 预测</th><th class="num">LKW</th><th class="num">PKW</th><th class="num">Else</th><th class="num">真正例率</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">LKW</th><td class="num best">1574</td><td class="num">22</td><td class="num">125</td><td class="num">91.4%</td></tr>
+    <tr><th scope="row">PKW</th><td class="num">16</td><td class="num best">1470</td><td class="num">210</td><td class="num">86.7%</td></tr>
+    <tr><th scope="row">Else</th><td class="num">267</td><td class="num">824</td><td class="num best">600</td><td class="num">35.5%</td></tr>
+  </tbody>
+</table></div>
+<p class="table-note">“Else”类中有 48.7% 被误判为 PKW，15.8% 被误判为 LKW。</p>
+<figure class="fig-md">
+  <img src="../assets/VehicleIdentification/p18.webp" alt="带真正例率的混淆矩阵热力图">
+</figure>
+
+<h3>结果</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>分组</th><th class="num">准确率</th><th class="num">PKW（TPR）</th><th class="num">LKW（TPR）</th><th class="num">Else（TPR）</th></tr></thead>
+  <tbody>
+    <tr class="hl"><td>模型验证——<em>包含</em>特殊路段的训练和测试</td><td class="num">0.7091</td><td class="num">0.867</td><td class="num">0.914</td><td class="num">0.355</td></tr>
+    <tr><td>用含特殊路段数据训练，在全部数据集上测试</td><td class="num best">0.7637</td><td class="num">0.836</td><td class="num">0.938</td><td class="num">0.362</td></tr>
+    <tr class="hl"><td>模型验证——<em>不含</em>特殊路段的训练和测试</td><td class="num">0.7062</td><td class="num">0.866</td><td class="num">0.922</td><td class="num">0.354</td></tr>
+    <tr><td>用含特殊路段数据训练，在不含特殊路段的数据上测试</td><td class="num">0.6759</td><td class="num">0.941</td><td class="num">0.965</td><td class="num">0.118</td></tr>
+    <tr><td>用不含特殊路段数据训练，在含特殊路段的数据上测试</td><td class="num" style="color:var(--warn);font-weight:700">0.4532</td><td class="num">0.914</td><td class="num">0.765</td><td class="num">0.45</td></tr>
+  </tbody>
+</table></div>
+<ul>
+  <li>在给定数据集上，能够稳健地区分 LKW（卡车）和 PKW（小汽车）。</li>
+  <li>识别“Else”组存在明显局限，其真正例率较低。</li>
+  <li>用含特殊路段数据训练的模型在其他数据集上表现良好，反之则不然。建议使用包含特殊路段的数据集进行训练。</li>
+</ul>
+
+<h2>方法二：传统机器学习——K 近邻（KNN）</h2>
+<div class="pair">
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p21.webp" alt="KNN 示意图：点 P 指向 A、B、C 三类中的最近邻"><figcaption>KNN 示意图（来源：medium.com/@sachinsoni600517）</figcaption></figure>
+  <div>
+    <p><strong>三个类别：</strong>PKW、LKW、Else</p>
+    <p><strong>输入：</strong>浮点数组</p>
+    <p><strong>输出：</strong>类别索引</p>
+  </div>
+</div>
+
+<h3>测试结果</h3>
+<p class="table-note">完整输入 = <code>levelTime1</code>、<code>trajectory</code>、<code>thirdSpectrum1</code>、<code>T6_1</code>、<code>Lmax1</code>、<code>RadarPulse</code>。</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>训练规模</th><th>数据集</th><th>输入</th><th class="num">整体</th><th class="num">LKW</th><th class="num">PKW</th><th class="num">Else</th></tr></thead>
+  <tbody>
+    <tr><td>(23243, 188)</td><td>ID4_normalized.csv</td><td>完整输入</td><td class="num best">0.81524</td><td class="num">0.81905</td><td class="num best">0.94997</td><td class="num">0.23712</td></tr>
+    <tr><td>(6130, 188)——三类均匀分布</td><td>ID6_normalized.csv</td><td>完整输入</td><td class="num">0.69073</td><td class="num">0.91007</td><td class="num">0.72144</td><td class="num">0.43209</td></tr>
+    <tr><td>(5794, 188)——剔除特殊地点</td><td>ID9_normalized.csv</td><td>完整输入</td><td class="num">0.70075</td><td class="num">0.90214</td><td class="num">0.74240</td><td class="num">0.45900</td></tr>
+    <tr><td>(6130, 24)</td><td>ID6_normalized.csv</td><td>仅 <code>thirdSpectrum1</code></td><td class="num">0.69195</td><td class="num best">0.91223</td><td class="num">0.67797</td><td class="num best">0.47761</td></tr>
+    <tr><td>(2043, 188)——缩小训练规模</td><td>ID6_normalized.csv</td><td>完整输入</td><td class="num">0.67813</td><td class="num">0.90214</td><td class="num">0.74240</td><td class="num">0.45900</td></tr>
+    <tr><td>(8173, 188)——扩大训练规模</td><td>ID6_normalized.csv</td><td>完整输入</td><td class="num">0.69814</td><td class="num">0.91079</td><td class="num">0.73252</td><td class="num">0.45152</td></tr>
+  </tbody>
+</table></div>
+<p class="table-note">ID4 整体准确率高，是因为其类别分布不平衡（以 PKW 为主）；它的“Else”识别率也是最低的。</p>
+<ul>
+  <li>在小数据集上表现不错；随着数据量增加，模型略有提升。</li>
+  <li>模型擅长区分 PKW 和 LKW，但识别“Else”类的能力相对较弱。</li>
+  <li><code>thirdSpectrum</code> 特征对提升模型性能起着关键作用。</li>
+</ul>
+
+<h2>最终成果</h2>
+<div class="pair">
+  <ul>
+    <li>两种用于车辆分类的机器学习方法</li>
+    <li>多个改进分类效果的数据处理步骤</li>
+    <li>软技能的提升</li>
+    <li>一张概述项目周的海报</li>
+  </ul>
+  <figure style="margin:0"><img src="../assets/VehicleIdentification/p25.webp" alt="项目海报" style="max-width:280px"><figcaption>项目海报</figcaption></figure>
+</div>
+
+<h2>结论</h2>
+<ul>
+  <li>数据集包含大量信息和测量值。</li>
+  <li>车辆类别分布不均 → 容易造成模型表现很好的错觉。</li>
+  <li>对录制数据进行深入分析潜力很大（声压级与车速的关系等）。</li>
+  <li>模型微调有一定效果。</li>
+  <li>两种模型都能很好地区分 LKW 和 PKW。</li>
+  <li>“Else”组很难分类。</li>
+</ul>
+<h2>展望</h2>
+<ul>
+  <li>更加重视数据处理，尤其是物理层面的分析。</li>
+  <li>增加相关特征的数量。</li>
+  <li>研究是否可以剔除影响不大的特征。</li>
+  <li>寻找能够区分 LKW 和 Else 的特征。</li>
+  <li>为样本较少的类别收集更多训练数据。</li>
+</ul>
+
+<footer>根据项目演示文稿（VehicleIdentification.pdf）转换。</footer>
+</main>
+</body>
+</html>

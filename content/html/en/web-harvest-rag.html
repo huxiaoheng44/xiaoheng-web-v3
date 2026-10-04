@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Harvest RAG</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← All projects</a><a class="lang" href="../zh/web-harvest-rag.html">中文</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">RAG · Retrieval research · Production deployment</p>
+  <h1>Web Harvest RAG</h1>
+  <p class="lead">A config-driven RAG chatbot starter – scrape any site or PDF, chunk and embed it, retrieve with hybrid vector + keyword search, and chat over it. Built, benchmarked against a public IR baseline, and deployed to production.</p>
+  <ul class="tags"><li>Next.js 15</li><li>FastAPI</li><li>Supabase pgvector</li><li>FAISS</li><li>BM25</li><li>OpenAI</li><li>Docker + nginx</li></ul>
+  <div class="links">
+    <a href="https://webrag.huxiaoheng.com"><span>Live demo</span>webrag.huxiaoheng.com</a>
+    <a href="https://github.com/huxiaoheng44/web-harvest-rag"><span>Source</span>github.com/huxiaoheng44/web-harvest-rag</a>
+  </div>
+</header>
+
+<h2>Architecture: Scrape → Chunk → Embed → Retrieve → Chat</h2>
+<p>Six stages, each independently swappable – the retrieval stage is where most of the engineering work actually happened.</p>
+<div class="grid">
+  <div class="card"><h4><span class="n">1</span>Scrape</h4><p><code>config/sources.json</code> → <code>scraper.py</code> pulls HTML pages and PDFs and extracts clean readable content.</p></div>
+  <div class="card"><h4><span class="n">2</span>Chunk</h4><p>Fixed-size token windows or structural (heading-aware) splitting – compared systematically, not assumed.</p></div>
+  <div class="card"><h4><span class="n">3</span>Embed</h4><p>OpenAI <code>text-embedding-3-small</code>, cached by content hash so re-runs don’t re-pay the API.</p></div>
+  <div class="card"><h4><span class="n">4</span>Retrieve</h4><p>Vector (FAISS / Supabase pgvector) + BM25, fused.</p></div>
+  <div class="card"><h4><span class="n">5</span>Generate</h4><p>The FastAPI backend builds context from retrieved chunks, calls the chat model and stores the conversation.</p></div>
+  <div class="card"><h4><span class="n">6</span>Chat</h4><p>Next.js UI – add sources, watch the index build live, ask questions, see cited sources.</p></div>
+</div>
+<div class="callout"><p>Production uses <strong>Supabase pgvector</strong> for retrieval. A separate, standalone module – <strong>retrieval_lab</strong> – exists purely to answer “is this actually the best way to do stage 4?” without touching the live app.</p></div>
+
+<h2>retrieval_lab: a standalone experimentation harness</h2>
+<p>Questions about retrieval quality, each answered with real numbers instead of assumptions – kept fully separate from the production app.</p>
+<div class="grid">
+  <div class="card"><h4><span class="n">1</span>Chunking strategies</h4><p>Fixed-size token windows vs. structural (heading-aware) splitting, compared head to head.</p></div>
+  <div class="card"><h4><span class="n">2</span>Vector vs. BM25 vs. Hybrid</h4><p>FAISS cosine search, rank_bm25 keyword search, and two fusion strategies (linear + RRF).</p></div>
+  <div class="card"><h4><span class="n">3</span>Cross-encoder rerank</h4><p>ms-marco-MiniLM reranking the hybrid candidate pool – tested, not assumed to help.</p></div>
+  <div class="card"><h4><span class="n">4</span>Chunk-size sweep</h4><p>200 / 500 / 1,000-token chunks, measuring the completeness-vs-noise trade-off directly.</p></div>
+  <div class="card"><h4><span class="n">5</span>LLM query rewriting</h4><p>Paraphrase each query into variants, retrieve for each, merge via reciprocal rank fusion.</p></div>
+  <div class="card"><h4><span class="n">6</span>Error-bucket analysis</h4><p>Every imperfect-recall query auto-sorted into a failure category, then read through by hand.</p></div>
+  <div class="card"><h4><span class="n">7</span>Alpha tuning</h4><p>Hybrid fusion weight swept on a held-out validation split, evaluated on a separate test split.</p></div>
+  <div class="card"><h4><span class="n">8</span>LLM-as-judge answer eval</h4><p>Not just “was the right chunk retrieved” – is the generated answer actually faithful to it?</p></div>
+</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>Corpus</th><th>Content</th></tr></thead>
+  <tbody>
+    <tr><td>A – MULTIVAC</td><td>24 scraped company pages/PDFs, 30 hand-labeled queries</td></tr>
+    <tr><td>B – NFCorpus</td><td>Public BEIR benchmark: 3,633 docs, 323 official test queries</td></tr>
+  </tbody>
+</table></div>
+
+<h2>Five real bugs, found by actually testing</h2>
+<p>Every one of these was caught by running the system end to end and looking hard at the output – not by code review alone.</p>
+<div class="grid">
+  <div class="card"><span class="badge">Security</span><h4>Unauthenticated secrets endpoint</h4><p>The in-app settings panel let anyone GET the real OpenAI/Supabase keys in plain JSON with zero auth. Disabled in production before the first public deploy.</p></div>
+  <div class="card"><span class="badge">Correctness</span><h4>Zero-fill scoring bug in hybrid fusion</h4><p>Candidates outside one method’s top-20 were scored 0 instead of their real value – unfairly penalizing chunks only one method liked. Fixed with exact re-scoring over the full candidate union.</p></div>
+  <div class="card"><span class="badge">Reproducibility</span><h4>Non-deterministic recall@k</h4><p>The same query, index and alpha produced three different recall@1 scores across three runs – a bare Python <code>set()</code>’s hash-seed-dependent iteration order was silently reshuffling score ties.</p></div>
+  <div class="card"><span class="badge">Eval calibration</span><h4>LLM judge conflated two failure modes</h4><p>A correct “I can’t confirm this” refusal was scored as harshly as a hallucination. Average score jumped 3.32 → 4.92 / 5 once the judge prompt separated retrieval failure from generation failure.</p></div>
+  <div class="card"><span class="badge">Production</span><h4>Dependency drift broke the live chat</h4><p>An unpinned supabase client picked up a newer API where <code>.insert().select().single()</code> no longer exists – every <code>/chat</code> call returned 500. Found by smoke-testing the fresh deploy, not by CI.</p></div>
+</div>
+
+<h2>Findings: what actually won, and where</h2>
+<h3>MULTIVAC – structural-500</h3>
+<p class="table-note">recall@k, 30 hand-labeled queries</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Method</th><th class="num">Recall@1</th><th class="num">Recall@5</th></tr></thead>
+  <tbody>
+    <tr><td>Vector only</td><td class="num">60.0 %</td><td class="num">93.3 %</td></tr>
+    <tr><td>BM25 only</td><td class="num">75.0 %</td><td class="num">95.0 %</td></tr>
+    <tr><td>Hybrid (linear)</td><td class="num best">78.3 %</td><td class="num best">96.7 %</td></tr>
+  </tbody>
+</table></div>
+<h3>NFCorpus – fixed-500 (BEIR)</h3>
+<p class="table-note">recall@k, 323 official test queries, tuned α = 0.8</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Method</th><th class="num">Recall@5</th><th class="num">Recall@100</th></tr></thead>
+  <tbody>
+    <tr><td>Vector only</td><td class="num">13.9 %</td><td class="num">35.4 %</td></tr>
+    <tr><td>BM25 only</td><td class="num">11.6 %</td><td class="num">23.0 %</td></tr>
+    <tr><td>Hybrid (linear)</td><td class="num best">14.4 %</td><td class="num best">36.0 %</td></tr>
+  </tbody>
+</table></div>
+<div class="callout">
+  <p><strong>BM25 wins on MULTIVAC</strong> – brand-heavy content (“MLC”, “PEAQ”, “GS1 Digital Link”) rewards exact keyword match. <strong>Vector wins on NFCorpus</strong> – technical medical abstracts vs. colloquial queries create a vocabulary gap that only semantic search bridges. Hybrid beats the better of the two on both corpora, but only once tuned per corpus. Neither method is a safe default.</p>
+</div>
+<p class="table-note">Validation: this harness’s BM25 recall@100 on NFCorpus (23.0 %) lands within 2 points of BEIR’s published official BM25 baseline (25.0 %) – the low absolute numbers are a property of the dataset, not a bug in the implementation.</p>
+
+<h2>Deployed, not just demoed</h2>
+<p><a href="https://webrag.huxiaoheng.com">webrag.huxiaoheng.com</a> – a real conversation, retrieving from the production index.</p>
+<figure class="fig-md">
+  <img src="../assets/WebHarvestRAG/p06.webp" alt="Screenshot of the Web Harvest Chatbot answering a question with cited sources">
+</figure>
+<div class="grid">
+  <div class="card"><h4>Infrastructure</h4><p>Docker Compose – isolated FastAPI + Next.js containers, bound to localhost only, <code>restart: unless-stopped</code>.</p></div>
+  <div class="card"><h4>Edge</h4><p>nginx reverse proxy + Let’s Encrypt TLS, sharing the host with two other live projects.</p></div>
+  <div class="card"><h4>Data</h4><p>Production Supabase index rebuilt end to end: 81 → 340 chunks across all 24 source documents.</p></div>
+  <div class="card"><h4>Verified</h4><p>Real question in, real cited answer out – checked through the public HTTPS domain, not just localhost.</p></div>
+</div>
+
+<h2>Stack: everything that shipped</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>Technology</th><th>Role</th></tr></thead>
+  <tbody>
+    <tr><td>Next.js 15</td><td>Chat UI, App Router</td></tr>
+    <tr><td>FastAPI</td><td>RAG, sources, conversations</td></tr>
+    <tr><td>Supabase</td><td>pgvector, <code>match_chunks</code> RPC</td></tr>
+    <tr><td>OpenAI</td><td>gpt-4o-mini + text-embedding-3-small</td></tr>
+    <tr><td>FAISS</td><td>Local vector search (retrieval_lab)</td></tr>
+    <tr><td>rank_bm25</td><td>Keyword search (retrieval_lab)</td></tr>
+    <tr><td>sentence-transformers</td><td>Cross-encoder rerank</td></tr>
+    <tr><td>Docker + nginx</td><td>Production deployment</td></tr>
+  </tbody>
+</table></div>
+
+<footer>Converted from the project presentation (WebHarvestRAG.pdf).</footer>
+</main>
+</body>
+</html>

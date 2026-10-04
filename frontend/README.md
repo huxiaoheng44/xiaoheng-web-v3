@@ -1,19 +1,7 @@
-# Frontend
+# CRT.AGENT frontend
 
-Only browser-facing code lives here. `src/features/ghost` is the Ghost UI/controller,
-not the LLM backend: it collects consented events, sends HTTP requests, renders chat,
-and executes allowlisted UI actions. It never imports Python or reads backend/.env.
+`src/features/crt-agent/` owns the semantic target registry, safe SSE rendering, local guidance, DND and Activity panel. Only registered, in-scope targets with declared capabilities can render; `guideTo` can use an off-screen guideable target and the browser computes direction locally.
 
-`src/content` renders reviewed data imported from `../content` at build time.
-Images, PDF and video files are imported by Vite and emitted into the root `build/`.
+The client sends a session-only semantic summary, never coordinates, paths, DOM text, selectors, input text, prompts, reasoning or tokens. It cannot execute navigation, scrolling, clicks, input, window opening or tab changes.
 
-Run `npm install` at the repository root, then root `npm run dev`, `npm run build`,
-or `npm test`. Alternatively `npm run dev --workspace frontend`.
-
-Local `/api` requests proxy to port 8000. For separate production hosting, set only
-the public `VITE_GHOST_API_URL` in `frontend/.env`. Never put provider keys here.
-
-Browser tests under `scripts/check-*.mjs` resolve the repository automatically and
-save screenshots to root `test-results/`. They use mocks rather than paid model calls.
-Asset-processing scripts resolve the frontend directory and preserve original art
-under `art-source/`; runtime art is in `public/assets/`.
+Run `npm run dev`, `npm run test --workspace frontend`, `npm run test:browser`, and `npm run build --workspace frontend`. `npm run test:live-dnd` requires local DeepSeek configuration.

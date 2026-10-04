@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web Harvest RAG</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← 全部项目</a><a class="lang" href="../en/web-harvest-rag.html">English</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">RAG · 检索研究 · 生产部署</p>
+  <h1>Web Harvest RAG</h1>
+  <p class="lead">一个配置驱动的 RAG 聊天机器人脚手架——抓取任意网站或 PDF，分块并向量化，用向量 + 关键词混合检索，然后基于这些内容对话。已完成开发、对照公开信息检索基线做了评测，并部署到生产环境。</p>
+  <ul class="tags"><li>Next.js 15</li><li>FastAPI</li><li>Supabase pgvector</li><li>FAISS</li><li>BM25</li><li>OpenAI</li><li>Docker + nginx</li></ul>
+  <div class="links">
+    <a href="https://webrag.huxiaoheng.com"><span>在线演示</span>webrag.huxiaoheng.com</a>
+    <a href="https://github.com/huxiaoheng44/web-harvest-rag"><span>源码</span>github.com/huxiaoheng44/web-harvest-rag</a>
+  </div>
+</header>
+
+<h2>架构：抓取 → 分块 → 向量化 → 检索 → 对话</h2>
+<p>六个阶段，每个都可以独立替换——本项目的大部分工程工作都集中在检索阶段。</p>
+<div class="grid">
+  <div class="card"><h4><span class="n">1</span>抓取</h4><p><code>config/sources.json</code> → <code>scraper.py</code> 拉取 HTML 页面和 PDF，提取干净可读的内容。</p></div>
+  <div class="card"><h4><span class="n">2</span>分块</h4><p>固定大小的 token 窗口或结构化（按标题）切分——经过系统比较，而不是想当然。</p></div>
+  <div class="card"><h4><span class="n">3</span>向量化</h4><p>OpenAI <code>text-embedding-3-small</code>，按内容哈希缓存，重复运行不必重复付费调用 API。</p></div>
+  <div class="card"><h4><span class="n">4</span>检索</h4><p>向量检索（FAISS / Supabase pgvector）+ BM25，融合排序。</p></div>
+  <div class="card"><h4><span class="n">5</span>生成</h4><p>FastAPI 后端用检索到的分块构建上下文，调用对话模型，并保存会话。</p></div>
+  <div class="card"><h4><span class="n">6</span>对话</h4><p>Next.js 界面——添加数据源、实时查看索引构建、提问、查看引用来源。</p></div>
+</div>
+<div class="callout"><p>生产环境使用 <strong>Supabase pgvector</strong> 做检索。另有一个独立模块 <strong>retrieval_lab</strong>，专门用来回答“第 4 阶段这样做真的是最好的吗？”，且不影响线上应用。</p></div>
+
+<h2>retrieval_lab：独立的实验框架</h2>
+<p>围绕检索质量提出问题，每一个都用真实数据而不是假设来回答——与生产应用完全隔离。</p>
+<div class="grid">
+  <div class="card"><h4><span class="n">1</span>分块策略</h4><p>固定大小 token 窗口与结构化（按标题）切分的正面对比。</p></div>
+  <div class="card"><h4><span class="n">2</span>向量 vs. BM25 vs. 混合</h4><p>FAISS 余弦检索、rank_bm25 关键词检索，以及两种融合策略（线性加权 + RRF）。</p></div>
+  <div class="card"><h4><span class="n">3</span>交叉编码器重排序</h4><p>用 ms-marco-MiniLM 对混合检索候选集重排序——经过测试验证，而非默认有效。</p></div>
+  <div class="card"><h4><span class="n">4</span>分块大小扫描</h4><p>200 / 500 / 1,000 token 的分块，直接衡量完整性与噪声之间的权衡。</p></div>
+  <div class="card"><h4><span class="n">5</span>LLM 查询改写</h4><p>把每个查询改写成多个变体，分别检索，再用倒数排名融合（RRF）合并。</p></div>
+  <div class="card"><h4><span class="n">6</span>错误归类分析</h4><p>每个召回不完美的查询都会被自动归入某个失败类别，再逐条人工阅读。</p></div>
+  <div class="card"><h4><span class="n">7</span>Alpha 调参</h4><p>在留出的验证集上扫描混合融合权重，再在独立的测试集上评估。</p></div>
+  <div class="card"><h4><span class="n">8</span>LLM 评审答案</h4><p>不只是“有没有检索到正确的分块”——生成的答案是否真的忠实于它？</p></div>
+</div>
+<div class="table-wrap"><table>
+  <thead><tr><th>语料库</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>A – MULTIVAC</td><td>24 个抓取的公司网页/PDF，30 条人工标注查询</td></tr>
+    <tr><td>B – NFCorpus</td><td>公开的 BEIR 基准：3,633 篇文档，323 条官方测试查询</td></tr>
+  </tbody>
+</table></div>
+
+<h2>五个真实的 bug，都是实际测试中发现的</h2>
+<p>每一个都是通过端到端运行系统、仔细检查输出发现的——而不是仅靠代码审查。</p>
+<div class="grid">
+  <div class="card"><span class="badge">安全</span><h4>未鉴权的密钥接口</h4><p>应用内的设置面板允许任何人通过 GET 请求以明文 JSON 获取真实的 OpenAI/Supabase 密钥，且无任何鉴权。已在首次公开部署前在生产环境中禁用。</p></div>
+  <div class="card"><span class="badge">正确性</span><h4>混合融合中的补零打分 bug</h4><p>不在某一方法 top-20 中的候选被记为 0 分而不是真实得分——不公平地惩罚了只被一种方法看好的分块。改为在全部候选并集上精确重新打分后修复。</p></div>
+  <div class="card"><span class="badge">可复现性</span><h4>recall@k 结果不确定</h4><p>相同的查询、索引和 alpha 在三次运行中得到三个不同的 recall@1——原因是 Python 原生 <code>set()</code> 的迭代顺序依赖哈希种子，悄悄打乱了同分结果的顺序。</p></div>
+  <div class="card"><span class="badge">评估校准</span><h4>LLM 评审混淆了两种失败</h4><p>一个正确的“我无法确认”的拒答被打出和幻觉一样低的分。评审提示词区分检索失败与生成失败后，平均分从 3.32 升至 4.92 / 5。</p></div>
+  <div class="card"><span class="badge">生产</span><h4>依赖漂移导致线上对话崩溃</h4><p>未锁定版本的 supabase 客户端升级到新 API，其中 <code>.insert().select().single()</code> 已不存在——所有 <code>/chat</code> 请求都返回 500。这是在新部署上做冒烟测试时发现的，而不是 CI。</p></div>
+</div>
+
+<h2>结论：谁赢了，在哪里赢</h2>
+<h3>MULTIVAC——structural-500</h3>
+<p class="table-note">recall@k，30 条人工标注查询</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>方法</th><th class="num">Recall@1</th><th class="num">Recall@5</th></tr></thead>
+  <tbody>
+    <tr><td>仅向量</td><td class="num">60.0%</td><td class="num">93.3%</td></tr>
+    <tr><td>仅 BM25</td><td class="num">75.0%</td><td class="num">95.0%</td></tr>
+    <tr><td>混合（线性）</td><td class="num best">78.3%</td><td class="num best">96.7%</td></tr>
+  </tbody>
+</table></div>
+<h3>NFCorpus——fixed-500（BEIR）</h3>
+<p class="table-note">recall@k，323 条官方测试查询，调优后 α = 0.8</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>方法</th><th class="num">Recall@5</th><th class="num">Recall@100</th></tr></thead>
+  <tbody>
+    <tr><td>仅向量</td><td class="num">13.9%</td><td class="num">35.4%</td></tr>
+    <tr><td>仅 BM25</td><td class="num">11.6%</td><td class="num">23.0%</td></tr>
+    <tr><td>混合（线性）</td><td class="num best">14.4%</td><td class="num best">36.0%</td></tr>
+  </tbody>
+</table></div>
+<div class="callout">
+  <p><strong>BM25 在 MULTIVAC 上胜出</strong>——品牌术语密集的内容（“MLC”“PEAQ”“GS1 Digital Link”）更适合精确关键词匹配。<strong>向量检索在 NFCorpus 上胜出</strong>——专业的医学摘要与口语化查询之间存在词汇鸿沟，只有语义检索能跨越。混合检索在两个语料上都优于两者中更好的那个，但前提是针对每个语料单独调参。没有哪种方法可以作为万无一失的默认选择。</p>
+</div>
+<p class="table-note">验证：本框架在 NFCorpus 上的 BM25 recall@100（23.0%）与 BEIR 官方公布的 BM25 基线（25.0%）相差不到 2 个百分点——绝对数值偏低是数据集本身的特性，而不是实现有 bug。</p>
+
+<h2>真正上线，而不只是演示</h2>
+<p><a href="https://webrag.huxiaoheng.com">webrag.huxiaoheng.com</a>——一次真实对话，从生产索引中检索。</p>
+<figure class="fig-md">
+  <img src="../assets/WebHarvestRAG/p06.webp" alt="Web Harvest Chatbot 回答问题并给出引用来源的截图">
+</figure>
+<div class="grid">
+  <div class="card"><h4>基础设施</h4><p>Docker Compose——相互隔离的 FastAPI 与 Next.js 容器，只绑定 localhost，<code>restart: unless-stopped</code>。</p></div>
+  <div class="card"><h4>边缘层</h4><p>nginx 反向代理 + Let’s Encrypt TLS，与另外两个线上项目共用同一台主机。</p></div>
+  <div class="card"><h4>数据</h4><p>端到端重建生产 Supabase 索引：覆盖全部 24 个源文档，分块数从 81 增至 340。</p></div>
+  <div class="card"><h4>验证</h4><p>真实提问、真实带引用的回答——通过公网 HTTPS 域名验证，而不只是 localhost。</p></div>
+</div>
+
+<h2>技术栈</h2>
+<div class="table-wrap"><table>
+  <thead><tr><th>技术</th><th>用途</th></tr></thead>
+  <tbody>
+    <tr><td>Next.js 15</td><td>聊天界面，App Router</td></tr>
+    <tr><td>FastAPI</td><td>RAG、数据源、会话</td></tr>
+    <tr><td>Supabase</td><td>pgvector，<code>match_chunks</code> RPC</td></tr>
+    <tr><td>OpenAI</td><td>gpt-4o-mini + text-embedding-3-small</td></tr>
+    <tr><td>FAISS</td><td>本地向量检索（retrieval_lab）</td></tr>
+    <tr><td>rank_bm25</td><td>关键词检索（retrieval_lab）</td></tr>
+    <tr><td>sentence-transformers</td><td>交叉编码器重排序</td></tr>
+    <tr><td>Docker + nginx</td><td>生产部署</td></tr>
+  </tbody>
+</table></div>
+
+<footer>根据项目演示文稿（WebHarvestRAG.pdf）转换。</footer>
+</main>
+</body>
+</html>

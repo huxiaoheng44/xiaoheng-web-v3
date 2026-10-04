@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drone Simulator on seL4 / TRENTOS</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← All projects</a><a class="lang" href="../zh/drone.html">中文</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">Operating Systems · seL4 &amp; TRENTOS · TUM</p>
+  <h1>Drone Simulator</h1>
+  <p class="lead">A flight task running on a TRENTOS-based companion computer that sends MAVLink commands to PX4 and flies a simulated drone in Gazebo to a predefined destination, guided by GPS and altitude sensor data.</p>
+  <ul class="tags"><li>seL4</li><li>TRENTOS</li><li>PX4 SITL</li><li>Gazebo Garden</li><li>MAVLink</li><li>C / C++</li><li>Raspberry Pi 3</li><li>Docker</li></ul>
+</header>
+
+<figure>
+  <video controls preload="metadata" src="../../videos/DroneDemo.mp4"></video>
+  <figcaption>Demo video</figcaption>
+</figure>
+
+<h2>Project overview</h2>
+<div class="callout"><p><strong>Goal:</strong> implement a flight task on the companion computer (TRENTOS) that sends actuator MAVLink messages to PX4 in order to fly the simulated drone to a predefined destination, guided by GPS and altitude sensor data from Gazebo.</p></div>
+
+<h3>System architecture</h3>
+<p>The system consists of four components:</p>
+<ul>
+  <li><strong>Gazebo Garden</strong> – the simulator</li>
+  <li><strong>PX4</strong> – the flight control app (SITL)</li>
+  <li><strong>C++ Proxy</strong> – bridges simulator sensor data to the companion computer</li>
+  <li><strong>TRENTOS-based companion computer</strong> – runs the flight task</li>
+</ul>
+<figure class="fig-md">
+  <img src="../assets/Drone/p03.webp" alt="Component diagram: flight control (PX4 SITL), companion computer (TrentOS), C++ proxy and Gazebo simulator, connected via MAVLink control data, socket/custom RPC sensor data and Gazebo Transport">
+  <figcaption>Drone software components and their interfaces</figcaption>
+</figure>
+
+<h2>PX4 SITL (flight control app)</h2>
+<div class="grid">
+  <div class="card"><h4>What is PX4?</h4><p>“The brain of a drone”. Its architecture consists of concurrent modules that communicate asynchronously via the uORB message bus, and it talks to the outside world through MAVLink.</p></div>
+  <div class="card"><h4>How to communicate?</h4><p>Through PX4 startup and its predefined MAVLink channels.</p></div>
+  <div class="card"><h4>What to communicate?</h4><p>Flight modes – in particular <em>offboard</em> mode – and standard MAVLink messages.</p></div>
+</div>
+<figure class="fig-sm">
+  <img src="../assets/Drone/p05.webp" alt="PX4 module architecture diagram">
+  <figcaption>PX4 architecture overview</figcaption>
+</figure>
+
+<h3>Patches to PX4</h3>
+<p>PX4 almost has everything needed – except that the default PX4 drone model for Gazebo has no GPS or altitude sensor. Models are specified in SDF, an XML-based format, so the PX4-Autopilot repository was patched with:</p>
+<ul>
+  <li>a custom drone model</li>
+  <li>a custom world</li>
+  <li>a custom (minimal) MAVLink message channel</li>
+</ul>
+
+<h2>C++ Proxy &amp; Gazebo</h2>
+<p>Two major questions: how to get sensor data from Gazebo, and how to communicate with TRENTOS.</p>
+<p><strong>Gazebo</strong> is a 3D robotics simulator with a plugin system for modifying models and pub-sub communication. The work needed was (1) sensor integration and (2) world modification.</p>
+<figure>
+  <img src="../assets/Drone/p09.webp" alt="Gazebo publishes GPS and altitude data over GZ transport to the C++ proxy, which encodes with Jansson and sends over UDP to the companion computer">
+  <figcaption>The proxy subscribes to <code>/gps_sensor/navsat</code> and <code>/altitude_sensor/altimeter</code> via GZ Transport, encodes the data as JSON with Jansson and forwards it over UDP.</figcaption>
+</figure>
+
+<h2>Companion computer &amp; MAVLink</h2>
+<p>MAVLink is a binary telemetry protocol and a transport-agnostic library. The most important commands used:</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Command</th><th>Purpose in the flight task</th></tr></thead>
+  <tbody>
+    <tr><td><code>MAV_CMD_DO_SET_MODE</code></td><td>Switch PX4 into offboard mode</td></tr>
+    <tr><td><code>MAV_CMD_COMPONENT_ARM_DISARM</code></td><td>Arm the drone</td></tr>
+    <tr><td><code>SET_POSITION_TARGET_LOCAL_NED</code></td><td>Send position setpoints (take-off height, target coordinates)</td></tr>
+    <tr><td><code>MAV_CMD_NAV_LAND</code></td><td>Land the drone</td></tr>
+  </tbody>
+</table></div>
+<figure>
+  <img src="../assets/Drone/p12.webp" alt="TRENTOS component diagram: libs (ds_sensor_data, mavlink), CompanionComputer (main, ds_timer, ds_flight_task_sm), Network Stack, NIC driver and Time Server">
+  <figcaption>Companion computer components on TRENTOS</figcaption>
+</figure>
+
+<h3>State machine</h3>
+<figure>
+  <img src="../assets/Drone/p13.webp" alt="State machine: PRE_READY → CHANGE_MODE → ARM → TAKEOFF → FLY_PHASE → LAND">
+  <figcaption>Flight task state machine</figcaption>
+</figure>
+<ol class="flow">
+  <li><code>PRE_READY</code> initial state</li><li class="arrow">→</li>
+  <li><code>CHANGE_MODE</code> to offboard</li><li class="arrow">→</li>
+  <li><code>ARM</code> the drone</li><li class="arrow">→</li>
+  <li><code>TAKEOFF</code> to predefined height</li><li class="arrow">→</li>
+  <li><code>FLY_PHASE</code> to predefined coordinates</li><li class="arrow">→</li>
+  <li><code>LAND</code></li>
+</ol>
+
+<h2>Final setup</h2>
+<h3>Hardware</h3>
+<figure class="fig-md">
+  <img src="../assets/Drone/p15.webp" alt="Raspberry Pi 3 with an Ethernet cable and serial adapter">
+  <figcaption>TRENTOS running on a Raspberry Pi 3</figcaption>
+</figure>
+<h3>Network architecture</h3>
+<p>The TRENTOS application on the RPi 3 is connected to the host PC via Ethernet (point-to-point network <code>10.0.0.x/24</code>). The host forwards UDP between <code>10.0.0.11</code> and <code>host.docker.internal</code>; inside Docker, the <code>ds_px4</code> container runs Gazebo, PX4 SITL (sending to port 11001) and the C++ proxy (sending to port 11000).</p>
+<figure>
+  <img src="../assets/Drone/p16.webp" alt="Network diagram: ethernet point-to-point 10.0.0.0/24, host UDP forwarders, trentos_app_rpi3 listening on ports 11000 and 11001, docker default bridge with ds_px4 container">
+  <figcaption>Network architecture</figcaption>
+</figure>
+
+<h2>Project details</h2>
+<h3>Problems faced</h3>
+<ul>
+  <li>Jansson: <code>sys_clock_gettime()</code> not implemented</li>
+  <li>Docker GUI (had to disable X11 authentication)</li>
+  <li>Firewall on NixOS</li>
+  <li>Socket can’t handle large traffic on QEMU</li>
+  <li><code>OS_Socket_recvfrom()</code> bug (or feature?): when nothing is received, <code>srcAddr</code> is set to the last address from which something was received</li>
+  <li>Can’t use a more complex world (some models take a long time to load)</li>
+</ul>
+<h3>Ways to improve</h3>
+<ul>
+  <li><strong>UDP forwarding is a hassle</strong> – better utility scripts that set up all components (instead of opening many terminals); <code>iptables</code> in a production setting.</li>
+  <li><strong>Make the flight task even more robust</strong> – handle the scenario where PX4 and Gazebo are killed and restarted.</li>
+</ul>
+
+<h3>Repository structure</h3>
+<pre><code>.
+├── Dockerfile          # Dockerfile for the `ds_px4` container
+├── external            # Where external dependencies are placed
+│   ├── mavlink/        # Pre-compiled MAVLink headers for C/C++
+│   └── PX4-Autopilot/  # PX4 repository
+├── Trentos             # TrentOS folder added manually
+│   ├── docker/         # TrentOS docker containers
+│   └── sdk/            # TrentOS sdk
+├── px4.patch           # Patches to PX4-Autopilot
+├── scripts/            # Utility script
+└── src                 # Source code
+    ├── apps
+    │   ├── proxy/      # C++ proxy source code
+    │   └── trentos/    # TrentOS application (companion computer) source code
+    └── libs/           # Modules shared between proxy/ and trentos/</code></pre>
+
+<footer>Converted from the project presentation (Drone.pdf).</footer>
+</main>
+</body>
+</html>

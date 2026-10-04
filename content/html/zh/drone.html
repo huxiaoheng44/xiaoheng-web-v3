@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>无人机模拟器</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← 全部项目</a><a class="lang" href="../en/drone.html">English</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">操作系统 · seL4 &amp; TRENTOS · 慕尼黑工业大学</p>
+  <h1>无人机模拟器</h1>
+  <p class="lead">在基于 TRENTOS 的伴飞计算机（Companion Computer）上运行飞行任务，向 PX4 发送 MAVLink 指令，依据 GPS 和高度传感器数据，让 Gazebo 中的模拟无人机飞往预定目的地。</p>
+  <ul class="tags"><li>seL4</li><li>TRENTOS</li><li>PX4 SITL</li><li>Gazebo Garden</li><li>MAVLink</li><li>C / C++</li><li>Raspberry Pi 3</li><li>Docker</li></ul>
+</header>
+
+<figure>
+  <video controls preload="metadata" src="../../videos/DroneDemo.mp4"></video>
+  <figcaption>演示视频</figcaption>
+</figure>
+
+<h2>项目概览</h2>
+<div class="callout"><p><strong>目标：</strong>在伴飞计算机（TRENTOS）上实现飞行任务，向 PX4 发送执行器 MAVLink 消息，利用 Gazebo 提供的 GPS 和高度传感器数据，引导模拟无人机飞到预定目的地。</p></div>
+
+<h3>系统架构</h3>
+<p>系统由四个组件构成：</p>
+<ul>
+  <li><strong>Gazebo Garden</strong>——仿真器</li>
+  <li><strong>PX4</strong>——飞控程序（SITL）</li>
+  <li><strong>C++ 代理（Proxy）</strong>——把仿真器的传感器数据转发给伴飞计算机</li>
+  <li><strong>基于 TRENTOS 的伴飞计算机</strong>——运行飞行任务</li>
+</ul>
+<figure class="fig-md">
+  <img src="../assets/Drone/p03.webp" alt="组件图：飞控（PX4 SITL）、伴飞计算机（TrentOS）、C++ 代理和 Gazebo 仿真器，分别通过 MAVLink 控制数据、socket/自定义 RPC 传感器数据和 Gazebo Transport 连接">
+  <figcaption>无人机软件组件及其接口</figcaption>
+</figure>
+
+<h2>PX4 SITL（飞控程序）</h2>
+<div class="grid">
+  <div class="card"><h4>PX4 是什么？</h4><p>“无人机的大脑”。其架构由并发模块组成，模块之间通过 uORB 消息总线异步通信，并通过 MAVLink 与外部世界交互。</p></div>
+  <div class="card"><h4>如何通信？</h4><p>通过 PX4 启动配置及其预定义的 MAVLink 通道。</p></div>
+  <div class="card"><h4>通信内容是什么？</h4><p>飞行模式（尤其是 <em>offboard</em> 模式）以及标准 MAVLink 消息。</p></div>
+</div>
+<figure class="fig-sm">
+  <img src="../assets/Drone/p05.webp" alt="PX4 模块架构图">
+  <figcaption>PX4 架构概览</figcaption>
+</figure>
+
+<h3>对 PX4 的补丁</h3>
+<p>PX4 几乎具备所需的一切——只是 PX4 为 Gazebo 提供的默认无人机模型没有 GPS 和高度传感器。模型使用基于 XML 的 SDF 格式描述，因此我们对 PX4-Autopilot 仓库打了补丁，加入：</p>
+<ul>
+  <li>自定义无人机模型</li>
+  <li>自定义世界（world）</li>
+  <li>自定义（精简的）MAVLink 消息通道</li>
+</ul>
+
+<h2>C++ 代理与 Gazebo</h2>
+<p>两个核心问题：如何从 Gazebo 获取传感器数据，以及如何与 TRENTOS 通信。</p>
+<p><strong>Gazebo</strong> 是一个三维机器人仿真器，具有用于修改模型的插件系统和发布-订阅式通信机制。需要完成的工作是：(1) 传感器集成；(2) 世界场景修改。</p>
+<figure>
+  <img src="../assets/Drone/p09.webp" alt="Gazebo 通过 GZ transport 向 C++ 代理发布 GPS 和高度数据，代理用 Jansson 编码后通过 UDP 发送到伴飞计算机">
+  <figcaption>代理通过 GZ Transport 订阅 <code>/gps_sensor/navsat</code> 和 <code>/altitude_sensor/altimeter</code>，用 Jansson 编码为 JSON，再经 UDP 转发。</figcaption>
+</figure>
+
+<h2>伴飞计算机与 MAVLink</h2>
+<p>MAVLink 是一种二进制遥测协议，也是一个与传输层无关的库。使用到的主要指令：</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>指令</th><th>在飞行任务中的作用</th></tr></thead>
+  <tbody>
+    <tr><td><code>MAV_CMD_DO_SET_MODE</code></td><td>将 PX4 切换到 offboard 模式</td></tr>
+    <tr><td><code>MAV_CMD_COMPONENT_ARM_DISARM</code></td><td>解锁（Arm）无人机</td></tr>
+    <tr><td><code>SET_POSITION_TARGET_LOCAL_NED</code></td><td>发送位置设定点（起飞高度、目标坐标）</td></tr>
+    <tr><td><code>MAV_CMD_NAV_LAND</code></td><td>降落</td></tr>
+  </tbody>
+</table></div>
+<figure>
+  <img src="../assets/Drone/p12.webp" alt="TRENTOS 组件图：libs（ds_sensor_data、mavlink）、CompanionComputer（main、ds_timer、ds_flight_task_sm）、网络协议栈、网卡驱动和时间服务">
+  <figcaption>TRENTOS 上的伴飞计算机组件</figcaption>
+</figure>
+
+<h3>状态机</h3>
+<figure>
+  <img src="../assets/Drone/p13.webp" alt="状态机：PRE_READY → CHANGE_MODE → ARM → TAKEOFF → FLY_PHASE → LAND">
+  <figcaption>飞行任务状态机</figcaption>
+</figure>
+<ol class="flow">
+  <li><code>PRE_READY</code> 初始状态</li><li class="arrow">→</li>
+  <li><code>CHANGE_MODE</code> 切换到 offboard</li><li class="arrow">→</li>
+  <li><code>ARM</code> 解锁</li><li class="arrow">→</li>
+  <li><code>TAKEOFF</code> 升至预定高度</li><li class="arrow">→</li>
+  <li><code>FLY_PHASE</code> 飞往预定坐标</li><li class="arrow">→</li>
+  <li><code>LAND</code> 降落</li>
+</ol>
+
+<h2>最终部署</h2>
+<h3>硬件</h3>
+<figure class="fig-md">
+  <img src="../assets/Drone/p15.webp" alt="连接网线和串口适配器的树莓派 3">
+  <figcaption>运行在树莓派 3 上的 TRENTOS</figcaption>
+</figure>
+<h3>网络架构</h3>
+<p>树莓派 3 上的 TRENTOS 应用通过以太网与主机相连（点对点网络 <code>10.0.0.x/24</code>）。主机在 <code>10.0.0.11</code> 与 <code>host.docker.internal</code> 之间转发 UDP；Docker 内的 <code>ds_px4</code> 容器运行 Gazebo、PX4 SITL（发往 11001 端口）和 C++ 代理（发往 11000 端口）。</p>
+<figure>
+  <img src="../assets/Drone/p16.webp" alt="网络示意图：以太网点对点 10.0.0.0/24、主机 UDP 转发、监听 11000 和 11001 端口的 trentos_app_rpi3、Docker 默认网桥及 ds_px4 容器">
+  <figcaption>网络架构</figcaption>
+</figure>
+
+<h2>项目细节</h2>
+<h3>遇到的问题</h3>
+<ul>
+  <li>Jansson：<code>sys_clock_gettime()</code> 未实现</li>
+  <li>Docker 图形界面（需要关闭 X11 认证）</li>
+  <li>NixOS 上的防火墙</li>
+  <li>QEMU 上的 socket 无法承受大流量</li>
+  <li><code>OS_Socket_recvfrom()</code> 的 bug（还是特性？）：没有收到数据时，<code>srcAddr</code> 会被设为上一次收到数据的地址</li>
+  <li>无法使用更复杂的世界场景（部分模型加载耗时很长）</li>
+</ul>
+<h3>改进方向</h3>
+<ul>
+  <li><strong>UDP 转发很麻烦</strong>——编写更好的工具脚本，一次性启动所有组件（而不是开一堆终端）；生产环境中使用 <code>iptables</code>。</li>
+  <li><strong>让飞行任务更健壮</strong>——处理 PX4 和 Gazebo 被终止后重启的情况。</li>
+</ul>
+
+<h3>仓库结构</h3>
+<pre><code>.
+├── Dockerfile          # `ds_px4` 容器的 Dockerfile
+├── external            # 外部依赖存放位置
+│   ├── mavlink/        # 预编译的 C/C++ MAVLink 头文件
+│   └── PX4-Autopilot/  # PX4 仓库
+├── Trentos             # 手动添加的 TrentOS 目录
+│   ├── docker/         # TrentOS docker 容器
+│   └── sdk/            # TrentOS SDK
+├── px4.patch           # 对 PX4-Autopilot 的补丁
+├── scripts/            # 工具脚本
+└── src                 # 源代码
+    ├── apps
+    │   ├── proxy/      # C++ 代理源码
+    │   └── trentos/    # TrentOS 应用（伴飞计算机）源码
+    └── libs/           # proxy/ 与 trentos/ 共用的模块</code></pre>
+
+<footer>根据项目演示文稿（Drone.pdf）转换。</footer>
+</main>
+</body>
+</html>

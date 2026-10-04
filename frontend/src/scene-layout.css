@@ -1,13 +1,31 @@
 /* Independent object coordinates: change these variables to rearrange the scene. */
 .stage{--monitor-x:50%;--monitor-y:4%;--monitor-w:78%;--monitor-h:76%;--keyboard-x:46%;--keyboard-y:78%;--keyboard-w:44%;--mouse-x:75%;--mouse-y:81%;--mouse-w:8%;--mug-x:84%;--mug-y:70%;--mug-w:11%;width:min(1440px,140svh);max-width:100%;aspect-ratio:3/2;margin:auto}
+/* A taller desktop CRT (~1.7:1 screen) adds real layout height, not scaleY on UI. */
+@media(min-width:1001px){.stage{--monitor-y:1%;--monitor-w:72%;--monitor-h:80%}}
 .monitor-object{position:absolute;left:var(--monitor-x);top:var(--monitor-y);width:var(--monitor-w);height:var(--monitor-h);transform:translateX(-50%);z-index:2}
 .monitor-art{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
-.monitor-screen{left:7.4%;top:13.3%;width:85.2%;height:67.5%;padding:3px}
+/* Cover the artwork's black inset (320×250 source); leave only its physical bevel. */
+.monitor-screen{left:6.25%;top:12%;width:87.5%;height:70.4%;padding:0;box-shadow:none}
+.monitor-screen .os-shell{border:0}
+.monitor-screen .os-shell:after{box-shadow:none}
 .desk-surface{position:absolute;left:0;right:0;top:78%;bottom:0;background:repeating-linear-gradient(0deg,#20211f 0 4px,#10110f 4px 12px);opacity:.65;mask-image:linear-gradient(transparent,#000 20%,#000 70%,transparent)}
 .desk-object{position:absolute;image-rendering:pixelated;transform:translateX(-50%);height:auto;z-index:3}
 .keyboard-object{left:var(--keyboard-x);top:var(--keyboard-y);width:var(--keyboard-w)}
 .mouse-object{left:var(--mouse-x);top:var(--mouse-y);width:var(--mouse-w);transform:translateX(-50%) rotate(180deg)}
 .mug-object{left:var(--mug-x);top:var(--mug-y);width:var(--mug-w)}
+/* Desk props (tooling/desk-props/draw_props.py): ~4.5 screen px per art pixel on a 1440px stage, so width% = art width × 0.3125. Shown on wide screens only. */
+.desk-prop{display:none}
+.scene-caption{z-index:5}
+@media(min-width:1001px){
+.desk-prop{display:block}
+.desk-art{left:50%;top:75%;width:131.25%;z-index:1}
+.tray-prop{left:-6%;top:51%;width:23.75%}
+.stack-prop{left:4.5%;top:68%;width:17.5%}
+.sheet-prop{left:-5%;top:84%;width:16.25%}
+.binders-prop{left:95%;top:47%;width:15%}
+.folder-prop{left:104%;top:69%;width:23.75%}
+.envelope-prop{left:100%;top:78%;width:22.5%}
+}
 .empty-state>*{flex-shrink:0}
 .empty-state{justify-content:safe center}
 .window-toolbar,.window-footer,.window-title{flex-shrink:0}

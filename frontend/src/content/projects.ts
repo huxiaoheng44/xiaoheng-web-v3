@@ -1,23 +1,19 @@
 import type { Language } from '../model';
 
-const notes = import.meta.glob<string>('../../../content/projects/**/*.md', { eager: true, query: '?raw', import: 'default' });
-const assets = import.meta.glob<string>(['../../../content/projects/assets/**/*.png', '../../../content/pdf/*.pdf', '../../../content/videos/3D.mp4', '../../../content/videos/DroneDemo.mp4', '../../../content/videos/FASTAIMOVIE.mp4'], { eager: true, query: '?url', import: 'default' });
-
-export const projects = [
-  { id: '3d-reconstruction', title: 'Stereo 3D Reconstruction', zh: '双目视觉三维重建', category: 'COMPUTER VISION', tags: ['Stereo vision', 'BM / SGBM', 'Point clouds'], image: '3d-reconstruction/output-35.png', video: '3D.mp4', pdf: '3DReconstruction.pdf' },
-  { id: 'drone-simulator', title: 'Drone Simulator', zh: '无人机仿真与控制', category: 'SYSTEMS / ROBOTICS', tags: ['seL4 / TrentOS', 'PX4', 'C++'], image: 'drone-simulator/setup-15.png', video: 'DroneDemo.mp4', pdf: 'Drone.pdf' },
-  { id: 'fast-ai-movie', title: 'FAST AI Movie Web', zh: 'FAST AI 视频编辑平台', category: 'PRODUCT ENGINEERING', tags: ['AI video', 'Editing workflows', 'Web'], image: 'fast-ai-movie/ui-08.png', video: 'FASTAIMOVIE.mp4', pdf: 'FASTAIMOVIE.pdf' },
-  { id: 'vehicle-identification', title: 'Vehicle Noise Classification', zh: '道路噪声车辆分类', category: 'MACHINE LEARNING', tags: ['Acoustics', 'KNN', 'Neural networks'], image: 'vehicle-identification/data-06.png', video: undefined, pdf: 'VehicleIdentification.pdf' },
+const documents = import.meta.glob<string>('../../../content/html/{en,zh}/*.html', { eager: true, query: '?raw', import: 'default' });
+const contentAssets = import.meta.glob<string>(['../../../content/html/assets/**/*', '../../../content/pdf/*', '../../../content/videos/*'], { eager: true, query: '?url', import: 'default' });
+type Project = { id: string; document: string; title: string; zh: string; category: string; tags: string[]; thumbnail: string; icon: string; pdf: string; };
+export const projects: Project[] = [
+  { id: 'pingpong-vision', document: 'pingpong-vision', title: 'PingPong Vision', zh: 'PingPong Vision', category: 'AI / INDUSTRIAL SYSTEMS', tags: ['AI OCR', 'FastAPI', 'TimescaleDB'], thumbnail: 'html/assets/pingpong/p04.webp', icon: 'html/assets/icons/pingpong-vision@4x.png', pdf: 'pdf/pingpong.pdf' },
+  { id: 'web-harvest-rag', document: 'web-harvest-rag', title: 'Web Harvest RAG', zh: 'Web Harvest RAG', category: 'AI / RETRIEVAL', tags: ['RAG', 'BM25', 'Vector search'], thumbnail: 'html/assets/WebHarvestRAG/p06.webp', icon: 'html/assets/icons/web-harvest-rag@4x.png', pdf: 'pdf/WebHarvestRAG.pdf' },
+  { id: 'you-dont-need-rag', document: 'you-dont-need-rag', title: 'You Don’t Need RAG', zh: 'You Don’t Need RAG', category: 'AI / KNOWLEDGE TOOLS', tags: ['Web scraping', 'RAG', 'Data preparation'], thumbnail: 'html/assets/YouDontNeedRAG/p04.webp', icon: 'html/assets/icons/you-dont-need-rag@4x.png', pdf: 'pdf/YouDontNeedRAG.pdf' },
+  { id: 'fast-ai-movie', document: 'fast-ai-movie', title: 'FAST AI Movie Web', zh: 'FAST AI 视频编辑平台', category: 'PRODUCT ENGINEERING', tags: ['AI video', 'Editing workflows', 'Web'], thumbnail: 'html/assets/FASTAIMOVIE/p02.webp', icon: 'html/assets/icons/fast-ai-movie@4x.png', pdf: 'pdf/FASTAIMOVIE.pdf' },
+  { id: 'vehicle-identification', document: 'vehicle-identification', title: 'Vehicle Noise Classification', zh: '道路噪声车辆分类', category: 'MACHINE LEARNING', tags: ['Acoustics', 'KNN', 'Neural networks'], thumbnail: 'html/assets/VehicleIdentification/p02.webp', icon: 'html/assets/icons/vehicle-identification@4x.png', pdf: 'pdf/VehicleIdentification.pdf' },
+  { id: '3d-reconstruction', document: '3d-reconstruction', title: 'Stereo 3D Reconstruction', zh: '双目视觉三维重建', category: 'COMPUTER VISION', tags: ['Stereo vision', 'BM / SGBM', 'Point clouds'], thumbnail: 'html/assets/3DReconstruction/p03.webp', icon: 'html/assets/icons/3d-reconstruction@4x.png', pdf: 'pdf/3DReconstruction.pdf' },
+  { id: 'drone-simulator', document: 'drone', title: 'Drone Simulator', zh: '无人机仿真与控制', category: 'SYSTEMS / ROBOTICS', tags: ['seL4 / TrentOS', 'PX4', 'C++'], thumbnail: 'html/assets/Drone/p03.webp', icon: 'html/assets/icons/drone@4x.png', pdf: 'pdf/Drone.pdf' },
 ];
-export function assetUrl(href: string): string | undefined {
-  const clean = href.replace(/^(\.\.\/)+/, '').replace(/^\//, '');
-  const path = clean.startsWith('assets/') ? `../../../content/projects/${clean}` : `../../../content/${clean}`;
-  return assets[path];
-}
-export function projectCopy(id: string, language: Language) {
-  const raw = notes[`../../../content/projects/${language === 'en' ? 'en/' : ''}${id}.md`] || '';
-  const summary = raw.match(/## (?:Summary|一句话简介)\s+([^\n]+)/)?.[1] || '';
-  const sections = raw.split(/(?=^## )/m).filter(section => section.startsWith('## '));
-  const body = sections.filter(section => !/^## (?:Summary|一句话简介|Portfolio copy|网页文案草案|待补充信息)\s*\n/.test(section)).join('\n').replace(/^## 建议展示素材/gm, '## 项目展示').replace(/^## 明确提及的工具\/概念/gm, '## 技术与方法');
-  return { summary, body };
-}
+export function assetUrl(path: string): string | undefined { return contentAssets[`../../../content/${path.replace(/^\//, '')}`]; }
+function documentFor(project: Project, language: Language) { return documents[`../../../content/html/${language}/${project.document}.html`] ?? ''; }
+function htmlAssetUrl(path: string): string | undefined { if (path.startsWith('../assets/')) return assetUrl(`html/assets/${path.slice(10)}`); if (path.startsWith('../../videos/')) return assetUrl(`videos/${path.slice(12)}`); return undefined; }
+export function projectHtml(project: Project, language: Language): string { const main = documentFor(project, language).match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1] ?? ''; return main.replace(/<nav\b[^>]*class=["']topbar["'][^>]*>[\s\S]*?<\/nav>/i, '').replace(/\bsrc=(["'])([^"']+)\1/gi, (attribute, quote, source) => { const url = htmlAssetUrl(source); return url ? `src=${quote}${url}${quote}` : /^(\.\.\/|\/)/.test(source) ? '' : attribute; }); }
+export function projectSummary(project: Project, language: Language): string { return documentFor(project, language).match(/<p\b[^>]*class=["']lead["'][^>]*>([\s\S]*?)<\/p>/i)?.[1].replace(/<[^>]*>/g, '').trim() ?? ''; }

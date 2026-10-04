@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stereo Reconstruction</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← All projects</a><a class="lang" href="../zh/3d-reconstruction.html">中文</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">3D Scanning and Motion Capturing · TUM</p>
+  <h1>Stereo Reconstruction</h1>
+  <p class="lead">A complete stereo reconstruction pipeline – from image pairs through sparse matching, rectification and dense matching to disparity maps, point clouds and meshes – evaluated on the TUM Intrinsic3D and KITTI datasets.</p>
+  <ul class="tags"><li>C++</li><li>OpenCV</li><li>Eigen</li><li>FLANN</li><li>Ceres Solver</li><li>SGBM</li></ul>
+</header>
+
+<figure>
+  <video controls preload="metadata" src="../../videos/3D.mp4"></video>
+  <figcaption>Demo video</figcaption>
+</figure>
+
+<h2>Motivation and idea</h2>
+<h3>Applications</h3>
+<figure>
+  <img src="../assets/3DReconstruction/p03.webp" alt="3D heart model, a castle model and a city street model">
+  <figcaption>3D models of human organs for surgical planning · reconstruction of historical architecture · environment reconstruction for robot navigation</figcaption>
+</figure>
+<figure class="fig-md">
+  <img src="../assets/3DReconstruction/p04.webp" alt="Point cloud reconstruction of Notre Dame">
+  <figcaption>Reconstruction of Notre Dame</figcaption>
+</figure>
+<h3>Our idea</h3>
+<p>Take multiple photographs of an object as input, run the reconstruction and output a 3D model.</p>
+<figure>
+  <img src="../assets/3DReconstruction/p05.webp" alt="Several input photos of a relief → Input → Reconstruction → Output → 3D model">
+  <figcaption>Input images → reconstruction → 3D model</figcaption>
+</figure>
+
+<h2>Related work</h2>
+<h3>Datasets</h3>
+<div class="grid">
+  <div class="card">
+    <h4>TUM Intrinsic3D – Bricks RGBD</h4>
+    <p>Color and depth images · color and depth camera intrinsics · camera pose matrix · multiple views of a single object</p>
+  </div>
+  <div class="card">
+    <h4>KITTI Stereo 2015</h4>
+    <p>Disparity maps · color images · camera distortion coefficients · camera extrinsics · images of different scenarios</p>
+  </div>
+</div>
+<figure>
+  <div class="pair">
+  <img src="../assets/3DReconstruction/p07.webp" alt="TUM Intrinsic3D Bricks preview">
+  <img src="../assets/3DReconstruction/p08.webp" alt="KITTI Stereo Evaluation 2015 preview">
+  </div>
+  <figcaption>TUM Intrinsic3D Bricks (left) and KITTI Stereo 2015 (right)</figcaption>
+</figure>
+
+<h3>Dataset comparison</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>TUM Intrinsic3D</th><th>KITTI Stereo 2015</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">Pros</th>
+      <td><ul><li>No need to consider camera distortion</li><li>Able to apply ICP</li><li>Provides ground-truth depth</li></ul></td>
+      <td><ul><li>Camera parameters can be loaded easily</li><li>Ground-truth disparity can be used directly for evaluation</li></ul></td></tr>
+    <tr><th scope="row">Cons</th>
+      <td><ul><li>No ground-truth disparity</li></ul></td>
+      <td><ul><li>Images of a single scenario are not sufficient</li></ul></td></tr>
+  </tbody>
+</table></div>
+
+<h3>Libraries</h3>
+<div class="grid">
+  <div class="card"><h4>OpenCV</h4><p>Computer vision algorithms</p></div>
+  <div class="card"><h4>Eigen</h4><p>Matrix computation</p></div>
+  <div class="card"><h4>FLANN</h4><p>Nearest-neighbour search</p></div>
+  <div class="card"><h4>Ceres Solver</h4><p>Non-linear optimization</p></div>
+</div>
+
+<h3>Reconstruction pipeline</h3>
+<figure>
+  <img src="../assets/3DReconstruction/p11.webp" alt="Pipeline: image pairs → key points → feature matches → rectified images → disparity map → depth map → mesh">
+  <figcaption>Image pairs → undistortion &amp; key-point detection → feature descriptor matching → sparse matching (camera pose / fundamental matrix) → image rectification → dense matching → disparity map → depth map → triangulation → mesh</figcaption>
+</figure>
+
+<h2>Methods</h2>
+<h3>Sparse matching – key-point detectors</h3>
+<p>Six detectors were compared: ORB, BRISK, FAST, Shi-Tomasi, SURF and SIFT.</p>
+<figure>
+  <img src="../assets/3DReconstruction/p14.webp" alt="Detected key points of ORB, Brisk, Fast, Shi-Tomasi, SURF and SIFT on the same image">
+  <figcaption>Key points detected by each method</figcaption>
+</figure>
+
+<h3>Key-point detector and feature descriptor comparison</h3>
+<p class="table-note">RANSAC used for fundamental-matrix calculation, FLANN for descriptor matching.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Dataset</th><th>Measurement</th><th class="num">BRISK</th><th class="num">ORB</th><th class="num">Shi-Tomasi</th><th class="num">SIFT</th><th class="num">SURF</th><th class="num">FAST</th></tr></thead>
+  <tbody>
+    <tr><th scope="row" rowspan="4">TUM Intrinsic</th><td>Average rotation error</td><td class="num best">0.0616</td><td class="num">0.1241</td><td class="num">0.1053</td><td class="num">0.1014</td><td class="num">0.0838</td><td class="num">0.0619</td></tr>
+    <tr><td>Abnormal fundamental matrix count</td><td class="num best">20</td><td class="num">40</td><td class="num">33</td><td class="num">33</td><td class="num">27</td><td class="num best">20</td></tr>
+    <tr><td>Average translation error</td><td class="num">0.9993</td><td class="num">0.9998</td><td class="num">0.9993</td><td class="num">0.9994</td><td class="num">0.9993</td><td class="num">0.9994</td></tr>
+    <tr><td>Time to process 10 image pairs (s)</td><td class="num best">22.5254</td><td class="num">57.269</td><td class="num">62.391</td><td class="num">430.32</td><td class="num">44.541</td><td class="num">670.31</td></tr>
+    <tr><th scope="row" rowspan="3">KITTI Raw</th><td>Average rotation error</td><td class="num">0.0125</td><td class="num">0.0318</td><td class="num">0.0097</td><td class="num best">0.0078</td><td class="num">–</td><td class="num">0.0111</td></tr>
+    <tr><td>Abnormal fundamental matrix count</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">–</td><td class="num">0</td></tr>
+    <tr><td>Average translation error</td><td class="num">0.7645</td><td class="num">1.03877</td><td class="num">0.5479</td><td class="num best">0.5403</td><td class="num">–</td><td class="num">0.6106</td></tr>
+  </tbody>
+</table></div>
+<p class="table-note">Translation error is too high for all methods, so ground-truth translation was used for the subsequent steps.</p>
+
+<h3>Fundamental matrix estimation</h3>
+<p>To evaluate the sparse matching method, the fundamental matrix estimated from detected key points is converted into an essential matrix and decomposed into rotation and translation, which are then compared against the ground-truth camera pose (MSE of rotation and translation).</p>
+<figure>
+  <img src="../assets/3DReconstruction/p17.webp" alt="Sparse matching → detected key points → fundamental matrix → essential matrix → rotation and translation, compared with ground truth camera pose">
+  <figcaption>Evaluating the sparse matching method</figcaption>
+</figure>
+<p class="table-note">BRISK used as key-point detector and feature descriptor, FLANN for descriptor matching.</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>Dataset</th><th>Measurement</th><th class="num">RANSAC</th><th class="num">LMEDS</th><th class="num">7-Point</th><th class="num">8-Point</th></tr></thead>
+  <tbody>
+    <tr><th scope="row" rowspan="3">TUM Intrinsic</th><td>Average rotation error</td><td class="num">0.0616</td><td class="num">0.1813</td><td class="num">0.1813</td><td class="num best">0.0296</td></tr>
+    <tr><td>Abnormal fundamental matrix count</td><td class="num">20</td><td class="num">60</td><td class="num">60</td><td class="num best">9</td></tr>
+    <tr><td>Average translation error</td><td class="num">0.9993</td><td class="num">0.9998</td><td class="num">0.9998</td><td class="num">0.9995</td></tr>
+    <tr><th scope="row" rowspan="3">KITTI Raw</th><td>Average rotation error</td><td class="num">0.0125</td><td class="num best">0.0055</td><td class="num best">0.0055</td><td class="num">0.0199</td></tr>
+    <tr><td>Abnormal fundamental matrix count</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+    <tr><td>Average translation error</td><td class="num">0.7645</td><td class="num best">0.5275</td><td class="num best">0.5275</td><td class="num">0.9225</td></tr>
+  </tbody>
+</table></div>
+<p class="table-note">Again, translation error is too high for all methods, so ground-truth translation was used for the subsequent steps.</p>
+
+<h3>Image rectification</h3>
+<figure>
+  <img src="../assets/3DReconstruction/p19.webp" alt="Image pairs of the relief and a KITTI street scene before and after rectification">
+  <figcaption>Image pairs before and after rectification (TUM and KITTI)</figcaption>
+</figure>
+<figure>
+  <img src="../assets/3DReconstruction/p20.webp" alt="Epipolar geometry diagram and epipolar lines drawn on a KITTI stereo pair">
+  <figcaption>The fundamental matrix determines the epipolar lines</figcaption>
+</figure>
+
+<h3>Dense matching</h3>
+<p>Once the fundamental, essential, translation and rotation matrices are known, the rectified pair is used to calculate a disparity map.</p>
+<figure class="fig-md">
+  <img src="../assets/3DReconstruction/p22.webp" alt="Rectified image with matches → calculate disparity → disparity map">
+</figure>
+
+<h4>Block Matching (BM)</h4>
+<ul>
+  <li>Once correspondences lie on parallel epipolar lines, the left image can be scanned line by line.</li>
+  <li>For each pixel, find “similar” pixels in the right image.</li>
+  <li>Individual pixels are hard to match, so a block of flattened pixels of size K×K is used.</li>
+  <li>The difference along the x-axis gives the disparity.</li>
+</ul>
+<p>Similarity is measured as the sum of absolute differences (SAD) between two K×K windows flattened to vectors <b>w</b><sub>L</sub>, <b>w</b><sub>R</sub>:</p>
+<p class="formula">SAD(x, y, d) = ‖ <b>w</b><sub>L</sub>(x, y) − <b>w</b><sub>R</sub>(x − d, y) ‖</p>
+<figure>
+  <div class="pair">
+  <img src="../assets/3DReconstruction/p23.webp" alt="Left and right image with scanline and matching score curve">
+  <img src="../assets/3DReconstruction/p24.webp" alt="Left and right image with windows wL and wR">
+  </div>
+  <figcaption>Scanning along the scanline and the resulting matching score</figcaption>
+</figure>
+
+<h4>Semi-Global Block Matching (SGBM)</h4>
+<ul>
+  <li>“Global” because it considers information available in the whole image.</li>
+  <li>It does so by considering neighbouring pixels in multiple directions to calculate the disparity.</li>
+  <li>Again a K×K block is used, and 8 directions around it are considered.</li>
+  <li>The direction with the minimum aggregated matching cost is used to calculate the disparity.</li>
+  <li>Uses the Birchfield–Tomasi dissimilarity to find “similar” pixels. For left and right images with columns x<sub>l</sub>, x<sub>r</sub> on the same scanline, symmetric functions are defined using the linear interpolation functions Î<sub>l</sub>, Î<sub>r</sub> of the image intensities I<sub>l</sub>, I<sub>r</sub>; the minimum of the two gives the dissimilarity.</li>
+</ul>
+<p class="formula">d̄(x<sub>l</sub>, x<sub>r</sub>, I<sub>l</sub>, I<sub>r</sub>) = min<sub>x<sub>r</sub>−½ ≤ x ≤ x<sub>r</sub>+½</sub> | I<sub>l</sub>(x<sub>l</sub>) − Î<sub>r</sub>(x) |</p>
+<p class="formula">d(x<sub>l</sub>, x<sub>r</sub>) = min{ d̄(x<sub>l</sub>, x<sub>r</sub>, I<sub>l</sub>, I<sub>r</sub>), d̄(x<sub>r</sub>, x<sub>l</sub>, I<sub>r</sub>, I<sub>l</sub>) }</p>
+<p>With D the dissimilarity term and R a regularisation term computed from neighbouring pixels, the total cost minimised for the disparity is <span class="formula" style="display:inline;padding:0">E = D + R</span>.</p>
+<figure>
+  <img src="../assets/3DReconstruction/p25.webp" alt="8 path directions for cost aggregation and illustration of matching windows">
+  <figcaption>Aggregation along multiple directions</figcaption>
+</figure>
+
+<h3>Generated disparity maps</h3>
+<figure>
+  <img src="../assets/3DReconstruction/p27.webp" alt="BM and SGBM disparity maps for TUM and KITTI without post filtering, very noisy">
+  <figcaption>Without post-filtering (top: BM, bottom: SGBM; left: TUM, right: KITTI Raw)</figcaption>
+</figure>
+<figure>
+  <img src="../assets/3DReconstruction/p28.webp" alt="BM and SGBM disparity maps for TUM and KITTI with post filtering, smooth">
+  <figcaption>With post-filtering</figcaption>
+</figure>
+
+<h3>Dense matching evaluation</h3>
+<p>The generated depth map is compared pixel-wise with the ground-truth depth map. A pixel counts as an error when its difference exceeds both 3 px and 5 %:</p>
+<p class="formula">Error = count( |d<sub>ij</sub> − d′<sub>ij</sub>| &gt; 3 px &amp; |d<sub>ij</sub> − d′<sub>ij</sub>| / d′<sub>ij</sub> &gt; 0.05 ) / total valid pixels</p>
+<figure class="fig-md">
+  <img src="../assets/3DReconstruction/p29.webp" alt="Generated depth map compared pixel-wise with ground truth depth map">
+</figure>
+<figure>
+  <div class="pair">
+  <img src="../assets/3DReconstruction/p30.webp" alt="Line chart of depth error over ~350 image pairs; block matching (red) has many high spikes, SGBM (blue) stays low">
+  <img src="../assets/3DReconstruction/p31.webp" alt="Line chart of disparity error on KITTI over ~200 image pairs; SGBM (blue) mostly below BM (red)">
+  </div>
+  <figcaption>Left: depth error vs. ground-truth depth (TUM). Right: disparity error vs. ground-truth disparity (KITTI). Red = Block Matching, blue = Semi-Global Block Matching – SGBM is consistently lower.</figcaption>
+</figure>
+
+<h2>3D model generation</h2>
+<figure class="fig-sm">
+  <img src="../assets/3DReconstruction/p33.webp" alt="Diagram of left and right cameras observing a scene, used to triangulate points">
+  <figcaption>Disparity map to point cloud by triangulation</figcaption>
+</figure>
+<figure>
+  <img src="../assets/3DReconstruction/p34.webp" alt="Disparity maps and resulting 3D models for TUM and KITTI">
+  <figcaption>Disparity map → 3D model (left: TUM, right: KITTI Raw)</figcaption>
+</figure>
+<figure>
+  <div class="pair">
+  <img src="../assets/3DReconstruction/p35.webp" alt="Textured mesh of the relief">
+  <img src="../assets/3DReconstruction/p36.webp" alt="Point cloud of a KITTI street">
+  </div>
+  <figcaption>Generated mesh (TUM Intrinsic3D) and generated point cloud (KITTI)</figcaption>
+</figure>
+
+<h2>Conclusion</h2>
+<ol>
+  <li>Implemented a stereo reconstruction pipeline.</li>
+  <li>Covered key steps such as calibration, key-point calculation and 3D model construction.</li>
+  <li>Results show the ease and efficiency of reconstructing 3D models from stereo images.</li>
+  <li>The generated 3D models have potential applications in scene understanding, object recognition and navigation.</li>
+</ol>
+<h2>Discussion</h2>
+<ol>
+  <li>The project serves as a starting point for further research and development.</li>
+  <li>ICP methods and other data could be incorporated for improved 3D models.</li>
+  <li>New applications could be explored in fields such as robotics and autonomous vehicles.</li>
+  <li>There is room to improve the accuracy and robustness of the 3D models.</li>
+  <li>New algorithms and techniques could be integrated for better performance.</li>
+</ol>
+
+<footer>Converted from the project presentation (3DReconstruction.pdf).</footer>
+</main>
+</body>
+</html>

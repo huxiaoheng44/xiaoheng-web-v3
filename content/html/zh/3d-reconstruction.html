@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>立体视觉三维重建</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← 全部项目</a><a class="lang" href="../en/3d-reconstruction.html">English</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">3D Scanning and Motion Capturing · 慕尼黑工业大学</p>
+  <h1>立体视觉三维重建</h1>
+  <p class="lead">完整的立体重建流程——从图像对出发，经过稀疏匹配、图像校正和稠密匹配，生成视差图、点云和网格，并在 TUM Intrinsic3D 与 KITTI 数据集上进行评估。</p>
+  <ul class="tags"><li>C++</li><li>OpenCV</li><li>Eigen</li><li>FLANN</li><li>Ceres Solver</li><li>SGBM</li></ul>
+</header>
+
+<figure>
+  <video controls preload="metadata" src="../../videos/3D.mp4"></video>
+  <figcaption>演示视频</figcaption>
+</figure>
+
+<h2>动机与思路</h2>
+<h3>应用场景</h3>
+<figure>
+  <img src="../assets/3DReconstruction/p03.webp" alt="心脏三维模型、城堡模型和城市街道模型">
+  <figcaption>用于手术规划的人体器官三维模型 · 历史建筑重建 · 为机器人导航重建环境</figcaption>
+</figure>
+<figure class="fig-md">
+  <img src="../assets/3DReconstruction/p04.webp" alt="巴黎圣母院的点云重建">
+  <figcaption>巴黎圣母院重建</figcaption>
+</figure>
+<h3>我们的思路</h3>
+<p>以同一物体的多张照片作为输入，经过重建，输出三维模型。</p>
+<figure>
+  <img src="../assets/3DReconstruction/p05.webp" alt="多张浮雕照片 → 输入 → 重建 → 输出 → 三维模型">
+  <figcaption>输入图像 → 重建 → 三维模型</figcaption>
+</figure>
+
+<h2>相关工作</h2>
+<h3>数据集</h3>
+<div class="grid">
+  <div class="card">
+    <h4>TUM Intrinsic3D – Bricks RGBD</h4>
+    <p>彩色图和深度图 · 彩色与深度相机内参 · 相机位姿矩阵 · 单个物体的多视角图像</p>
+  </div>
+  <div class="card">
+    <h4>KITTI Stereo 2015</h4>
+    <p>视差图 · 彩色图 · 相机畸变系数 · 相机外参 · 不同场景的图像</p>
+  </div>
+</div>
+<figure>
+  <div class="pair">
+  <img src="../assets/3DReconstruction/p07.webp" alt="TUM Intrinsic3D Bricks 预览">
+  <img src="../assets/3DReconstruction/p08.webp" alt="KITTI Stereo Evaluation 2015 预览">
+  </div>
+  <figcaption>TUM Intrinsic3D Bricks（左）与 KITTI Stereo 2015（右）</figcaption>
+</figure>
+
+<h3>数据集对比</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th></th><th>TUM Intrinsic3D</th><th>KITTI Stereo 2015</th></tr></thead>
+  <tbody>
+    <tr><th scope="row">优点</th>
+      <td><ul><li>无需考虑相机畸变</li><li>可以使用 ICP</li><li>提供真实深度（ground truth）</li></ul></td>
+      <td><ul><li>相机参数易于加载</li><li>真实视差可直接用于评估</li></ul></td></tr>
+    <tr><th scope="row">缺点</th>
+      <td><ul><li>没有真实视差</li></ul></td>
+      <td><ul><li>单一场景的图像数量不足</li></ul></td></tr>
+  </tbody>
+</table></div>
+
+<h3>使用的库</h3>
+<div class="grid">
+  <div class="card"><h4>OpenCV</h4><p>计算机视觉算法</p></div>
+  <div class="card"><h4>Eigen</h4><p>矩阵运算</p></div>
+  <div class="card"><h4>FLANN</h4><p>最近邻搜索</p></div>
+  <div class="card"><h4>Ceres Solver</h4><p>非线性优化</p></div>
+</div>
+
+<h3>重建流程</h3>
+<figure>
+  <img src="../assets/3DReconstruction/p11.webp" alt="流程：图像对 → 关键点 → 特征匹配 → 校正图像 → 视差图 → 深度图 → 网格">
+  <figcaption>图像对 → 去畸变与关键点检测 → 特征描述子匹配 → 稀疏匹配（估计相机位姿 / 基础矩阵）→ 图像校正 → 稠密匹配 → 视差图 → 深度图 → 三角化 → 网格</figcaption>
+</figure>
+
+<h2>方法</h2>
+<h3>稀疏匹配——关键点检测器</h3>
+<p>对比了六种检测器：ORB、BRISK、FAST、Shi-Tomasi、SURF 和 SIFT。</p>
+<figure>
+  <img src="../assets/3DReconstruction/p14.webp" alt="ORB、Brisk、Fast、Shi-Tomasi、SURF、SIFT 在同一图像上检测到的关键点">
+  <figcaption>各方法检测到的关键点</figcaption>
+</figure>
+
+<h3>关键点检测器与特征描述子对比</h3>
+<p class="table-note">基础矩阵计算使用 RANSAC，描述子匹配使用 FLANN。</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>数据集</th><th>指标</th><th class="num">BRISK</th><th class="num">ORB</th><th class="num">Shi-Tomasi</th><th class="num">SIFT</th><th class="num">SURF</th><th class="num">FAST</th></tr></thead>
+  <tbody>
+    <tr><th scope="row" rowspan="4">TUM Intrinsic</th><td>平均旋转误差</td><td class="num best">0.0616</td><td class="num">0.1241</td><td class="num">0.1053</td><td class="num">0.1014</td><td class="num">0.0838</td><td class="num">0.0619</td></tr>
+    <tr><td>异常基础矩阵数量</td><td class="num best">20</td><td class="num">40</td><td class="num">33</td><td class="num">33</td><td class="num">27</td><td class="num best">20</td></tr>
+    <tr><td>平均平移误差</td><td class="num">0.9993</td><td class="num">0.9998</td><td class="num">0.9993</td><td class="num">0.9994</td><td class="num">0.9993</td><td class="num">0.9994</td></tr>
+    <tr><td>处理 10 对图像耗时（秒）</td><td class="num best">22.5254</td><td class="num">57.269</td><td class="num">62.391</td><td class="num">430.32</td><td class="num">44.541</td><td class="num">670.31</td></tr>
+    <tr><th scope="row" rowspan="3">KITTI Raw</th><td>平均旋转误差</td><td class="num">0.0125</td><td class="num">0.0318</td><td class="num">0.0097</td><td class="num best">0.0078</td><td class="num">–</td><td class="num">0.0111</td></tr>
+    <tr><td>异常基础矩阵数量</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">–</td><td class="num">0</td></tr>
+    <tr><td>平均平移误差</td><td class="num">0.7645</td><td class="num">1.03877</td><td class="num">0.5479</td><td class="num best">0.5403</td><td class="num">–</td><td class="num">0.6106</td></tr>
+  </tbody>
+</table></div>
+<p class="table-note">所有方法的平移误差都过高，因此后续步骤使用真实平移量。</p>
+
+<h3>基础矩阵估计</h3>
+<p>为了评估稀疏匹配方法，先由检测到的关键点估计基础矩阵，再转换为本质矩阵并分解出旋转和平移，与真实相机位姿进行比较（旋转和平移的均方误差）。</p>
+<figure>
+  <img src="../assets/3DReconstruction/p17.webp" alt="稀疏匹配 → 检测到的关键点 → 基础矩阵 → 本质矩阵 → 旋转与平移，与真实相机位姿比较">
+  <figcaption>稀疏匹配方法的评估流程</figcaption>
+</figure>
+<p class="table-note">使用 BRISK 作为关键点检测器和特征描述子，FLANN 进行描述子匹配。</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>数据集</th><th>指标</th><th class="num">RANSAC</th><th class="num">LMEDS</th><th class="num">七点法</th><th class="num">八点法</th></tr></thead>
+  <tbody>
+    <tr><th scope="row" rowspan="3">TUM Intrinsic</th><td>平均旋转误差</td><td class="num">0.0616</td><td class="num">0.1813</td><td class="num">0.1813</td><td class="num best">0.0296</td></tr>
+    <tr><td>异常基础矩阵数量</td><td class="num">20</td><td class="num">60</td><td class="num">60</td><td class="num best">9</td></tr>
+    <tr><td>平均平移误差</td><td class="num">0.9993</td><td class="num">0.9998</td><td class="num">0.9998</td><td class="num">0.9995</td></tr>
+    <tr><th scope="row" rowspan="3">KITTI Raw</th><td>平均旋转误差</td><td class="num">0.0125</td><td class="num best">0.0055</td><td class="num best">0.0055</td><td class="num">0.0199</td></tr>
+    <tr><td>异常基础矩阵数量</td><td class="num">0</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+    <tr><td>平均平移误差</td><td class="num">0.7645</td><td class="num best">0.5275</td><td class="num best">0.5275</td><td class="num">0.9225</td></tr>
+  </tbody>
+</table></div>
+<p class="table-note">同样，所有方法的平移误差都过高，后续步骤使用真实平移量。</p>
+
+<h3>图像校正</h3>
+<figure>
+  <img src="../assets/3DReconstruction/p19.webp" alt="浮雕和 KITTI 街景图像对在校正前后的对比">
+  <figcaption>校正前后的图像对（TUM 与 KITTI）</figcaption>
+</figure>
+<figure>
+  <img src="../assets/3DReconstruction/p20.webp" alt="对极几何示意图以及在 KITTI 立体图像对上绘制的极线">
+  <figcaption>基础矩阵决定了极线</figcaption>
+</figure>
+
+<h3>稠密匹配</h3>
+<p>得到基础矩阵、本质矩阵、平移矩阵和旋转矩阵后，利用校正后的图像对计算视差图。</p>
+<figure class="fig-md">
+  <img src="../assets/3DReconstruction/p22.webp" alt="带匹配的校正图像 → 计算视差 → 视差图">
+</figure>
+
+<h4>块匹配（Block Matching, BM）</h4>
+<ul>
+  <li>当对应点位于平行的极线上时，就可以逐行扫描左图。</li>
+  <li>对每个像素，在右图中寻找“相似”的像素。</li>
+  <li>单个像素难以匹配，因此使用大小为 K×K 的像素块（展平为向量）。</li>
+  <li>x 方向上的差值即为视差。</li>
+</ul>
+<p>相似度用两个展平为向量 <b>w</b><sub>L</sub>、<b>w</b><sub>R</sub> 的 K×K 窗口之间的绝对差之和（SAD）来衡量：</p>
+<p class="formula">SAD(x, y, d) = ‖ <b>w</b><sub>L</sub>(x, y) − <b>w</b><sub>R</sub>(x − d, y) ‖</p>
+<figure>
+  <div class="pair">
+  <img src="../assets/3DReconstruction/p23.webp" alt="左右图像中的扫描线及匹配得分曲线">
+  <img src="../assets/3DReconstruction/p24.webp" alt="左右图像中的窗口 wL 与 wR">
+  </div>
+  <figcaption>沿扫描线搜索及得到的匹配得分</figcaption>
+</figure>
+
+<h4>半全局块匹配（Semi-Global Block Matching, SGBM）</h4>
+<ul>
+  <li>之所以称为“全局”，是因为它会利用整幅图像中的信息。</li>
+  <li>具体做法是在多个方向上考虑相邻像素来计算视差。</li>
+  <li>同样取 K×K 的块，并考虑其周围的 8 个方向。</li>
+  <li>选择聚合匹配代价最小的方向来计算视差。</li>
+  <li>使用 Birchfield–Tomasi 相异度寻找“相似”像素：对于同一扫描线上左右图像的列 x<sub>l</sub>、x<sub>r</sub>，利用图像强度 I<sub>l</sub>、I<sub>r</sub> 的线性插值函数 Î<sub>l</sub>、Î<sub>r</sub> 定义一对对称函数，二者的最小值即为相异度。</li>
+</ul>
+<p class="formula">d̄(x<sub>l</sub>, x<sub>r</sub>, I<sub>l</sub>, I<sub>r</sub>) = min<sub>x<sub>r</sub>−½ ≤ x ≤ x<sub>r</sub>+½</sub> | I<sub>l</sub>(x<sub>l</sub>) − Î<sub>r</sub>(x) |</p>
+<p class="formula">d(x<sub>l</sub>, x<sub>r</sub>) = min{ d̄(x<sub>l</sub>, x<sub>r</sub>, I<sub>l</sub>, I<sub>r</sub>), d̄(x<sub>r</sub>, x<sub>l</sub>, I<sub>r</sub>, I<sub>l</sub>) }</p>
+<p>记 D 为相异度项，R 为由相邻像素计算的正则项，则用于求视差的总代价为 <span class="formula" style="display:inline;padding:0">E = D + R</span>。</p>
+<figure>
+  <img src="../assets/3DReconstruction/p25.webp" alt="代价聚合的 8 个路径方向及匹配窗口示意">
+  <figcaption>沿多个方向进行代价聚合</figcaption>
+</figure>
+
+<h3>生成的视差图</h3>
+<figure>
+  <img src="../assets/3DReconstruction/p27.webp" alt="未经后处理滤波的 BM 和 SGBM 视差图，噪声很多">
+  <figcaption>未经后处理滤波（上：BM，下：SGBM；左：TUM，右：KITTI Raw）</figcaption>
+</figure>
+<figure>
+  <img src="../assets/3DReconstruction/p28.webp" alt="经过后处理滤波的 BM 和 SGBM 视差图，较为平滑">
+  <figcaption>经过后处理滤波</figcaption>
+</figure>
+
+<h3>稠密匹配评估</h3>
+<p>将生成的深度图与真实深度图逐像素比较。当某像素的差值同时超过 3 像素和 5% 时，记为错误：</p>
+<p class="formula">Error = count( |d<sub>ij</sub> − d′<sub>ij</sub>| &gt; 3 px &amp; |d<sub>ij</sub> − d′<sub>ij</sub>| / d′<sub>ij</sub> &gt; 0.05 ) / 有效像素总数</p>
+<figure class="fig-md">
+  <img src="../assets/3DReconstruction/p29.webp" alt="生成的深度图与真实深度图逐像素比较">
+</figure>
+<figure>
+  <div class="pair">
+  <img src="../assets/3DReconstruction/p30.webp" alt="约 350 对图像的深度误差折线图；块匹配（红）有大量尖峰，SGBM（蓝）保持较低">
+  <img src="../assets/3DReconstruction/p31.webp" alt="KITTI 上约 200 对图像的视差误差折线图；SGBM（蓝）大多低于 BM（红）">
+  </div>
+  <figcaption>左：与真实深度图对比的深度误差（TUM）；右：与真实视差图对比的视差误差（KITTI）。红色为块匹配，蓝色为半全局块匹配——SGBM 的误差始终更低。</figcaption>
+</figure>
+
+<h2>三维模型生成</h2>
+<figure class="fig-sm">
+  <img src="../assets/3DReconstruction/p33.webp" alt="左右相机观察场景并进行三角化的示意图">
+  <figcaption>通过三角化将视差图转换为点云</figcaption>
+</figure>
+<figure>
+  <img src="../assets/3DReconstruction/p34.webp" alt="TUM 和 KITTI 的视差图及对应三维模型">
+  <figcaption>视差图 → 三维模型（左：TUM，右：KITTI Raw）</figcaption>
+</figure>
+<figure>
+  <div class="pair">
+  <img src="../assets/3DReconstruction/p35.webp" alt="浮雕的纹理网格">
+  <img src="../assets/3DReconstruction/p36.webp" alt="KITTI 街道点云">
+  </div>
+  <figcaption>生成的网格（TUM Intrinsic3D）与生成的点云（KITTI）</figcaption>
+</figure>
+
+<h2>结论</h2>
+<ol>
+  <li>实现了立体重建流程。</li>
+  <li>涵盖标定、关键点计算和三维模型构建等关键步骤。</li>
+  <li>结果表明，从立体图像重建三维模型简单且高效。</li>
+  <li>生成的三维模型在场景理解、物体识别和导航等方面具有应用潜力。</li>
+</ol>
+<h2>讨论</h2>
+<ol>
+  <li>本项目可作为进一步研究和开发的起点。</li>
+  <li>可以引入 ICP 方法和其他数据来改进三维模型。</li>
+  <li>可在机器人、自动驾驶等领域探索新的应用。</li>
+  <li>三维模型的精度和鲁棒性仍有提升空间。</li>
+  <li>可以集成新的算法和技术以获得更好的性能。</li>
+</ol>
+
+<footer>根据项目演示文稿（3DReconstruction.pdf）转换。</footer>
+</main>
+</body>
+</html>

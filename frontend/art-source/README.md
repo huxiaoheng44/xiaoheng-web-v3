@@ -8,9 +8,9 @@ Generated using the built-in ImageGen tool, then processed by `scripts/prepare-a
 | keyboard.png | 160 × 53 | Independently positioned keyboard |
 | mouse.png | 36 × 36 | Independently positioned mouse |
 | mug.png | 40 × 40 | Independently positioned water mug |
-| ghost-sprites.png | 192 × 192 | 4 × 4 sheet, each frame 48 × 48 |
+| crt-agent-sprites.png | 192 × 192 | 4 × 4 sheet, each frame 48 × 48 |
 
-Ghost rows: idle, move, look, point. Four frames per row; idle includes a blink. `src/GhostOverlay.tsx` maps local behavior to these rows. Sprite generation can vary frame silhouettes slightly; originals permit further art direction without changing the interaction code.
+Ghost rows: idle, move, look, point. Four frames per row; idle includes a blink. `src/CrtAgentOverlay.tsx` maps local behavior to these rows. Sprite generation can vary frame silhouettes slightly; originals permit further art direction without changing the interaction code.
 
 ## Prompt set
 

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PingPong Vision</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<main>
+<nav class="topbar"><a href="index.html">← 全部项目</a><a class="lang" href="../en/pingpong-vision.html">English</a></nav>
+
+<header class="hero">
+  <p class="eyebrow">HMI 监控平台</p>
+  <h1>PingPong Vision——基于摄像头的 HMI 可视化</h1>
+  <p class="lead">PingPong Vision 用摄像头和 AI OCR 读取生产设备的 HMI 屏幕，再把读数转化为实时看板数据。</p>
+  <ul class="tags"><li>摄像头输入</li><li>Gemini OCR</li><li>FastAPI</li><li>Flask</li><li>TimescaleDB</li><li>React</li><li>nginx</li></ul>
+</header>
+
+<figure>
+  <video controls preload="metadata" src="../../videos/pingpong.mp4"></video>
+  <figcaption>演示视频</figcaption>
+</figure>
+
+<div class="stats">
+  <div class="stat"><b>摄像头</b><span>输入</span></div>
+  <div class="stat"><b>AI OCR</b><span>字段读取</span></div>
+  <div class="stat"><b>数据库</b><span>历史 + 事件</span></div>
+</div>
+
+<h2>问题：设备数据被困在 HMI 屏幕后面</h2>
+<p>老旧设备和厂商封闭的平台往往不开放 PLC/API 数据。可见的屏幕常常是唯一通用的接口。</p>
+<div class="grid">
+  <div class="card"><h4><span class="n">01</span>无需 PLC 集成</h4><p>系统不涉及控制指令、OPC UA 标签和设备自动化逻辑。</p></div>
+  <div class="card"><h4><span class="n">02</span>跨品牌通用</h4><p>摄像头可以观察西门子、Multivac、老式面板以及类模拟仪表界面。</p></div>
+  <div class="card"><h4><span class="n">03</span>形成历史数据</h4><p>屏幕上可见的数值变成结构化读数、事件和看板趋势。</p></div>
+</div>
+
+<h2>核心流程：一个摄像头把屏幕变成数据</h2>
+<p>操作员只需配置一次 HMI，之后 worker 会持续从实时画面中读取已配置的字段。</p>
+<ol class="flow">
+  <li><strong>01 采集 HMI</strong>——USB 摄像头在本地或通过中继服务推流设备屏幕</li><li class="arrow">→</li>
+  <li><strong>02 标定字段</strong>——初始化时保存屏幕四角和各字段的边界框</li><li class="arrow">→</li>
+  <li><strong>03 读取 + 存储</strong>——worker 做透视校正、调用 Gemini OCR 并保存读数</li>
+</ol>
+
+<h2>架构</h2>
+<figure>
+  <img src="../assets/pingpong/p04.webp" alt="架构：现场 PC 上的 camera-server 通过 WebSocket 推帧到云端 relay-server（FastAPI，:8080）；hmi-data-server（Flask API，:5100）获取最新帧，做透视校正和 Gemini OCR，写入 TimescaleDB（:5432）；浏览器通过 MJPEG 查看实时画面，并通过 REST 访问 React + nginx 看板">
+  <figcaption>现场 PC → 云端 / 服务器 → 浏览器</figcaption>
+</figure>
+
+<h3>每个服务负责视觉流水线中的一部分</h3>
+<div class="table-wrap"><table>
+  <thead><tr><th>服务</th><th>职责</th></tr></thead>
+  <tbody>
+    <tr><td><code>camera-server</code></td><td>运行在摄像头所连的 PC 上；在局域网提供 MJPEG，或把画面推送到中继。</td></tr>
+    <tr><td><code>relay-server</code></td><td>为每个摄像头缓存最新一帧，并把 MJPEG 分发给前端和 worker。</td></tr>
+    <tr><td><code>hmi-data-server</code></td><td>业务 REST API；管理 HMI 页面、字段、读数、事件和监控任务。</td></tr>
+    <tr><td><code>hmi-monitor-worker</code></td><td>真正执行 OCR 循环并写入读数的单一进程。</td></tr>
+    <tr><td>TimescaleDB</td><td>存储 HMI 页面、字段定义、时序读数、事件和 worker 状态。</td></tr>
+  </tbody>
+</table></div>
+
+<h2>数据模型：HMI 数据保存在后端</h2>
+<p>浏览器只保存临时的会话状态。HMI 业务数据都从 HMI 数据服务器读取、写入。</p>
+<div class="table-wrap"><table>
+  <thead><tr><th>表</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td><code>hmi_pages</code></td><td>已配置的摄像头/HMI 页面或设备位置。</td></tr>
+    <tr><td><code>hmi_fields</code></td><td>识别出的标签、单位、可视类型和 <code>bbox_percent</code>。</td></tr>
+    <tr><td><code>hmi_readings</code></td><td>时序 OCR 数值、置信度、延迟和元数据。</td></tr>
+    <tr><td><code>hmi_events</code></td><td>画面变化、运行事件和字段阈值告警。</td></tr>
+    <tr><td><code>hmi_monitor_jobs</code></td><td>期望的监控状态，以及 worker 心跳/状态。</td></tr>
+  </tbody>
+</table></div>
+
+<h2>事件与可靠性：监控不只是 OCR 数值</h2>
+<div class="grid">
+  <div class="card"><h4><span class="n">01</span>画面变化 AI</h4><p>比较基准帧与实时帧，检测手部遮挡、摄像头移动、页面切换或数值变化。</p></div>
+  <div class="card"><h4><span class="n">02</span>运行事件</h4><p>worker 会记录 <code>camera_connection_lost</code> 和 <code>repeated_unreadable_values</code>。</p></div>
+  <div class="card"><h4><span class="n">03</span>字段阈值</h4><p>看板规则可以把读数转化为警告和告警。</p></div>
+</div>
+<div class="callout"><p><strong>已知限制：</strong>标定依赖于摄像头的对准和 HMI 页面的稳定。如果摄像头移动或屏幕布局变化，已保存的字段框可能不再与实时画面对应。</p></div>
+
+<h2>总结</h2>
+<p><strong>PingPong Vision 读取的是设备屏幕，而不是设备控制器。</strong>该项目展示了一条无侵入式实现生产可视化的路径：摄像头采集、AI OCR、时序存储、事件记录，以及面向 HMI 设备监控的看板。</p>
+
+<footer>根据项目演示文稿（pingpong.pdf）转换。</footer>
+</main>
+</body>
+</html>

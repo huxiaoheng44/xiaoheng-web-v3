@@ -33,7 +33,7 @@ for (let row = 0; row < 4; row++) for (let col = 0; col < 4; col++) {
   const frame = await sharp(trimmed).resize(18, 20, { fit:'contain', background:{r:0,g:0,b:0,alpha:0}, kernel:'nearest' }).png().toBuffer();
   tiles.push({ input: frame, left:col*32+7, top:row*32+6 });
 }
-await sharp({ create:{width:128,height:128,channels:4,background:{r:0,g:0,b:0,alpha:0}} }).composite(tiles).png().toFile('public/assets/ghost-sprites-v2.png');
-await sharp('public/assets/ghost-sprites-v2.png').extract({left:0,top:0,width:32,height:32}).resize(256,256,{kernel:'nearest'}).png().toFile('test-results/ghost-v2-preview.png');
+await sharp({ create:{width:128,height:128,channels:4,background:{r:0,g:0,b:0,alpha:0}} }).composite(tiles).png().toFile('public/assets/crt-agent-sprites-v2.png');
+await sharp('public/assets/crt-agent-sprites-v2.png').extract({left:0,top:0,width:32,height:32}).resize(256,256,{kernel:'nearest'}).png().toFile('../artifacts/test-results/ghost-v2-preview.png');
 console.log('Prepared 16 aligned transparent ghost frames, 32px per cell.');
 import './asset-workspace.mjs';

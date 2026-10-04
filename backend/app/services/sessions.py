@@ -18,6 +18,9 @@ class Session:
     evaluated: float=-1e9
     spoke: float=-1e9
     proactive_count: int=0
+    unanswered_proactive: int=0
+    light_invite_sent: bool=False
+    guide_topic: str=''
 
 class Store:
     def __init__(self): self.sessions={}; self.calls=deque(); self.creates={}; self.ip_requests={}

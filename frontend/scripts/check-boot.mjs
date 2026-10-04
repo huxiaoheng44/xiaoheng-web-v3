@@ -6,10 +6,10 @@ try {
  await page.goto('http://127.0.0.1:5173');
  await page.locator('.boot-overlay').waitFor();
  assert(await page.locator('.os-shell').evaluate(e=>e.inert));
- await page.screenshot({path:'test-results/boot-start.png'});
+ await page.screenshot({path:'artifacts/test-results/boot-start.png'});
  await page.locator('.boot-overlay').waitFor({state:'detached'});
  assert.equal(await page.locator('.os-shell').evaluate(e=>e.inert),false);
- await page.screenshot({path:'test-results/desk-motion.png'});
+ await page.screenshot({path:'artifacts/test-results/desk-motion.png'});
  assert.equal(await page.locator('.stage').evaluate(e=>getComputedStyle(e,'::before').animationName),'coffee-steam');
  const keyboard=await page.locator('.keyboard-object').boundingBox();
  const stage=await page.locator('.stage').boundingBox();
