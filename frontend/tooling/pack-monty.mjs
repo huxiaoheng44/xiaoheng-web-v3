@@ -1,8 +1,9 @@
+import '../scripts/asset-workspace.mjs';
 import { mkdir, readdir, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 import sharp from 'sharp';
 
-const root='frontend/art-source/crt-agent';
+const root='art-source/monty';
 const actions=[
  ['idle',9,6,true],['listening',9,6,true],['scan',9,6,true],['travel',9,8,true],
  ['guide-left',9,8,false],['guide-right',9,8,false],['question',9,8,false],['answer',9,8,false],
@@ -30,6 +31,6 @@ for(const action of files){
 }
 const rows=Math.ceil(frames.length/cols), sheet={width:cols*size,height:rows*size,columns:cols,padding:0};
 const png=await sharp({create:{width:sheet.width,height:sheet.height,channels:4,background:{r:0,g:0,b:0,alpha:0}}}).composite(composites).png().toBuffer();
-const metadata={schema_version:1,character:'crt-agent',canvas:{width:size,height:size},sheet,frames,animations:Object.fromEntries(files.map(action=>[action.name,{frames:action.indices,fps:action.fps,loop:action.loop}]))};
-for(const target of [join(root,'dist'),join('frontend','public','assets')]){await mkdir(target,{recursive:true});await writeFile(join(target,'crt-agent.png'),png);await writeFile(join(target,'crt-agent.json'),`${JSON.stringify(metadata,null,2)}\n`);}
+const metadata={schema_version:1,character:'monty',canvas:{width:size,height:size},sheet,frames,animations:Object.fromEntries(files.map(action=>[action.name,{frames:action.indices,fps:action.fps,loop:action.loop}]))};
+for(const target of [join(root,'dist'),join('public','assets')]){await mkdir(target,{recursive:true});await writeFile(join(target,'monty.png'),png);await writeFile(join(target,'monty.json'),`${JSON.stringify(metadata,null,2)}\n`);}
 console.log(`Packed ${frames.length} transparent ${size}×${size} frames into ${sheet.width}×${sheet.height}; dozing loop and sleep-sequence metadata verified.`);

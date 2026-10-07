@@ -8,6 +8,6 @@ export default defineConfig({
   build: { outDir: '../artifacts/build', emptyOutDir: true },
   server: {
     proxy: { '/api': 'http://127.0.0.1:8000' },
-    fs: { allow: ['./', '../content', '../node_modules'].map(path => fileURLToPath(new URL(path, import.meta.url))) },
+    fs: { allow: ['./', '../content'].map(path => fileURLToPath(new URL(path, import.meta.url))) },
   },
 });
