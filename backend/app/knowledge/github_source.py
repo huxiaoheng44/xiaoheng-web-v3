@@ -29,12 +29,12 @@ def allowed_repository(slug: str) -> Repository:
     return Repository(slug, ALLOWED_REPOSITORIES[slug])
 
 def github_json(url: str) -> dict:
-    request = Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'crt-agent-source-indexer'})
+    request = Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'monty-source-indexer'})
     with urlopen(request, timeout=15) as response:
         return json.loads(response.read().decode('utf-8'))
 
 def github_bytes(url: str, limit: int = MAX_FILE_BYTES) -> bytes:
-    request = Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'crt-agent-source-indexer'})
+    request = Request(url, headers={'Accept': 'application/vnd.github+json', 'User-Agent': 'monty-source-indexer'})
     with urlopen(request, timeout=30) as response:
         data = response.read(limit + 1)
     if len(data) > limit:

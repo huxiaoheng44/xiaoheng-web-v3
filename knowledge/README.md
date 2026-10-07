@@ -1,4 +1,4 @@
-# Ghost public knowledge
+# Monty public knowledge
 
 Only Markdown files beginning with the following exact frontmatter are indexed:
 

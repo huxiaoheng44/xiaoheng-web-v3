@@ -30,7 +30,7 @@ def test_readme_modules_and_code_chunks_are_searchable_with_current_branch_links
     assert any(row['id'].endswith(':summary') and row['sourceType'] == 'github-source' for row in rows)
     code = next(row for row in rows if row['path'] == 'backend/app/example.py')
     assert code['url'] == 'https://github.com/huxiaoheng44/xiaoheng-web-v3/blob/main/backend/app/example.py'
-    db = tmp_path/'knowledge.sqlite'; build(db=db, github_snapshot=(repo, branch, files))
+    db = tmp_path/'knowledge.sqlite'; build(db=db, semantic=False, github_snapshot=(repo, branch, files))
     matches = Knowledge(db).search('safe source block')
     assert any(match['sourceType'] == 'github-source' and match['url'] == code['url'] for match in matches)
     assert file_url(repo, branch, 'frontend/src/App.tsx').endswith('/blob/main/frontend/src/App.tsx')
@@ -46,5 +46,5 @@ def test_code_pseudo_instructions_are_data_not_agent_permissions(tmp_path):
 
 def test_no_matching_source_returns_no_evidence(tmp_path):
     repo, branch, files = snapshot()
-    db = tmp_path/'knowledge.sqlite'; build(db=db, github_snapshot=(repo, branch, files))
+    db = tmp_path/'knowledge.sqlite'; build(db=db, semantic=False, github_snapshot=(repo, branch, files))
     assert Knowledge(db).search('qwertyuiopasdfghjkl') == []
