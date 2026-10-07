@@ -1,0 +1,128 @@
+[
+  {
+    "id": "fast-ai-movie",
+    "aliases": [
+      "FAST AI Movie",
+      "视频编辑",
+      "电影"
+    ],
+    "topics": [
+      "ai",
+      "full-stack",
+      "web"
+    ],
+    "title": "FAST AI Movie Web",
+    "description": {
+      "en": "AI video generation and editing",
+      "zh": "AI 视频生成与编辑"
+    }
+  },
+  {
+    "id": "pingpong-vision",
+    "aliases": [
+      "PingPong",
+      "乒乓"
+    ],
+    "topics": [
+      "ai",
+      "full-stack",
+      "vision",
+      "llm",
+      "multimodal",
+      "ocr"
+    ],
+    "title": "PingPong Vision",
+    "description": {
+      "en": "Gemini multimodal OCR for camera readings",
+      "zh": "Gemini 多模态 OCR 与摄像头读数"
+    }
+  },
+  {
+    "id": "web-harvest-rag",
+    "aliases": [
+      "Web Harvest",
+      "网页采集"
+    ],
+    "topics": [
+      "ai",
+      "rag",
+      "web",
+      "llm"
+    ],
+    "title": "Web Harvest RAG",
+    "description": {
+      "en": "RAG chatbot with hybrid retrieval and query rewriting",
+      "zh": "混合检索、查询改写与 RAG 聊天系统"
+    }
+  },
+  {
+    "id": "you-dont-need-rag",
+    "aliases": [
+      "You Don't Need RAG",
+      "You Don’t Need RAG"
+    ],
+    "topics": [
+      "ai",
+      "rag",
+      "web",
+      "llm"
+    ],
+    "title": "You Don’t Need RAG",
+    "description": {
+      "en": "Prepare knowledge for long-context LLMs or RAG",
+      "zh": "为长上下文 LLM 或 RAG 整理知识"
+    }
+  },
+  {
+    "id": "vehicle-identification",
+    "aliases": [
+      "Vehicle Noise",
+      "车辆",
+      "噪声"
+    ],
+    "topics": [
+      "ai",
+      "machine-learning"
+    ],
+    "title": "Vehicle Noise Classification",
+    "description": {
+      "en": "Machine learning for acoustic classification",
+      "zh": "基于机器学习的车辆声学分类"
+    }
+  },
+  {
+    "id": "3d-reconstruction",
+    "aliases": [
+      "Stereo 3D",
+      "三维",
+      "双目"
+    ],
+    "topics": [
+      "vision",
+      "3d",
+      "ai"
+    ],
+    "title": "Stereo 3D Reconstruction",
+    "description": {
+      "en": "Computer vision and stereo reconstruction",
+      "zh": "计算机视觉与双目三维重建"
+    }
+  },
+  {
+    "id": "drone-simulator",
+    "aliases": [
+      "Drone",
+      "无人机",
+      "PX4"
+    ],
+    "topics": [
+      "robotics",
+      "systems"
+    ],
+    "title": "Drone Simulator",
+    "description": {
+      "en": "PX4 robotics and flight simulation",
+      "zh": "PX4 机器人与飞行仿真"
+    }
+  }
+]

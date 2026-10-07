@@ -1,0 +1,17 @@
+[
+  {
+    "id": "ai",
+    "label": { "en": "AI projects", "zh": "AI 项目" },
+    "question": { "en": "Show me AI projects", "zh": "带我看 AI 项目" }
+  },
+  {
+    "id": "drone",
+    "label": { "en": "Drone simulator", "zh": "无人机仿真" },
+    "question": { "en": "Take me to the drone simulator", "zh": "带我看无人机仿真项目" }
+  },
+  {
+    "id": "experience",
+    "label": { "en": "Work experience", "zh": "工作经历" },
+    "question": { "en": "Show me your work experience", "zh": "带我看工作经历" }
+  }
+]

@@ -7,7 +7,7 @@ from backend.main import create_app
 from backend.app.knowledge.store import Knowledge, build, records
 from backend.app.core.config import ROOT
 from backend.app.schemas.contracts import ChatRequest, PresentationInstruction
-from backend.app.agent.guide_planner import GuidePlanner
+from backend.app.agent.guide_planner import CATALOG, GuidePlanner
 
 CTX={'language':'zh','contextVersion':0,'activeWindow':None,'windows':[],'aboutTab':'profile','targets':[{'id':'folder:projects','available':True,'guideable':True,'capabilities':['highlight','guideTo'],'names':{'en':'Projects','zh':'项目'}}]}
 def body(message='你好',**kwargs): return {'requestId':str(uuid.uuid4()),'message':message,'pageContext':CTX,**kwargs}
@@ -31,7 +31,7 @@ class Fake:
 
 @pytest.fixture
 def knowledge(tmp_path):
-    db=tmp_path/'kb.sqlite';build(db=db);return Knowledge(db)
+    db=tmp_path/'kb.sqlite';build(db=db, semantic=False);return Knowledge(db)
 
 def login(client):return {'Authorization':'Bearer '+client.post('/api/session').json()['token']}
 
@@ -55,7 +55,8 @@ def test_explicit_project_tour_has_trusted_desktop_fallback(knowledge,message):
     # provide the one safe, registered entry point.
     with TestClient(create_app(Fake('silent'),knowledge)) as client:
         h=login(client);ev=events(client.post('/api/chat',json=body(message),headers=h))
-        assert [e['instruction'] for e in ev if e['type']=='presentation']==[{'type':'guideTo','target':'folder:projects','value':''}]
+        assert next(e for e in ev if e['type']=='projectChoices')['ids']
+        assert not any(e['type']=='presentation' for e in ev)
 
 def test_guide_planner_rejects_invalid_or_plural_provider_candidates():
     planner=GuidePlanner();context=ChatRequest.model_validate(body()).pageContext
@@ -169,3 +170,158 @@ def test_public_extra_requires_explicit_approval(tmp_path):
     rows=list(records(tmp_path))
     assert any('Approved canary' in r['text'] for r in rows)
     assert not any('private canary' in r['text'] for r in rows)
+
+@pytest.mark.parametrize('message', ['带我看 AI 项目', 'Show me AI projects'])
+def test_tour_can_start_inside_open_projects(message):
+    context=ChatRequest.model_validate({**body(), 'pageContext':{**CTX,'activeWindow':'projects','activePanel':'collection','targets':[
+        {'id':'project-card:fast-ai-movie','available':False,'guideable':True,'capabilities':['guideTo'],'names':{'en':'FAST AI Movie Web','zh':'FAST AI 视频编辑平台'}},
+    ]}}).pageContext
+    assert GuidePlanner().plan(message,context,'zh').target_id=='project-card:fast-ai-movie'
+
+def test_full_stack_tour_does_not_choose_alphabetically_first_project():
+    planner=GuidePlanner()
+    context=ChatRequest.model_validate({**body(), 'pageContext':{**CTX,'activeWindow':'projects','activePanel':'collection','targets':[
+        {'id':f'project-card:{id}','available':True,'guideable':True,'capabilities':['guideTo'],'names':{'en':id,'zh':id}}
+        for id in ['3d-reconstruction','fast-ai-movie']
+    ]}}).pageContext
+    assert planner.plan('completed',context,'en',guide_step=True,topic=planner.topic('Show me full-stack projects')).target_id=='project-card:fast-ai-movie'
+
+@pytest.mark.parametrize('project', CATALOG)
+def test_each_catalog_project_routes_from_desktop_through_collection_to_detail(project):
+    planner=GuidePlanner();question=f"Show me {project['id']}"
+    assert planner.plan(question,ChatRequest.model_validate(body()).pageContext,'en').target_id=='folder:projects'
+    context=ChatRequest.model_validate({**body(), 'pageContext':{**CTX,'activeWindow':'projects','activePanel':'collection','targets':[
+        {'id':f"project-card:{project['id']}",'available':False,'guideable':True,'capabilities':['guideTo'],'names':{'en':project['id'],'zh':project['id']}}
+    ]}}).pageContext
+    assert planner.plan('completed',context,'zh',guide_step=True,topic=planner.topic(question)).target_id==f"project-card:{project['id']}"
+    result=planner.plan('completed',context.model_copy(update={'activeWindow':f"project:{project['id']}",'activePanel':'detail','targets':[]}),'zh',guide_step=True,topic=planner.topic(question))
+    assert result.kind=='finish' and '已到达' in result.message
+    for locale in ['en','zh']:
+        arrived=planner.plan('completed',context.model_copy(update={'activeWindow':f"project:{project['id']}",'activePanel':'detail','targets':[]}),locale,guide_step=True,topic=planner.topic(question))
+        PresentationInstruction(type='speak',value=arrived.message)
+
+def test_unmatched_topic_does_not_fall_back_to_unrelated_card():
+    planner=GuidePlanner()
+    context=ChatRequest.model_validate({**body(), 'pageContext':{**CTX,'activeWindow':'projects','activePanel':'collection','targets':[
+        {'id':'project-card:3d-reconstruction','available':True,'guideable':True,'capabilities':['guideTo'],'names':{'en':'3D','zh':'三维'}}
+    ]}}).pageContext
+    assert planner.plan('Show me full-stack projects',context,'en').kind=='finish'
+
+def test_session_usage_is_authorized_and_guidance_does_not_spend_tokens(knowledge):
+    app=create_app(Fake('silent'),knowledge)
+    with TestClient(app) as client:
+        assert client.get('/api/session/usage').status_code==401
+        h=login(client)
+        before=client.get('/api/session/usage',headers=h).json()
+        assert before['used']==0 and before['remaining']==before['limit']
+        events(client.post('/api/chat',json=body('带我看 AI 项目'),headers=h))
+        assert client.get('/api/session/usage',headers=h).json()==before
+        ev=events(client.post('/api/chat',json=body('你好'),headers=h))
+        assert any(e['type']=='usage' and e['usage']['used']>0 for e in ev)
+        assert client.get('/api/session/usage',headers=h).json()['remaining']<before['remaining']
+
+@pytest.mark.parametrize('window',['about','contact','monty-history','project:drone-simulator'])
+def test_tour_first_guides_minimizing_an_unrelated_window(window):
+    context=ChatRequest.model_validate({**body(), 'pageContext':{**CTX,'activeWindow':window,'activePanel':'','targets':[
+        *CTX['targets'],
+        {'id':f'window:minimize:{window}','available':True,'guideable':True,'capabilities':['guideTo'],'names':{'en':'Minimize window','zh':'最小化窗口'}}
+    ]}}).pageContext
+    assert GuidePlanner().plan('带我看 AI 项目',context,'zh').target_id==f'window:minimize:{window}'
+
+def test_minimize_continuation_preserves_destination_on_desktop():
+    planner=GuidePlanner()
+    context=ChatRequest.model_validate(body()).pageContext
+    assert planner.plan('completed minimize',context,'zh',guide_step=True,topic='ai').target_id=='folder:projects'
+
+
+@pytest.mark.parametrize('question,folder',[('带我看 README','about'),('带我看工作经历','experience'),('Show me contact','contact'),('Show me DOOM','doom')])
+def test_other_desktop_destinations_survive_window_minimization(question,folder):
+    planner=GuidePlanner();topic=planner.topic(question)
+    assert topic==f'folder:{folder}'
+    context=ChatRequest.model_validate({**body(), 'pageContext':{**CTX,'targets':[
+        {'id':f'folder:{folder}','available':True,'guideable':True,'capabilities':['guideTo'],'names':{'en':folder,'zh':folder}}
+    ]}}).pageContext
+    assert planner.plan('completed minimize',context,'zh',guide_step=True,topic=topic).target_id==f'folder:{folder}'
+    arrived=context.model_copy(update={'activeWindow':folder})
+    assert '已打开' in planner.plan('completed folder',arrived,'zh',guide_step=True,topic=topic).message
+
+def test_about_preposition_does_not_override_a_project_topic():
+    assert GuidePlanner.topic('带我看关于 AI 的项目')=='ai'
+
+@pytest.mark.parametrize('locale',['zh','en'])
+@pytest.mark.parametrize('offer',json.loads((ROOT/'content/guide-offers.json').read_text(encoding='utf-8')))
+def test_welcome_offers_finish_through_the_real_api_without_a_model(knowledge,locale,offer):
+    fake=Fake('silent')
+    with TestClient(create_app(fake,knowledge)) as client:
+        h=login(client)
+        desktop={**CTX,'language':locale,'targets':[*CTX['targets'],{'id':'folder:experience','available':True,'guideable':True,'capabilities':['guideTo'],'names':{'en':'Experience','zh':'经历'}}]}
+        first=events(client.post('/api/chat',json={**body(offer['question'][locale],messageLocale=locale),'pageContext':desktop},headers=h))
+        if offer['id']=='ai':
+            assert 'pingpong-vision' in next(e for e in first if e['type']=='projectChoices')['ids']
+            first=events(client.post('/api/chat',json={**body('Take me to fast-ai-movie',messageLocale=locale),'pageContext':desktop},headers=h))
+        target='folder:experience' if offer['id']=='experience' else 'folder:projects'
+        assert next(e['instruction']['target'] for e in first if e['type']=='presentation')==target
+        if offer['id']=='experience':
+            context={**desktop,'activeWindow':'experience','activePanel':''}
+        else:
+            collection={**desktop,'activeWindow':'projects','activePanel':'collection','targets':[
+                {'id':f"project-card:{p['id']}",'available':True,'guideable':True,'capabilities':['guideTo'],'names':{'en':p['id'],'zh':p['id']}} for p in CATALOG
+            ]}
+            second=events(client.post('/api/chat',json={**body('completed folder',messageLocale=locale,guideStep=True),'pageContext':collection},headers=h))
+            project='fast-ai-movie' if offer['id']=='ai' else 'drone-simulator'
+            assert next(e['instruction']['target'] for e in second if e['type']=='presentation')==f'project-card:{project}'
+            context={**collection,'activeWindow':f'project:{project}','activePanel':'detail'}
+        final=events(client.post('/api/chat',json={**body('completed target',messageLocale=locale,guideStep=True),'pageContext':context},headers=h))
+        assert next(e['instruction']['type'] for e in final if e['type']=='presentation')=='speak'
+        if offer['id']=='ai':
+            speech=next(e['instruction']['value'] for e in final if e['type']=='presentation')
+            assert 'FAST AI Movie' in speech
+            assert ('AI 讲解员' if locale=='zh' else 'AI speaker') in speech
+            assert 'safe guide' not in speech
+        assert fake.seen==[]
+        assert client.get('/api/session/usage',headers=h).json()['used']==0
+
+@pytest.mark.parametrize('question', ['Show me AI projects', '有哪些 LLM 相关项目', 'RAG projects', '有没有LLM相关的', 'RAG项目'])
+def test_topic_discovery_requires_selection_before_navigation(knowledge, question):
+    fake=Fake('silent')
+    with TestClient(create_app(fake,knowledge)) as client:
+        ev=events(client.post('/api/chat',json=body(question),headers=login(client)))
+        choices=next((e for e in ev if e['type']=='projectChoices'),None)
+        assert choices is not None
+        assert ('web-harvest-rag' if 'RAG' in question else 'pingpong-vision') in choices['ids']
+        assert not any(e['type']=='presentation' and e['instruction']['type']=='guideTo' for e in ev)
+        assert fake.seen==[]
+
+@pytest.mark.parametrize('query,expected', [
+    ('AI projects', {'pingpong-vision','web-harvest-rag','you-dont-need-rag','fast-ai-movie','vehicle-identification','3d-reconstruction'}),
+    ('大语言模型项目', {'pingpong-vision','web-harvest-rag','you-dont-need-rag'}),
+    ('RAG projects', {'web-harvest-rag','you-dont-need-rag'}),
+])
+def test_topic_search_returns_diverse_grounded_project_overviews(knowledge,query,expected):
+    results=knowledge.search(query)
+    projects={row['id'].split(':')[1] for row in results if row['id'].endswith(':summary')}
+    assert expected <= projects
+    assert all(row['source'].startswith('content/') for row in results)
+
+def test_conceptual_questions_and_specific_projects_do_not_offer_unrelated_choices():
+    planner=GuidePlanner()
+    assert planner.discover('What is RAG?', 'en') is None
+    assert planner.discover('Take me to pingpong-vision', 'en') is None
+    assert set(planner.discover('LLM projects', 'en').choices)=={'pingpong-vision','web-harvest-rag','you-dont-need-rag'}
+
+
+@pytest.mark.parametrize('locale',['en','zh'])
+def test_arrival_introduces_fast_ai_movie_without_requiring_another_target(locale):
+    fake=Fake('silent')
+    with TestClient(create_app(fake,object())) as client:
+        h=login(client)
+        events(client.post('/api/chat',json=body('Show me FAST AI Movie',messageLocale=locale),headers=h))
+        detail={**CTX,'activeWindow':'project:fast-ai-movie','activePanel':'detail','targets':[]}
+        final=events(client.post('/api/chat',json={**body('completed target',messageLocale=locale,guideStep=True),'pageContext':detail},headers=h))
+        instructions=[PresentationInstruction.model_validate(e['instruction']) for e in final if e['type']=='presentation']
+        assert len(instructions)==1 and instructions[0].type=='speak'
+        assert 'FAST AI Movie' in instructions[0].value
+        assert ('AI 讲解员' if locale=='zh' else 'AI speaker') in instructions[0].value
+        assert 'safe guide' not in instructions[0].value
+        assert final[-1]['type']=='done' and final[-1]['waiting'] is False
+        assert fake.seen==[]

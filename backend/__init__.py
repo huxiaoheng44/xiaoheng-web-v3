@@ -1,1 +1,1 @@
-"""Ghost backend. Run from the repository root."""
+"""Monty backend. Run from the repository root."""

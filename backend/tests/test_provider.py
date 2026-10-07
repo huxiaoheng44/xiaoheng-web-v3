@@ -34,6 +34,7 @@ async def test_deepseek_stream_keeps_reasoning_private(monkeypatch):
     async def stream():
         for delta,finish in [(SimpleNamespace(content=None,reasoning_content='private protocol state',tool_calls=[]),None),(SimpleNamespace(content='Hello',tool_calls=[]),'stop')]:
             yield SimpleNamespace(choices=[SimpleNamespace(delta=delta,finish_reason=finish)])
+        yield SimpleNamespace(choices=[],usage=SimpleNamespace(completion_tokens=7))
     class Client:
         def __init__(self,**kwargs):seen.update(kwargs);self.chat=SimpleNamespace(completions=self)
         async def __aenter__(self):return self
@@ -43,4 +44,23 @@ async def test_deepseek_stream_keeps_reasoning_private(monkeypatch):
     events=[];result=await chat.ChatProvider([]).complete([],events.append)
     assert seen['base_url']=='https://api.deepseek.com'
     assert result['reasoning_content']=='private protocol state'
-    assert events==[{'type':'delta','text':'Hello'}]
+    assert events==[{'type':'delta','text':'Hello'},{'type':'modelUsage','outputTokens':7}]
+    assert seen['request']['stream_options']=={'include_usage':True}
+
+@pytest.mark.asyncio
+async def test_provider_recovers_temporary_upstream_failure(monkeypatch):
+    import httpx
+    from openai import AsyncOpenAI
+    monkeypatch.setattr(config,'KEY','test-key');monkeypatch.setattr(config,'MODEL','test-model')
+    requests=[]
+    def respond(request):
+        requests.append(request)
+        if len(requests)==1:return httpx.Response(503,json={'error':{'message':'temporary','type':'server_error'}})
+        return httpx.Response(200,headers={'content-type':'text/event-stream'},text='data: {"id":"test","object":"chat.completion.chunk","created":0,"model":"test-model","choices":[{"index":0,"delta":{"content":"Recovered"},"finish_reason":"stop"}]}\n\ndata: [DONE]\n\n')
+    def client(**kwargs):return AsyncOpenAI(**kwargs,http_client=httpx.AsyncClient(transport=httpx.MockTransport(respond)))
+    monkeypatch.setattr(chat,'AsyncOpenAI',client)
+    events=[]
+    result=await chat.ChatProvider([]).complete([],events.append)
+    assert result['content']=='Recovered'
+    assert events==[{'type':'delta','text':'Recovered'}]
+    assert len(requests)==2

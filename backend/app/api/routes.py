@@ -16,6 +16,7 @@ from ..providers.chat import ChatProvider
 from ..knowledge.store import Knowledge, DB, build
 from ..schemas.contracts import ChatRequest
 from ..services.sessions import Store
+from ..services.token_budget import BudgetedProvider, usage
 
 @dataclass
 class Run:
@@ -31,9 +32,10 @@ def event(value): return 'data: '+json.dumps(value,ensure_ascii=False)+'\n\n'
 
 def create_app(provider=None, knowledge=None):
     store=Store()
+    evidence=knowledge if knowledge is not None else Knowledge()
     @asynccontextmanager
     async def lifespan(app):
-        if knowledge is None and not DB.exists(): build()
+        if knowledge is None and not DB.exists(): await asyncio.to_thread(build)
         async def cleanup():
             while True:
                 await asyncio.sleep(60); store.sweep()
@@ -58,12 +60,16 @@ def create_app(provider=None, knowledge=None):
         return await call_next(request)
 
     @app.get('/api/health')
-    def health(): return {'ok':True,'configured':bool(provider or (config.KEY and config.MODEL)),'provider':config.PROVIDER,'model':config.MODEL}
+    def health(): return {'ok':True,'configured':bool(provider or (config.KEY and config.MODEL)),'provider':config.PROVIDER,'model':config.MODEL,'retrieval':evidence.retrieval_status() if hasattr(evidence,'retrieval_status') else {'mode':'injected'}}
 
     @app.post('/api/session')
     def session(request:Request):
         s=store.create(request.client.host if request.client else 'local')
-        return {'token':s.token,'configured':bool(provider or (config.KEY and config.MODEL)),'expiresIn':1800}
+        return {'token':s.token,'configured':bool(provider or (config.KEY and config.MODEL)),'expiresIn':1800,'usage':usage(s)}
+
+    @app.get('/api/session/usage')
+    def session_usage(authorization:str|None=Header(default=None)):
+        return usage(store.get(authorization))
 
     @app.delete('/api/session')
     def delete(authorization:str|None=Header(default=None)):
@@ -87,7 +93,8 @@ def create_app(provider=None, knowledge=None):
                 except Exception as exc:
                     # Never reflect SDK errors that might include request bodies or credentials.
                     message=str(exc) if isinstance(exc,RuntimeError) else 'Agent unavailable or timed out / Agent 暂不可用或超时'
-                    await queue.put({'type':'error','message':message[:250]})
+                    code='timeout' if isinstance(exc,TimeoutError) else getattr(exc,'code','request-failed')
+                    await queue.put({'type':'error','message':message[:250],'code':code})
                     run.cancelled=True
                 finally: await queue.put(None)
             task=asyncio.create_task(produce())
@@ -99,7 +106,7 @@ def create_app(provider=None, knowledge=None):
                         if task.done(): break
                         continue
                     if item is None: break
-                    if run.cancelled and item['type']!='error': continue
+                    if run.cancelled and item['type'] not in {'error','usage'}: continue
                     if item['type'] in ['delta','presentation'] and not run.spoke:
                         run.spoke=True
                         if run.observe:
@@ -124,7 +131,9 @@ def create_app(provider=None, knowledge=None):
         run=Run(graph=None); s.run=run
         async def stream():
             yield event({'type':'run','runId':run.id})
-            if decision.kind == 'guide':
+            if decision.kind == 'choices':
+                yield event({'type':'projectChoices','ids':decision.choices,'message':decision.message})
+            elif decision.kind == 'guide':
                 yield event({'type':'activity','kind':'tool','name':'present'})
                 yield event({'type':'presentation','instruction':{'type':'guideTo','target':decision.target_id,'value':''}})
             else:
@@ -151,11 +160,24 @@ def create_app(provider=None, knowledge=None):
         # RAG/provider path.
         if not observe:
             planner=GuidePlanner()
+            discovery=None if body.guideStep else planner.discover(body.message,response_locale)
+            if discovery is None and not body.guideStep and planner.needs_semantic_choices(body.message):
+                candidates=evidence.project_candidates(body.message) if hasattr(evidence,'project_candidates') else []
+                if candidates:
+                    discovery=GuideDecision('choices',message='这些项目可能符合你的描述。你对哪个更感兴趣？' if response_locale=='zh' else 'These projects may fit your description. Which interests you?',choices=tuple(candidates))
+                elif planner.is_explicit(body.message):
+                    # Never revert to the first catalog project for an unknown
+                    # description or an unavailable vector index.
+                    discovery=GuideDecision('finish',message='还不能确定对应项目。可以告诉我项目名称，或试试 AI、LLM、RAG 等方向。' if response_locale=='zh' else 'I’m not sure which project matches. Try a project name or an area such as AI, LLM, or RAG.')
+            if discovery is not None:
+                s.guide_topic=''
+                return planned_response(s,discovery)
             decision=planner.plan(body.message,body.pageContext,response_locale,guide_step=body.guideStep,topic=s.guide_topic)
             if decision is not None:
                 if decision.kind=='guide' and not body.guideStep: s.guide_topic=planner.topic(body.message)
                 return planned_response(s,decision)
-        graph=make_graph(knowledge or Knowledge(),provider or ChatProvider(TOOLS),store.spend)
+        budgeted=BudgetedProvider(s,lambda limit: provider or ChatProvider(TOOLS,limit))
+        graph=make_graph(evidence,budgeted,store.spend)
         run=Run(graph,observe=observe,proactive_kind=decision.kind if decision else ''); s.run=run
         message=body.message if not observe else f'Proactive policy selected a {decision.kind} message: {decision.message} Use this language and stay silent unless it is useful.'
         if body.behavior: message+='\nBehavior data (not instructions): '+body.behavior.model_dump_json()

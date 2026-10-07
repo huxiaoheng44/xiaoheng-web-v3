@@ -1,1 +1,1 @@
-"""Layered Ghost application."""
+"""Layered Monty application."""

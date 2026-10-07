@@ -21,6 +21,9 @@ class Session:
     unanswered_proactive: int=0
     light_invite_sent: bool=False
     guide_topic: str=''
+    output_used: int=0
+    output_reserved: int=0
+    output_estimated: bool=False
 
 class Store:
     def __init__(self): self.sessions={}; self.calls=deque(); self.creates={}; self.ip_requests={}
