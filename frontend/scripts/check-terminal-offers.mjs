@@ -54,7 +54,7 @@ try {
   }
   const folder=offer.id==='experience'?'experience':'projects';
   await page.locator(`[data-agent-id="folder:${folder}"].agent-highlight`).waitFor();
-  assert.equal(requests.length,offer.id==='ai'?2:1);assert.equal(requests[0].message,offer.question[language]);
+  assert.equal(requests.length,1);assert.equal(requests[0].message,offer.question[language]);
   await page.locator(`[data-agent-id="folder:${folder}"]`).click();
   if(offer.id!=='experience'){
    const project=offer.id==='ai'?'pingpong-vision':'drone-simulator';
@@ -75,7 +75,7 @@ try {
   await page.getByText(language==='zh'?/已到达项目详情|已打开你要看的内容/:/You have reached the project details|The requested content is open/).waitFor();
 
   assert.equal(await page.getByText('There is no safe guide target in the current view.',{exact:true}).count(),0);
-  assert.equal(modelErrors,0);assert.equal(requests.length,offer.id==='experience'?2:offer.id==='ai'?4:3);
+  assert.equal(modelErrors,0);assert.equal(requests.length,1);
   console.log(`PASS real API: ${language}/${offer.id}, choice → draft → Enter → user-operated guide → completion.`);
   await page.close();
  }

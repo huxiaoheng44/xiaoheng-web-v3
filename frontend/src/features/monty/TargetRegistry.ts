@@ -39,7 +39,7 @@ export class TargetRegistry {
 
   getRevision() { return this.revision; }
   contextChanged() { this.publish(); }
-  subscribe(listener: () => void) { this.listeners.add(listener); return () => this.listeners.delete(listener); }
+  subscribe(listener: () => void) { this.listeners.add(listener); return () => { this.listeners.delete(listener); }; }
   /** Resolves only after a locally registered, visible semantic condition becomes true. */
   waitFor(condition: () => boolean, signal?: AbortSignal) {
     if (signal?.aborted) return Promise.reject(new DOMException('Aborted', 'AbortError'));

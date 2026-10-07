@@ -16,7 +16,7 @@ export function MontySpeech({language,open}:{language:Language;open:boolean}){
  const displayed=agent.guideProgress?text:typed;
  return <section ref={speechRef} className={`monty-speech${agent.guideProgress?' is-guiding':''}`} data-agent-ui aria-label={zh?'Monty 消息':'Monty message'} style={height?{height}:undefined}><div ref={contentRef} className="monty-speech-content">
   <p className="monty-utterance" aria-live="polite">{displayed}<span className="typing-caret" aria-hidden="true">▋</span></p>
-  {!!agent.projectChoices.length&&<div className="terminal-offer-list project-choice-list">{agent.projectChoices.map((id,index)=>{const project=catalog.find(entry=>entry.id===id)!;return <div key={id}><button type="button" data-project-choice={id} disabled={agent.busy} onClick={()=>void agent.start(`${agent.guideLocale==='zh'?'带我看':'Take me to'} ${project.id}`)}>{index+1}. {project.title}</button><small>{project.description[agent.guideLocale]}</small></div>;})}</div>}
+  {!!agent.projectChoices.length&&<div className="terminal-offer-list project-choice-list">{agent.projectChoices.map((id,index)=>{const project=catalog.find(entry=>entry.id===id)!;return <div key={id}><button type="button" data-project-choice={id} disabled={agent.busy} onClick={()=>agent.startGuide(project.id)}>{index+1}. {project.title}</button><small>{project.description[agent.guideLocale]}</small></div>;})}</div>}
   {!agent.guideProgress&&!!latest?.sources.length&&<details><summary>{zh?'来源':'Sources'}</summary><div className="monty-sources">{latest.sources.map(s=>s.url?<a key={s.id} href={s.url} target="_blank" rel="noreferrer">{s.title}</a>:<span key={s.id}>{s.title}</span>)}</div></details>}
  </div></section>;
 }

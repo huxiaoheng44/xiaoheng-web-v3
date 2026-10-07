@@ -9,7 +9,7 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:offers": "node scripts/check-terminal-offers.mjs",
-    "test:browser": "node tooling/pack-monty.mjs && node scripts/check-terminal-layout.mjs && node scripts/check-agent.mjs && node scripts/check-agent-boundaries.mjs && node scripts/check-guided-tour.mjs && node scripts/check-guide-minimize.mjs && node scripts/check-monty-recovery.mjs && node scripts/check-monty-history.mjs && node scripts/check-activity.mjs && node scripts/check-content.mjs",
+    "test:browser": "node tooling/pack-monty.mjs && node scripts/check-terminal-layout.mjs && node scripts/check-agent.mjs && node scripts/check-agent-boundaries.mjs && node scripts/check-guided-tour.mjs && node scripts/check-local-guide.mjs && node scripts/check-guide-minimize.mjs && node scripts/check-monty-recovery.mjs && node scripts/check-monty-history.mjs && node scripts/check-activity.mjs && node scripts/check-content.mjs",
     "test:live-dnd": "node scripts/check-live-dnd.mjs",
     "assets:monty": "node tooling/pack-monty.mjs"
   },

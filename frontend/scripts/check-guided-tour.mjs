@@ -15,14 +15,8 @@ try {
    if (path.endsWith('/cancel')) return route.fulfill({ json: { ok: true } });
    if (path !== '/api/chat') return route.fulfill({ contentType: 'text/event-stream', body: sse([{ type: 'done', waiting: false }]) });
    requests.push(route.request().postDataJSON());
-   const step = requests.length;
-   const instruction = step === 1
-    ? { type: 'guideTo', target: 'folder:projects', value: '' }
-    : step === 2
-     ? { type: 'guideTo', target: 'project-card:fast-ai-movie', value: '' }
-     : { type: 'speak', target: '', value: '已到达项目详情，可以开始浏览了。' };
    return route.fulfill({ contentType: 'text/event-stream', body: sse([
-    { type: 'run', runId: `tour-${step}` }, { type: 'presentation', instruction }, { type: 'done', waiting: false },
+    { type: 'run', runId: 'tour' }, { type: 'guidePlan', destination: 'fast-ai-movie' }, { type: 'done', waiting: false },
    ]) });
   });
   await page.goto(process.env.MONTY_TEST_URL || 'http://127.0.0.1:5173', { waitUntil: 'domcontentloaded', timeout: 30000 });
@@ -40,13 +34,7 @@ try {
   await page.getByRole('button', { name: 'Projects', exact: true }).focus();
   await page.keyboard.press('Enter');
   await page.waitForFunction(() => document.querySelector('.monty-overlay')?.dataset.visibilityDirection === 'below');
-  assert.equal(requests.length, 2);
-  assert.equal(requests[1].guideStep, true);
-  assert.equal(requests[1].messageLocale, 'zh');
-  assert.equal(requests[1].pageContext.activeWindow, 'projects');
-  const target = requests[1].pageContext.targets.find(value => value.id === 'project-card:fast-ai-movie');
-  assert.equal(target.guideable, true);
-  assert.equal(target.visible, false);
+  assert.equal(requests.length, 1);
   assert.equal(await page.locator('.agent-highlight').count(), 0);
   await page.getByText(/请向下滚动/).waitFor();
   assert.equal(await page.locator('.monty-scroll-arrow').isVisible(), true);
@@ -72,13 +60,15 @@ try {
   await page.locator('[data-agent-id="project-card:fast-ai-movie"].agent-highlight').waitFor();
   await page.getByText(/找到了.*FAST AI/).waitFor();
   assert.equal(await page.locator('.monty-scroll-arrow').isVisible(), false);
-  assert.equal(requests.length, 2);
+  assert.equal(requests.length, 1);
+  await page.mouse.wheel(0, 25);
+  await page.waitForTimeout(350);
+  assert.match(await page.locator('[data-agent-id="project-card:fast-ai-movie"]').getAttribute('class'), /agent-highlight/, 'scrolling must preserve acquired highlight');
+  await page.mouse.wheel(0, -25);
   await page.screenshot({ path: `artifacts/monty-guide-${reducedMotion}.png` });
   await page.getByRole('button', { name: /FAST AI Movie Web/ }).click();
-  await page.getByText('已到达项目详情，可以开始浏览了。').waitFor();
-  assert.equal(requests.length, 3);
-  assert.equal(requests[2].messageLocale, 'zh');
-  assert.equal(requests[2].pageContext.activeWindow, 'project:fast-ai-movie');
+  await page.getByText(/已到达项目详情/).waitFor();
+  assert.equal(requests.length, 1);
   await page.waitForFunction(() => !document.querySelector('.monty-overlay')?.dataset.guidePhase);
   assert.equal(await page.locator('.agent-highlight').count(), 0);
   await page.close();

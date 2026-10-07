@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from ..core import config
 from ..agent.graph import make_graph
-from ..agent.guide_planner import GuideDecision, GuidePlanner
+from ..agent.guide_planner import CATALOG, GuideDecision, GuidePlanner
 from ..agent.proactive import decide_proactive
 from ..agent.tools import TOOLS
 from ..providers.chat import ChatProvider
@@ -126,11 +126,13 @@ def create_app(provider=None, knowledge=None):
                 if s.run is run: s.run=None
         return StreamingResponse(stream(),media_type='text/event-stream',headers={'Cache-Control':'no-store','X-Accel-Buffering':'no'})
 
-    def planned_response(s, decision:GuideDecision):
+    def planned_response(s, decision:GuideDecision, destination=""):
         """Emit a planner result without exposing model text as a page instruction."""
         run=Run(graph=None); s.run=run
         async def stream():
             yield event({'type':'run','runId':run.id})
+            if destination:
+                yield event({'type':'guidePlan','destination':destination})
             if decision.kind == 'choices':
                 yield event({'type':'projectChoices','ids':decision.choices,'message':decision.message})
             elif decision.kind == 'guide':
@@ -175,7 +177,9 @@ def create_app(provider=None, knowledge=None):
             decision=planner.plan(body.message,body.pageContext,response_locale,guide_step=body.guideStep,topic=s.guide_topic)
             if decision is not None:
                 if decision.kind=='guide' and not body.guideStep: s.guide_topic=planner.topic(body.message)
-                return planned_response(s,decision)
+                destination=planner.topic(body.message) if not body.guideStep else ''
+                if destination not in {entry['id'] for entry in CATALOG} and not destination.startswith('folder:'): destination=''
+                return planned_response(s,decision,destination)
         budgeted=BudgetedProvider(s,lambda limit: provider or ChatProvider(TOOLS,limit))
         graph=make_graph(evidence,budgeted,store.spend)
         run=Run(graph,observe=observe,proactive_kind=decision.kind if decision else ''); s.run=run

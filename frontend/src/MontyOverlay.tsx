@@ -53,7 +53,7 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
     let lastActivity = performance.now(), lastTime = 0, frameId = 0, animationKey = '', animationStarted = 0;
     let previousHint = '';
     let previousProgress = '';
-    let highlighted:HTMLElement|null = null;
+    const highlighted=new Set<HTMLElement>();
     let command: MontyCue = { until: 0 }, dnd = false;
     const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
     const onCue = (event: Event) => { command = (event as CustomEvent<MontyCue>).detail; };
@@ -61,7 +61,7 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
     window.addEventListener('monty-cue', onCue); window.addEventListener('monty-dnd', onDnd);
     const onPointer = () => { lastActivity = performance.now(); };
     const onFocus = () => { lastActivity = performance.now(); };
-    const onActivity = () => { lastActivity = performance.now(); if (command.target && command.persistent) window.dispatchEvent(new CustomEvent('monty-guide-ended')); };
+    const onActivity = () => { lastActivity = performance.now(); };
     const onLeave = () => undefined;
     const setHint = (text: string) => { if (previousHint !== text) { hint.textContent = text; hint.hidden = !text; previousHint = text; } };
     const tick = (time: number) => {
@@ -89,12 +89,11 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
           // The sprite travels first, then remains beside the target and points.
           mode = Math.hypot(tx - x, ty - y) > 8 ? 'move' : 'point';
           element.dataset.visibilityDirection = 'visible';
-          if(highlighted&&highlighted!==anchor)highlighted.classList.remove('agent-highlight');
-          highlighted=anchor;anchor.classList.toggle('agent-highlight',mode==='point'&&!command.waiting);
+          if(!command.waiting&&(mode==='point'||anchor.classList.contains('agent-highlight'))){anchor.classList.add('agent-highlight');highlighted.add(anchor);}
         } else if (command.target) {
           const direction=desktopRef.current.targetRegistry.direction(command.target,desktopRef.current.snapshot());
           element.dataset.visibilityDirection = direction;
-          if(highlighted){highlighted.classList.remove('agent-highlight');highlighted=null;}
+          // A clipped target keeps its highlight while the visitor scrolls.
           const bounds=anchor?.closest('.content-scroll')?.getBoundingClientRect();
           if(bounds){tx=Math.min(maxX,bounds.right+12);ty=Math.max(55,Math.min(maxY,(bounds.top+bounds.bottom-size)/2));}
           if(!reduced&&(direction==='above'||direction==='below'))ty+=Math.sin(time/280)*10;
@@ -110,7 +109,7 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
         }
       } else {
         element.dataset.gesture = '';delete element.dataset.visibilityDirection;delete element.dataset.guidePhase;
-        if(highlighted){highlighted.classList.remove('agent-highlight');highlighted=null;}
+        highlighted.forEach(target=>target.classList.remove('agent-highlight'));highlighted.clear();
         if(previousProgress){previousProgress='';window.dispatchEvent(new CustomEvent('monty-guide-progress',{detail:null}));}
       }
       element.dataset.agentState = command.until > performance.now() ? (command.state || stateRef.current) : stateRef.current;
@@ -138,6 +137,7 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
       element.classList.remove('face-right');
       element.classList.toggle('bubble-right', x < 200);
       element.classList.toggle('speech-below', y < innerHeight / 2);
+      highlighted.forEach(target=>{if(!target.isConnected)highlighted.delete(target);});
       setHint(message);
       frameId = requestAnimationFrame(tick);
     };
@@ -153,12 +153,12 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
     return () => {
       window.removeEventListener('monty-cue', onCue); window.removeEventListener('monty-dnd', onDnd);
       cancelAnimationFrame(frameId);
-      highlighted?.classList.remove('agent-highlight');
+      highlighted.forEach(target=>target.classList.remove('agent-highlight'));highlighted.clear();
       document.removeEventListener('pointermove', onPointer); document.removeEventListener('pointerdown', onActivity);
       document.removeEventListener('keydown', onActivity); document.removeEventListener('focusin', onFocus); document.removeEventListener('focusout', onLeave);
       document.documentElement.removeEventListener('pointerleave', onLeave); document.removeEventListener('visibilitychange', visibility);
     };
-  }, [language]);
+  }, []);
   return <div className="monty-overlay" ref={host} data-agent-ui data-visual-state={visual.marker} data-waking-effect={visual.wakingEffect}>
    <div ref={agent.setWelcomeHost}/><div className="monty-bubble" ref={bubble} hidden aria-hidden="true"/>{!agent.welcomeVisible&&(desktop.active!=='monty-history'||agent.guideProgress)&&<MontySpeech language={language} open={chatOpen}/>}
       <button className="monty-avatar" aria-label={language==='zh'?'和 Monty 聊天':'Chat with Monty'} aria-expanded={chatOpen} onClick={()=>{setChatOpen(value=>!value);setSettingsOpen(false);}}><span className="monty-sprite"/></button><span className="monty-scroll-arrow" aria-hidden="true"/><span className="monty-caption">monty.exe</span>

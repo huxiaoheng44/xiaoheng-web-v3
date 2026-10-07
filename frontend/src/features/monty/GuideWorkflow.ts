@@ -15,6 +15,7 @@ export type GuideProgress = { phase: GuidePhase; text: string; direction: Visibi
 /** Layout stays local. This module produces presentation only, never page actions. */
 export function guideProgress(direction: VisibilityDirection, arrived: boolean, waiting: boolean, name: string, locale: Language, targetId = ''): GuideProgress {
   const zh = locale === 'zh';
+  if(targetId==='desktop:show')return {phase:waiting?'waiting-for-window':arrived?'waiting-for-click':'travel-to-target',direction,text:zh?'请点击「显示桌面」，收起这些窗口后继续。':'Click “Show desktop” to put these windows away and continue.'};
   if (targetId.startsWith('window:minimize:')) {
     if (waiting) return { phase: 'waiting-for-window', direction, text: zh ? '正在等待窗口收起，再继续带你过去…' : 'Waiting for the window to minimize, then we’ll continue…' };
     return { phase: arrived ? 'waiting-for-click' : 'travel-to-target', direction, text: zh ? `请点击「${name}」，先收起这个窗口，再继续前往目标。` : `Click “${name}” to put this window away, then we’ll continue to your destination.` };

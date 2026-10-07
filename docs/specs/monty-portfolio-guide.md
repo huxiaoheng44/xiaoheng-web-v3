@@ -122,7 +122,7 @@ From `frontend/`, `npm run test:offers` checks all three suggestions in both lan
 
 `GuideWorkflow.ts` derives local progress copy for scroll, travel, click, and window waiting. Monty shows up/down (or horizontal) arrows beside the scroll container, updates the compact speech surface in the original request language, and highlights only after reaching a sufficiently visible target. Reduced-motion users keep the direction cues without bobbing or travel interpolation. The visitor still performs every page action.
 
-Continuation follows a real click (including keyboard activation), waits for the active completion window and its registered content, and keeps internal continuation prompts out of the conversation. Layout-generated scroll events do not cancel the next request. Escape, unrelated clicks, timeout, and a hidden document retain cancellation behavior.
+Continuation follows a real click (including keyboard activation), waits for the active completion window and its registered content, and keeps internal continuation prompts out of the conversation. Layout-generated scroll events do not cancel the next request. Escape cancels explicitly; unrelated clicks and scrolling are reconciled locally, and a hidden document pauses presentation without discarding the destination.
 
 Validation: backend tests cover every catalog project path, starting within Projects, full-stack selection, and unmatched topics. The guided-tour browser check uses a constrained scrolling collection and mocked SSE to verify both scroll directions, keyboard activation, Chinese continuation, reduced motion, and completion cleanup. It does not require or validate a live model provider.
 
@@ -146,3 +146,14 @@ Knowledge retrieval now combines multilingual E5 embeddings with FTS5/BM25. The 
 Project descriptions with no known topic or exact project name can use dense evidence to offer up to three catalog-validated candidates. These are explicitly described as possible matches and require selection. A failed match never silently selects the first project. All other navigation remains local, visitor-operated, and unchanged.
 
 The real-model evaluation is `python run.py eval` from `backend/`; deterministic tests cover persistence, source preservation, failure fallback, stale/model-incompatible vectors, and rebuild rollback. This is a small regression corpus, not a claim of perfect semantic understanding.
+
+
+## Local guide execution and persistent highlights (2026-10-07)
+
+`LocalGuide` owns a fixed destination, the remaining window route, and a replaceable recovery stack. Its start/update/cancel interface emits a semantic target or a completion summary; it performs no desktop actions. The client reconciles actual window state after every state change. It skips reached prerequisites, recovers when the visitor opens a wrong window or closes the collection, and completes when the destination is active. The recovery stack is replaced instead of accumulating stale actions. Visible-window counts exclude minimized windows: one blocking window uses its minimize control; multiple unrelated windows use the registered Show desktop control; useful windows underneath are preserved by minimizing blockers individually.
+
+Project-choice clicks start locally without another model/server request. Text requests receive a `guidePlan` destination once; subsequent steps and completion use only local state and the catalog. The backend retains legacy presentation events for older clients, which the new client ignores after accepting a destination. No guide-step continuation requests are sent by the new client.
+
+A highlight, once acquired, survives scrolling, Monty travel, and viewport clipping. Ordinary presentation highlights no longer expire after 4.5 seconds. Target clicks clear the highlight, removed window elements disappear with it, and explicit cancellation/new requests clear the presentation. Guide sessions no longer expire after 45 seconds; Escape, shutdown, or a replacement request ends them. Monty never clicks, scrolls, minimizes, opens windows, or toggles Show desktop itself.
+
+Browser checks cover ordinary highlight lifetime, scroll persistence, wrong-window recovery, show-desktop keyboard activation, closing/reopening the collection, both motion preferences, bilingual real-API entry, and absence of continuation network requests.
