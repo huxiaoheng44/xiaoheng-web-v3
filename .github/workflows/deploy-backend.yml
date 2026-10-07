@@ -1,0 +1,31 @@
+name: Deploy backend
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'backend/**'
+      - 'content/**'
+      - 'knowledge/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-backend
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            set -e
+            cd /home/xiaoheng/xiaoheng-web-v3
+            git fetch origin master
+            git reset --hard origin/master
+            backend/.venv/bin/pip install -q -r backend/requirements.txt
+            pm2 restart monty-backend
