@@ -33,6 +33,20 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: artifacts/build
+      - run: npx vite build --base / --outDir ../artifacts/build-root
+        working-directory: frontend
+        env:
+          VITE_MONTY_API_URL: https://monty-api.huxiaoheng.com
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          deploy_key: ${{ secrets.PAGES_DEPLOY_KEY }}
+          external_repository: huxiaoheng44/huxiaoheng44.github.io
+          publish_branch: main
+          publish_dir: artifacts/build-root
+          keep_files: false
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+          commit_message: "sync from xiaoheng-web-v3@${{ github.sha }}"
 
   deploy:
     environment:
