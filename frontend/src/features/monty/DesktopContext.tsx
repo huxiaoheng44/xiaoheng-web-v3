@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { desktopReducer, type DesktopAction, type Language, type WindowState, type WindowId } from '../../model';
-import type { PageContext } from './CrtAgentChat';
-import { TargetRegistry, type TargetDefinition } from './TargetRegistry';
+import type { PageContext } from './MontyChat';
+import { TargetRegistry, hasUsableVisibleArea, type TargetDefinition } from './TargetRegistry';
 
 type DesktopState={windows:WindowState[];aboutTab:string};
 export function visibleTarget(e:HTMLElement) {
@@ -9,12 +9,15 @@ export function visibleTarget(e:HTMLElement) {
   const win=e.closest<HTMLElement>('.desktop-window');
   if(win&&!win.classList.contains('active'))return false;
   const r=e.getBoundingClientRect(); const scroll=e.closest('.content-scroll')?.getBoundingClientRect();
-  return r.bottom>Math.max(0,scroll?.top??0)&&r.top<Math.min(innerHeight,scroll?.bottom??innerHeight)&&r.right>0&&r.left<innerWidth;
+  return hasUsableVisibleArea(r,{top:Math.max(0,scroll?.top??0),bottom:Math.min(innerHeight,scroll?.bottom??innerHeight),left:Math.max(0,scroll?.left??0),right:Math.min(innerWidth,scroll?.right??innerWidth)});
 }
 function createDesktop(language:Language) {
   const [state,setState]=useState<DesktopState>({windows:[],aboutTab:'profile'});
   const ref=useRef(state); const version=useRef(0);
   const targetRegistry=useRef(new TargetRegistry(visibleTarget)).current;
+  // Existing mounted targets also become ready when a window is minimized,
+  // restored or focused; registration alone cannot announce these transitions.
+  useEffect(()=>{targetRegistry.contextChanged();},[state,targetRegistry]);
   useEffect(()=>{version.current++;},[language]);
   useEffect(()=>{const resize=()=>{version.current++;};window.addEventListener('resize',resize);return()=>window.removeEventListener('resize',resize);},[]);
   const active=state.windows.filter(w=>!w.minimized).at(-1)?.id;
@@ -39,6 +42,6 @@ export function DesktopProvider({language,children}:{language:Language;children:
 export function useDesktop(){const ctx=useContext(Context);if(!ctx)throw new Error('Missing DesktopProvider');return ctx;}
 export function useSemanticTarget(definition:TargetDefinition):RefObject<any> {
   const desktop=useDesktop();const element=useRef<HTMLElement|null>(null);
-  useEffect(()=>{if(!element.current)return;return desktop.targetRegistry.register(definition,element.current);},[desktop.targetRegistry,definition.id,definition.names.en,definition.names.zh,definition.scope.window,definition.scope.panel,definition.capabilities.join('|'),definition.projectId,definition.tag,definition.completion?.window,definition.completion?.panel]);
+  useEffect(()=>{if(!element.current)return;return desktop.targetRegistry.register(definition,element.current);},[desktop.targetRegistry,definition.id,definition.names.en,definition.names.zh,definition.scope.window,definition.scope.panel,definition.capabilities.join('|'),definition.projectId,definition.tag,JSON.stringify(definition.completion)]);
   return element;
 }

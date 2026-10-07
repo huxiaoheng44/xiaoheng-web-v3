@@ -6,15 +6,15 @@ export const labels: Record<FolderId, Record<Language, string>> = {
   experience: { en: 'Experience', zh: '经历' }, contact: { en: 'Contact', zh: '联系' },
   doom: { en: 'DOOM', zh: '毁灭战士' },
 };
-/** Desktop file names shown on icons and window titles; `labels` stay the semantic names CRT.AGENT matches against. */
+/** Desktop file names shown on icons and window titles; `labels` stay the semantic names Monty matches against. */
 export const fileLabels: Record<FolderId, Record<Language, string>> = {
-  projects: { en: 'Projects', zh: '项目' }, about: { en: 'README.txt', zh: 'README.txt' },
-  experience: { en: 'Experience.exe', zh: '经历.exe' }, contact: { en: 'Contact', zh: '联系' },
+  projects: { en: 'Projects', zh: '项目' }, about: { en: 'README', zh: 'README' },
+  experience: { en: 'Experience', zh: '经历' }, contact: { en: 'Contact', zh: '联系' },
   doom: { en: 'DOOM.exe', zh: 'DOOM.exe' },
 };
 export const projectIds = ['pingpong-vision', 'web-harvest-rag', 'you-dont-need-rag', 'fast-ai-movie', 'vehicle-identification', '3d-reconstruction', 'drone-simulator'] as const;
 export type ProjectId = typeof projectIds[number];
-export type WindowId = FolderId | `project:${ProjectId}`;
+export type WindowId = FolderId | 'monty-history' | `project:${ProjectId}`;
 export type WindowState = { id: WindowId; minimized: boolean; maximized: boolean };
 export type DesktopAction = { type: 'open' | 'close' | 'minimize' | 'maximize'; id: WindowId } | { type: 'showDesktop' };
 export function desktopReducer(state: WindowState[], action: DesktopAction): WindowState[] {

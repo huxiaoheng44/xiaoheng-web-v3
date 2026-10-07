@@ -29,7 +29,7 @@ try {
   const deprecated = [['Smart', 'companion'].join(' '), ['Quiet', 'mode'].join(' ')];
   const pageText = await page.locator('body').innerText();
   for (const text of deprecated) assert.equal(pageText.includes(text), false);
-  const input = page.getByRole('textbox', { name: 'Ask CRT.AGENT' });
+  const input = page.getByRole('textbox', { name: 'Ask Monty' });
   await input.fill('Tell me about projects');
   await input.press('Enter');
   await page.getByText('Projects are ready to explore.', { exact: true }).waitFor();
@@ -64,7 +64,7 @@ try {
   assert.equal(semantic.behavior.events.some(event => event.type === 'scroll'), false);
   assert.equal(pathField in semantic.behavior, false);
   assert.equal(JSON.stringify(semantic.behavior).match(/clientX|clientY|\brect\b|\bpath\b|selector|textContent/), null);
-  console.log('PASS: CRT.AGENT display-only SSE, semantic session snapshot, and local visual hint.');
+  console.log('PASS: Monty display-only SSE, semantic session snapshot, and local visual hint.');
 } finally {
   await browser.close();
 }

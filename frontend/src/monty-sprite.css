@@ -1,0 +1,2 @@
+/* Metadata-driven 9 × 14 Monty atlas produced from PixelLab action frames. */
+.monty-sprite{background-image:url('/assets/monty.png?v=monty-v3');background-size:900% 1400%;background-position:var(--frame-x,0%) var(--frame-y,0%);transform:translate(var(--sprite-offset-x,0px),var(--sprite-offset-y,0px))}

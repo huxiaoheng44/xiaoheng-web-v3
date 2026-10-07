@@ -13,18 +13,19 @@
 .keyboard-object{left:var(--keyboard-x);top:var(--keyboard-y);width:var(--keyboard-w)}
 .mouse-object{left:var(--mouse-x);top:var(--mouse-y);width:var(--mouse-w);transform:translateX(-50%) rotate(180deg)}
 .mug-object{left:var(--mug-x);top:var(--mug-y);width:var(--mug-w)}
-/* Desk props (tooling/desk-props/draw_props.py): ~4.5 screen px per art pixel on a 1440px stage, so width% = art width × 0.3125. Shown on wide screens only. */
+/* Desk props (frontend/tooling/desk-props/draw_props.py): ~4.5 screen px per art pixel on a 1440px stage, so width% = art width × 0.3125. Shown on wide screens only. */
 .desk-prop{display:none}
 .scene-caption{z-index:5}
 @media(min-width:1001px){
 .desk-prop{display:block}
+.stage{--mug-x:92%;--mug-y:69%}
 .desk-art{left:50%;top:75%;width:131.25%;z-index:1}
 .tray-prop{left:-6%;top:51%;width:23.75%}
 .stack-prop{left:4.5%;top:68%;width:17.5%}
 .sheet-prop{left:-5%;top:84%;width:16.25%}
-.binders-prop{left:95%;top:47%;width:15%}
-.folder-prop{left:104%;top:69%;width:23.75%}
-.envelope-prop{left:100%;top:78%;width:22.5%}
+.binders-prop{left:3%;top:40%;width:15%}
+.folder-prop{left:111%;top:70%;width:23.75%}
+.envelope-prop{left:107%;top:80%;width:22.5%}
 }
 .empty-state>*{flex-shrink:0}
 .empty-state{justify-content:safe center}

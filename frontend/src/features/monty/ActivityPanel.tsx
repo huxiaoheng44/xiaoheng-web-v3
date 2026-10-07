@@ -3,7 +3,7 @@ import type { ActivitySafeSummary } from './activity';
 
 export function ActivityPanel({language,summary}:{language:Language;summary:ActivitySafeSummary}){
  const zh=language==='zh';const label=(target:{en:string;zh:string})=>zh?target.zh:target.en;
- return <section id="agent-activity-panel" className="agent-activity-panel" aria-label={zh?'CRT.AGENT 活动摘要':'CRT.AGENT activity summary'}>
+ return <section id="agent-activity-panel" className="agent-activity-panel" aria-label={zh?'Monty 活动摘要':'Monty activity summary'}>
   <p className="activity-state">{zh?'状态':'State'}: <strong>{summary.state}</strong></p>
   <ActivityList title={zh?'近期语义观察':'Recent semantic observations'} items={summary.observations.map(item=>`${item.type} · ${item.target}`)}/>
   <ActivityList title={zh?'当前可见目标':'Visible targets'} items={summary.targets.map(target=>`${label(target)} · ${target.id}`)}/>

@@ -1,4 +1,4 @@
-import type { Behavior, PresentationType, Source, Target } from './CrtAgentChat';
+import type { Behavior, PresentationType, Source, Target } from './MontyChat';
 import type { SemanticState } from './agentState';
 
 export type ActivitySafeSummary = {

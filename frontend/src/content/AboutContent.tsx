@@ -1,5 +1,5 @@
-import { useDesktop, useSemanticTarget } from '../features/crt-agent/DesktopContext';
-import type { TargetScope } from '../features/crt-agent/TargetRegistry';
+import { useDesktop, useSemanticTarget } from '../features/monty/DesktopContext';
+import type { TargetScope } from '../features/monty/TargetRegistry';
 import type { Language } from '../model';
 import { experienceZh, researchZh, skillLabels } from './translations';
 

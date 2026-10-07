@@ -3,13 +3,13 @@
 /* Two staggered, stepped wisps anchored to the cup, not the viewport. */
 .stage::before,.stage::after{content:'';position:absolute;pointer-events:none;z-index:4;left:calc(var(--mug-x) - 3%);top:calc(var(--mug-y) - 5%);width:1.5%;height:8%;background:#cbd0c4;clip-path:polygon(40% 0,70% 0,70% 20%,45% 20%,45% 40%,75% 40%,75% 60%,50% 60%,50% 80%,30% 80%,30% 100%,5% 100%,5% 75%,25% 75%,25% 55%,50% 55%,50% 45%,20% 45%,20% 15%,40% 15%);opacity:0;animation:coffee-steam 3.8s linear infinite}
 .stage::after{left:calc(var(--mug-x) - .5%);height:6%;animation-delay:-1.9s}
-@keyframes coffee-steam{0%{transform:translate(0,15%) scaleX(.7);opacity:0}25%{opacity:.3}65%{opacity:.18}100%{transform:translate(25%,-65%) scaleX(1.2);opacity:0}}
+@keyframes coffee-steam{0%{transform:translate(0,15%) scaleX(.7);opacity:0}25%{opacity:.45}65%{opacity:.25}100%{transform:translate(25%,-65%) scaleX(1.2);opacity:0}}
 .boot-overlay{position:absolute;inset:3px;z-index:50;overflow:hidden;background:#080c09;color:#c6cebb;display:grid;place-items:center}
 .boot-overlay::before{content:'';position:absolute;inset:0;background:#cbd6c2;pointer-events:none;animation:crt-start .65s ease-out both}
 .boot-center{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;min-width:min(76%,330px)}.boot-copy{font-family:monospace;font-size:clamp(9px,1.1vw,15px);line-height:1.8;animation:boot-text .3s ease .45s both}
 .boot-brand{font-size:1.65em;letter-spacing:-.04em}.boot-brand>span{display:block;font-size:.4em;letter-spacing:.2em;color:#86957e}.boot-copy p{margin:2em 0 1em}.boot-copy small{font-size:.75em;letter-spacing:.1em;color:#86957e}
 .boot-progress{height:8px;border:1px solid #64715d;padding:1px;margin-bottom:1em}.boot-progress>span{display:block;height:100%;background:repeating-linear-gradient(90deg,#b6c0aa 0 7px,transparent 7px 10px);transform-origin:left;animation:boot-load 1.3s steps(12,end) .5s both}
-.boot-skip{position:static;background:transparent;color:#c6cebb;border:1px solid #87947c;padding:7px 20px;font:10px monospace;cursor:pointer;animation:boot-text .3s ease .6s both}.boot-skip:focus-visible{outline:2px solid #c6cebb}.startup-agent{width:64px;height:64px;filter:drop-shadow(0 8px 6px #0009);animation:startup-emerge .8s steps(8,end) both}.startup-agent .crt-agent-sprite{display:block;width:100%;height:100%}
+.boot-skip{position:static;background:transparent;color:#c6cebb;border:1px solid #87947c;padding:7px 20px;font:10px monospace;cursor:pointer;animation:boot-text .3s ease .6s both}.boot-skip:focus-visible{outline:2px solid #c6cebb}.startup-agent{width:64px;height:64px;filter:drop-shadow(0 8px 6px #0009);animation:startup-emerge .8s steps(8,end) both}.startup-agent .monty-sprite{display:block;width:100%;height:100%}
 @keyframes crt-start{0%{transform:scale(.01,.003);opacity:1}40%{transform:scale(1,.003);opacity:.8}75%{transform:scale(1,1);opacity:.12}100%{transform:scale(1,1);opacity:0}}
 @keyframes boot-text{from{opacity:0}to{opacity:1}}
 @keyframes boot-load{from{transform:scaleX(0)}to{transform:scaleX(1)}}
@@ -25,3 +25,74 @@
 .boot-skip:hover,.boot-skip:focus-visible{color:#ccf781;border-color:#ccf781;box-shadow:0 0 12px #ccf78155}
 .boot-copyright{position:absolute;left:0;right:0;bottom:7%;z-index:1;text-align:center;font:10px/1 monospace;letter-spacing:.12em;color:#86957e;animation:boot-text .3s ease .6s both}
 @media(prefers-reduced-motion:reduce){.boot-copyright{animation:none}}
+
+/* ---- Living desk: monitor power, afterglow, desk lamp, darkness, prop hover ---- */
+/* Bezel power button (sprite px 285-298 / 213-225 of 320x251) with its LED. */
+.monitor-power{position:absolute;left:89.1%;top:84.9%;width:4.1%;height:4.8%;z-index:3;padding:0;border:0;background:none;cursor:pointer}
+.monitor-power:focus-visible{outline:1px dashed #d1d8c5;outline-offset:2px}
+.power-led{position:absolute;left:31.7%;top:18.75%;width:39%;height:33%;pointer-events:none;background:#ccf781;box-shadow:0 0 7px 2px #ccf78188}
+.power-off .power-led{background:#f6b13a;box-shadow:0 0 6px 1px #f6b13a99;animation:led-breathe 2.8s ease-in-out infinite}
+@keyframes led-breathe{0%,100%{opacity:.25}50%{opacity:1}}
+/* CRT power animations: collapse to a line, then a dot; reverse when switched on. */
+.monitor-screen{transform-origin:50% 50%}
+.power-off .monitor-screen{animation:crt-power-off .6s ease-in forwards}
+.power-on .monitor-screen{animation:crt-power-on .7s ease-out both}
+@keyframes crt-power-off{0%{transform:none;filter:none;opacity:1}45%{transform:scale(1,.008);filter:brightness(3)}80%{transform:scale(.03,.008);filter:brightness(4);opacity:1}100%{transform:scale(0,0);opacity:0}}
+@keyframes crt-power-on{0%{transform:scale(0,0);filter:brightness(4);opacity:0}15%{transform:scale(.03,.008);opacity:1}50%{transform:scale(1,.008);filter:brightness(3)}100%{transform:none;filter:none}}
+.monitor-off .monty-overlay{visibility:hidden}
+/* Phosphor afterglow spilling onto the wall around the monitor. */
+.monitor-object::before{content:'';position:absolute;left:-7%;right:-7%;top:-5%;bottom:10%;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,#ccf7811c 0%,#ccf7810a 45%,transparent 70%);opacity:.45;transition:opacity .6s;animation:screen-afterglow 7s ease-in-out infinite}
+.monitor-object.is-on::before{opacity:.9}
+.monitor-object.power-off::before{opacity:0}
+@keyframes screen-afterglow{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+/* A faint band rolling down the CRT now and then. */
+.monitor-screen::after{content:'';position:absolute;left:0;right:0;top:0;height:20%;z-index:60;pointer-events:none;background:linear-gradient(transparent,#ccf7810d 50%,transparent);transform:translateY(-110%);animation:screen-roll 11s linear infinite}
+@keyframes screen-roll{0%{transform:translateY(-110%)}45%,100%{transform:translateY(560%)}}
+
+/* Desk lamp on the right: click to toggle. Light cone + dust while on. */
+.lamp-object{position:absolute;left:105%;top:25%;width:26.25%;z-index:3;padding:0;border:0;background:none;cursor:pointer;transform:translateX(-50%)}
+.lamp-object img{display:block;width:100%;height:auto;image-rendering:pixelated}
+.lamp-object:focus-visible{outline:1px dashed #d1d8c5;outline-offset:4px}
+.lamp-light{position:absolute;left:-30%;top:44.5%;width:110%;height:115%;pointer-events:none;clip-path:polygon(31.8% 0,70% 0,100% 100%,0 100%);background:linear-gradient(#fff2cf38,#fff2cf14 55%,transparent 92%);mix-blend-mode:screen;transition:opacity .35s steps(3,end);animation:lamp-flicker 6s steps(1,end) infinite}
+@keyframes lamp-flicker{0%,100%{opacity:1}61%{opacity:.86}62%{opacity:1}88%{opacity:.93}}
+.lamp-light i{position:absolute;bottom:20%;width:3px;height:3px;background:#fff6dd;opacity:0;animation:lamp-dust 9s linear infinite}
+.lamp-light i:nth-child(1){left:38%;animation-delay:0s}
+.lamp-light i:nth-child(2){left:52%;animation-delay:-1.6s;animation-duration:11s}
+.lamp-light i:nth-child(3){left:45%;animation-delay:-3.1s}
+.lamp-light i:nth-child(4){left:60%;animation-delay:-4.4s;animation-duration:12s}
+.lamp-light i:nth-child(5){left:30%;animation-delay:-6.2s;animation-duration:10s}
+.lamp-light i:nth-child(6){left:66%;animation-delay:-7.5s}
+@keyframes lamp-dust{0%{transform:translate(0,0);opacity:0}15%{opacity:.75}50%{transform:translate(9px,-60px)}85%{opacity:.5}100%{transform:translate(-4px,-130px);opacity:0}}
+
+/* Lamp off: an undimmed copy of the sprite, masked to a soft ~100px circle around its own bulb
+   (design grid 15.5,33 of 60x76), keeps the bulb and its surroundings from going fully dark. */
+.lamp-object .lamp-bulb-glow{position:absolute;inset:0;pointer-events:none;opacity:0;-webkit-mask-image:radial-gradient(circle 100px at 25.8% 43.4%,#000 0,#000 12%,#0008 40%,transparent 100%);mask-image:radial-gradient(circle 100px at 25.8% 43.4%,#000 0,#000 12%,#0008 40%,transparent 100%);transition:opacity .5s steps(5,end)}
+.lamp-object::before{content:'';position:absolute;left:25.8%;top:43.4%;width:200px;height:200px;transform:translate(-50%,-50%);z-index:-1;pointer-events:none;background:radial-gradient(circle closest-side,#fff2cf14,#fff2cf06 55%,transparent);opacity:0;transition:opacity .5s steps(5,end)}
+.lamp-off .lamp-object .lamp-bulb-glow{opacity:.85;animation:bulb-ember 4.5s ease-in-out infinite}
+.lamp-off .lamp-object::before{opacity:1}
+@keyframes bulb-ember{0%,100%{opacity:.7}50%{opacity:.95}}
+/* Lamp off: the room goes almost black; only the screen and its spill on keyboard/mouse remain. */
+.portfolio-scene.lamp-off{background:#020302}
+.lamp-off .lamp-light{opacity:0;animation:none}
+.stage .desk-object,.stage .monitor-art,.lamp-object .lamp-sprite,.desk-surface,.page-header,.scene-caption{transition:filter .5s steps(5,end),opacity .5s steps(5,end)}
+.lamp-off .desk-object,.lamp-off .lamp-object .lamp-sprite{filter:brightness(.055)}
+.lamp-off .monitor-art{filter:brightness(.17)}
+.lamp-off .keyboard-object,.lamp-off .mouse-object{filter:brightness(.42)}
+.lamp-off.monitor-off .keyboard-object,.lamp-off.monitor-off .mouse-object,.lamp-off.monitor-off .monitor-art{filter:brightness(.06)}
+.lamp-off .desk-surface{opacity:.04}
+.lamp-off .stage::before,.lamp-off .stage::after{filter:brightness(.15)}
+.lamp-off .page-header,.lamp-off .scene-caption{opacity:.25}
+.screen-spill{position:absolute;left:4%;top:70%;width:88%;height:40%;z-index:4;pointer-events:none;background:radial-gradient(ellipse 48% 75% at 50% 0%,#ccf7812e 0%,#ccf78114 45%,transparent 100%);mix-blend-mode:screen;opacity:0;transition:opacity .5s steps(5,end)}
+.lamp-off:not(.monitor-off) .screen-spill{opacity:1}
+
+/* Desk props react to hover. */
+.desk-object.desk-prop{transition:transform .22s steps(3,end),filter .5s steps(5,end)}
+.binders-prop{transform-origin:50% 100%}
+.tray-prop:hover{transform:translateX(-50%) translateY(-1.5%)}
+.stack-prop:hover{transform:translateX(-50%) translateY(-3%) rotate(-1deg)}
+.sheet-prop:hover{transform:translateX(-50%) translateY(-3%) rotate(-5deg)}
+.binders-prop:hover{transform:translateX(-50%) rotate(-3deg)}
+.folder-prop:hover,.envelope-prop:hover{transform:translateX(-50%) translateY(-4%) rotate(-1.5deg)}
+
+@media(max-width:700px){.monitor-power,.monitor-object::before,.screen-spill{display:none}}
+@media(prefers-reduced-motion:reduce){.power-led,.monitor-object::before,.monitor-screen::after,.lamp-light,.lamp-light i,.power-off .monitor-screen,.power-on .monitor-screen,.lamp-off .lamp-object .lamp-bulb-glow{animation:none}.power-off .monitor-screen{opacity:0}.monitor-screen::after,.lamp-light i{display:none}.desk-object.desk-prop,.stage .desk-object,.stage .monitor-art,.lamp-object .lamp-sprite,.lamp-light,.screen-spill,.desk-surface,.page-header,.scene-caption{transition:none}}

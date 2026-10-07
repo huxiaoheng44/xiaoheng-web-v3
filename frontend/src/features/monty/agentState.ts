@@ -1,4 +1,4 @@
-import type { PresentationState } from './CrtAgentChat';
+import type { PresentationState } from './MontyChat';
 export type SemanticState = PresentationState;
 export function interactionTransition(current:SemanticState, kind:'message'|'interaction'):SemanticState[]{
   if(current==='sleeping')return ['waking','idle'];

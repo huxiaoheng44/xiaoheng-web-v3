@@ -16,10 +16,10 @@ try {
   console.log(selector,fonts.map(f=>({family:f.familyName,glyphs:f.glyphCount,custom:f.isCustomFont})));
  }
  assert(!requests.some(url=>/fonts\.(googleapis|gstatic)\.com/.test(url)));
- await page.getByRole('button',{name:'README.txt',exact:true}).click();await page.getByRole('button',{name:'maximize README.txt',exact:true}).click();
+ await page.getByRole('button',{name:'README',exact:true}).click();await page.getByRole('button',{name:'maximize README',exact:true}).click();
  await page.screenshot({path:'artifacts/test-results/pixel-font-en.png'});
- await page.getByRole('button',{name:'close README.txt',exact:true}).click();await page.getByRole('button',{name:'Switch to Chinese'}).click();
- await page.getByRole('button',{name:'README.txt',exact:true}).click();
+ await page.getByRole('button',{name:'close README',exact:true}).click();await page.getByRole('button',{name:'Switch to Chinese'}).click();
+ await page.getByRole('button',{name:'README',exact:true}).click();
  await page.screenshot({path:'artifacts/test-results/pixel-font-zh.png'});
  await page.setViewportSize({width:390,height:844});await page.screenshot({path:'artifacts/test-results/pixel-font-mobile.png'});
  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));

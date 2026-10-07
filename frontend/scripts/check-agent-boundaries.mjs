@@ -21,22 +21,22 @@ try {
   await page.locator('.boot-overlay').waitFor({ state: 'detached' });
   const initialWindows = await page.locator('.desktop-window').count();
   const initialScroll = await page.evaluate(() => window.scrollY);
-  const input = page.getByRole('textbox', { name: 'Ask CRT.AGENT' });
+  const input = page.getByRole('textbox', { name: 'Ask Monty' });
   await input.fill('Show a safe hint');
   await input.press('Enter');
-  await page.waitForFunction(() => document.querySelector('.crt-agent-overlay')?.dataset.mode === 'move', null, { timeout: 12000 });
-  await page.waitForFunction(() => document.querySelector('.crt-agent-overlay')?.dataset.mode === 'point', null, { timeout: 12000 });
+  await page.waitForFunction(() => document.querySelector('.monty-overlay')?.dataset.mode === 'move', null, { timeout: 12000 });
+  await page.waitForFunction(() => document.querySelector('.monty-overlay')?.dataset.mode === 'point', null, { timeout: 12000 });
   assert.equal(await page.locator('.desktop-window').count(), initialWindows);
   assert.equal(await page.evaluate(() => window.scrollY), initialScroll);
   assert.equal(await page.locator('[data-agent-id="folder:projects"].agent-highlight').count(), 1);
   assert.equal(await page.locator('[data-agent-id="folder:projects"]').count(), 1);
   await page.keyboard.press('Escape');
-  await page.waitForFunction(() => document.querySelector('.crt-agent-overlay')?.dataset.mode === 'move', null, { timeout: 12000 });
+  await page.waitForFunction(() => document.querySelector('.monty-overlay')?.dataset.mode === 'move', null, { timeout: 12000 });
   await page.waitForFunction(() => {
-    const overlay = document.querySelector('.crt-agent-overlay')?.getBoundingClientRect();
+    const overlay = document.querySelector('.monty-overlay')?.getBoundingClientRect();
     return !!overlay && overlay.right >= innerWidth - 26 && overlay.bottom >= innerHeight - 40;
   }, null, { timeout: 12000 });
-  console.log('PASS: valid guideTo travels, then points until cancelled and returns home; malformed or unavailable display instructions have no page side effects; CRT.AGENT cannot navigate, scroll, click, type, open UI, or change tabs.');
+  console.log('PASS: valid guideTo travels, then points until cancelled and returns home; malformed or unavailable display instructions have no page side effects; Monty cannot navigate, scroll, click, type, open UI, or change tabs.');
 } finally {
   await browser.close();
 }

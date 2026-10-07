@@ -1,0 +1,96 @@
+.os-shell{position:relative;container-type:size;overflow:hidden}
+.monty-terminal{height:28px;min-height:28px;box-sizing:border-box;flex-shrink:0;position:relative;z-index:30;font-family:monospace;background:#090e0c;gap:8px}
+.power-control{margin-left:5px;background:transparent;color:#c6cebb;border:1px solid #59694f;padding:1px 5px;font-size:12px}
+.monty-terminal form{display:flex;flex:1;min-width:0}
+.monty-terminal input{font:inherit;color:inherit;background:transparent;border:0;padding:0;min-width:0;width:100%;outline:none;border-radius:0}
+.monty-terminal input:focus-visible{box-shadow:0 1px #a6b29c}
+.terminal-user{white-space:nowrap}.monty-terminal time{white-space:nowrap}.system-status{display:flex;align-items:center;gap:6px;white-space:nowrap;font-size:9px;color:#bac5af}.system-status span{font-size:9px}.task-tray .show-desktop{background:#1d2719}.task-tray .show-desktop:disabled{opacity:.45;cursor:default}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+/* Maximize against the OS shell, not the folder rail or desktop content box. */
+.desktop-area:has(.desktop-window.maximized.active:not([hidden])){position:static;overflow:visible}
+.window-layer:has(.desktop-window.maximized.active:not([hidden])){position:static}
+.desktop-window.maximized.active:not([hidden]){inset:0 0 28px!important;z-index:25!important;margin:0;box-shadow:none}
+.os-shell:has(.desktop-window.maximized.active:not([hidden])) .task-tray,
+.os-shell:has(.desktop-window.maximized.active:not([hidden])) .os-header{visibility:hidden}
+.task-tray{overflow-x:auto;flex-shrink:0}.task-tray button{white-space:nowrap}
+.agent-highlight{outline:2px solid #d3ecac!important;outline-offset:4px;box-shadow:0 0 16px #b8f58955!important}
+.monty-avatar{display:block;width:100%;height:100%;border:0;background:none;padding:0;pointer-events:auto;cursor:help;color:inherit}
+.monty-avatar:hover{filter:none}.monty-avatar .monty-sprite{display:block}
+.agent-badge{position:absolute;top:2px;right:2px;z-index:3;border:1px solid #bbc7ad;background:#0b100ef2;color:#d1d8c5;padding:2px 4px;font:8px/1 monospace;letter-spacing:.6px;pointer-events:none;box-shadow:1px 1px #0008}
+.activity-toggle{width:30px;height:30px;border:1px solid #bbc7ad;background:#0b100ef2;color:#d1d8c5;font:18px/1 monospace}
+.agent-settings-control{position:absolute;left:calc(100% + 8px);bottom:4px;z-index:3;pointer-events:auto;font:11px/1.4 monospace;color:#d1d8c5}.agent-settings-control .activity-toggle{border-radius:50%}
+.agent-activity-panel{width:100%;max-height:45svh;overflow:auto;background:#10150f;border:1px solid #59694f;padding:8px;font-size:10px;overflow-wrap:anywhere}
+.agent-activity-panel h3{font-size:10px;margin:9px 0 3px;color:#d9e6ca}.agent-activity-panel p{margin:3px 0}.agent-activity-panel ul{margin:3px 0;padding-left:17px}.agent-activity-panel a{color:#d3ecac}.activity-state strong{text-transform:capitalize}
+@keyframes activity-spin{to{transform:rotate(360deg)}}
+.monty-overlay:has(.monty-speech) .monty-bubble{display:none}
+.monty-overlay[data-agent-state=guiding] .monty-speech{pointer-events:none}
+.monty-speech{position:absolute;bottom:112%;right:0;width:300px;max-width:calc(100vw - 56px);max-height:min(280px,42svh);overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#9cac8d #11170f;pointer-events:auto;background:#0b100ef5;border:2px solid #bbc7ad;box-shadow:4px 4px #0009;padding:12px;color:#d1d8c5;font:12px/1.6 monospace;overflow-wrap:anywhere;transition:height .18s ease-out}
+.monty-speech::-webkit-scrollbar{width:7px}.monty-speech::-webkit-scrollbar-track{background:#11170f}.monty-speech::-webkit-scrollbar-thumb{background:#9cac8d;border:1px solid #0b100e}
+.bubble-right .monty-speech{right:auto;left:0}
+.speech-below .monty-speech{bottom:auto;top:100%}
+.monty-speech p{margin:0 0 8px;white-space:pre-wrap}
+.monty-speech button{font:inherit;background:transparent;color:inherit;border:1px solid #59694f;padding:2px 7px;cursor:pointer}
+.monty-speech button:disabled{opacity:.35;cursor:default}
+.speech-actions,.monty-sources{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin:5px 0}
+.monty-sources{font-size:10px}.monty-speech summary{cursor:pointer;font-size:10px}
+.typing-caret{animation:blink 1s steps(1) infinite}.monty-settings{position:absolute;right:0;bottom:calc(100% + 8px);width:280px;max-width:calc(100vw - 56px);max-height:55svh;overflow:auto;background:#0b100ef5;border:2px solid #bbc7ad;box-shadow:4px 4px #0009;padding:12px;font:11px/1.6 monospace;overflow-wrap:anywhere}.monty-settings h2{font-size:12px;margin:0 0 8px}.monty-settings label{display:flex;align-items:center;gap:6px;margin:8px 0}.monty-settings input{accent-color:#a5b794}.monty-settings button{font:inherit;background:transparent;color:inherit;border:1px solid #59694f;padding:3px 7px;cursor:pointer}.monty-settings p{font-size:10px;color:#96a28a}.monty-settings details{margin-top:10px}.monty-settings .agent-activity-panel{position:static;margin-top:7px;box-shadow:none}
+.monty-overlay[data-gesture=think] .monty-sprite,.monty-overlay[data-agent-state=observing] .monty-sprite,.monty-overlay[data-agent-state=thinking] .monty-sprite,.monty-overlay[data-agent-state=waking] .monty-sprite{opacity:.8}
+.monty-overlay[data-agent-state=guiding] .monty-sprite{filter:brightness(1.16)}
+.monty-overlay[data-visual-state=monty-waking]{filter:brightness(1.28);outline:1px solid #dfffc3;outline-offset:3px;animation:monty-wake .18s steps(2,end) 1}
+.monty-overlay[data-visual-state=monty-thinking]{filter:none;outline:0}
+@keyframes monty-wake{0%{filter:brightness(.7)}50%{filter:brightness(1.9)}100%{filter:brightness(1.28)}}
+.monty-overlay[data-gesture=nod] .monty-sprite{animation:monty-nod .35s ease 3}
+@keyframes monty-nod{50%{transform:translateY(4px)}}
+@media(max-width:700px){.monty-terminal{font-size:10px}.monty-terminal .terminal-user{font-size:8px}.monty-terminal time{font-size:9px}.desktop-window:not(.active){visibility:hidden}.monty-speech{width:260px;max-width:calc(100vw - 38px)}.monty-settings{max-width:calc(100vw - 38px)}.agent-badge{font-size:7px;padding:2px 3px}}
+@media(prefers-reduced-motion:reduce){.monty-overlay[data-gesture=nod] .monty-sprite,.activity-toggle.is-active,.monty-overlay[data-visual-state=monty-waking]{animation:none}.monty-overlay[data-visual-state=monty-waking]{filter:brightness(1.28);outline:2px solid #dfffc3}.agent-highlight{transition:none!important;box-shadow:none!important}}
+
+/* Guidance remains a compact live message while the visitor performs each step. */
+.monty-speech.is-guiding{width:240px;padding:7px 9px;max-height:112px;font-size:11px;pointer-events:none}
+.monty-speech.is-guiding p{margin:0}
+.monty-speech.is-guiding .typing-caret{display:none}
+.monty-scroll-arrow{display:none;position:absolute;right:-22px;top:28%;font:32px/1 monospace;color:#d3ecac;text-shadow:0 2px #0b100e}
+.monty-overlay[data-guide-phase=scroll-cue] .monty-scroll-arrow{display:block}
+.monty-overlay[data-visibility-direction=above] .monty-scroll-arrow::before{content:'↑'}
+.monty-overlay[data-visibility-direction=below] .monty-scroll-arrow::before{content:'↓'}
+.monty-overlay[data-visibility-direction=left] .monty-scroll-arrow::before{content:'←'}
+.monty-overlay[data-visibility-direction=right] .monty-scroll-arrow::before{content:'→'}
+@media(prefers-reduced-motion:reduce){.monty-speech{transition:none}.typing-caret{animation:none}}
+
+.agent-settings-control{display:flex;flex-direction:column;gap:6px}
+.history-toggle{display:grid;place-items:center}
+.network-status{display:inline-flex;align-items:center;justify-content:center}
+.monty-history{padding:18px 22px;color:#d1d8c5}
+.monty-history-intro{border-bottom:1px solid #405037;padding-bottom:10px}
+.monty-history-intro>span{font-size:9px;letter-spacing:1.5px;color:#a6bb93}
+.monty-history-intro p,.monty-history-empty{font-size:10px;color:#98a58e}
+.monty-history-lines{list-style:none!important;padding:0!important;margin:0!important}
+.history-line{padding:14px 12px;border-bottom:1px solid #2e3b27;margin:0!important;overflow-wrap:anywhere}
+.history-line header{display:flex;align-items:center;gap:10px;font-size:9px;letter-spacing:1px;color:#b4c79f}
+.history-line time{margin-left:auto;font-size:9px;color:#839177;letter-spacing:0}
+.history-line p{white-space:pre-wrap;margin:8px 0!important;font-size:12px}
+.history-user{background:#1a24163d;border-left:2px solid #718764}
+.history-monty{border-left:2px solid #b8cf9c}
+.history-guide-steps{font-size:10px;color:#b7c4aa}
+.history-sources{display:flex;flex-wrap:wrap;gap:7px;font-size:9px}
+.history-tools{font-size:10px}
+.history-pending{font-size:10px;color:#b8cf9c}
+.monty-history-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:7px 10px;flex-shrink:0;border-top:1px solid #4e6043;background:#141e10;color:#aaba9b;font:9px/1.5 monospace}
+.monty-token-balance{text-align:right;color:#d4e5c4;font-variant-numeric:tabular-nums}
+.monty-token-balance small{font:inherit;color:#96a98a}
+@media(max-width:700px){.monty-history{padding:12px}.history-line{padding:10px 8px}.monty-history-footer{align-items:flex-end;font-size:8px;gap:6px}.monty-history-footer>span:first-child{white-space:nowrap}}
+
+@media(max-width:700px){.agent-settings-control{left:calc(100% + 2px)}}
+
+/* Welcome shares Monty's speech anchor and appearance. */
+.terminal-welcome header{display:flex;align-items:center;justify-content:space-between;color:#a7c18b;font-size:10px}
+.terminal-welcome header button{border:0;background:none;color:inherit;padding:0 3px;font:16px/1 monospace;cursor:pointer}
+.terminal-welcome .terminal-welcome-copy{min-height:1.6em;margin:6px 0 9px}
+.terminal-offer-list{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.terminal-offer-list button{display:flex;align-items:baseline;gap:6px;min-height:26px;border:0;background:none;color:#d4e7c3;padding:3px 0;font:inherit;text-align:left;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.terminal-offer-list button:disabled{opacity:.65;cursor:default}
+.terminal-offer-list button:hover:not(:disabled),.terminal-offer-list button:focus-visible{color:#efffe0;outline:1px dashed #c9d0c1;outline-offset:2px}
+.terminal-offer-number{font:inherit}
+.terminal-welcome small{display:block;margin-top:9px;color:#94a582;font:10px/1.5 monospace}
+.terminal-type-caret{animation:blink 1s steps(1) infinite}
+
+.project-choice-list small{display:block;color:#a2b295;font-size:10px;line-height:1.5;margin-bottom:6px}

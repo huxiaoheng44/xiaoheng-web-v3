@@ -9,7 +9,7 @@ const assets = [
   ['keyboard', 'exec-1d728c67-24df-4542-820a-29f0ead61e35.png', 160],
   ['mouse', 'exec-4757c32f-20ad-45ad-870b-f7b4f8cd81ba.png', 36],
   ['mug', 'exec-da133191-86e9-4e56-b793-d2c250e7b246.png', 40],
-  ['crt-agent-sprites', 'exec-0d31ec12-cbb6-40cb-b13c-74884cef9be2.png', 192],
+  ['monty-sprites', 'exec-0d31ec12-cbb6-40cb-b13c-74884cef9be2.png', 192],
 ];
 await mkdir('public/assets', { recursive: true });
 await mkdir('art-source', { recursive: true });

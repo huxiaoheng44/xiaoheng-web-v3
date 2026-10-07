@@ -3,8 +3,8 @@
 @font-face{font-family:'Fusion Pixel Mono';src:url('/fonts/fusion-pixel/fusion-pixel-12px-monospaced-zh_hans.ttf.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
 :root{--font-ui:'Fusion Pixel',sans-serif;--font-terminal:'Fusion Pixel Mono',monospace;font-family:var(--font-ui);font-synthesis:none}
 button,input,textarea,select{font-family:inherit}
-.boot-copy,.boot-skip,.window-controls button,.crt-agent-speech{font-family:var(--font-ui)}
-.crt-agent-terminal,.markdown-content code,.markdown-content pre{font-family:var(--font-terminal)}
+.boot-copy,.boot-skip,.window-controls button,.monty-speech{font-family:var(--font-ui)}
+.monty-terminal,.markdown-content code,.markdown-content pre{font-family:var(--font-terminal)}
 .os-header,.window-title,.content-tabs button,.folder,.window-toolbar,.window-footer{font-size:12px;font-weight:400}
 .folder{font-size:10px;line-height:1.2}
 .desktop-greeting h1{font-size:36px;font-weight:400;line-height:1.3}
@@ -14,6 +14,6 @@ button,input,textarea,select{font-family:inherit}
 .content-scroll h2{font-size:18px;font-weight:400;line-height:1.5}
 .content-scroll h3,.project-entry h2{font-size:12px;font-weight:400;line-height:1.6}
 .profile-focus p,.project-entry p,.project-read,.project-summary,.profile-intro,.collection-header p{font-size:12px;line-height:1.8}
-.crt-agent-terminal{font-size:12px}.crt-agent-terminal .terminal-user,.crt-agent-terminal time{font-size:12px}
-.crt-agent-speech{font-size:12px;line-height:1.6}
-@media(max-width:700px){.os-header,.window-title,.content-tabs button,.window-toolbar,.window-footer{font-size:10px}.crt-agent-terminal,.crt-agent-terminal .terminal-user,.crt-agent-terminal time{font-size:10px}.desktop-greeting h1{font-size:24px}.window-toolbar,.window-footer{gap:4px}.window-title{overflow-wrap:anywhere}}
+.monty-terminal{font-size:12px}.monty-terminal .terminal-user,.monty-terminal time{font-size:12px}
+.monty-speech{font-size:12px;line-height:1.6}
+@media(max-width:700px){.os-header,.window-title,.content-tabs button,.window-toolbar,.window-footer{font-size:10px}.monty-terminal,.monty-terminal .terminal-user,.monty-terminal time{font-size:10px}.desktop-greeting h1{font-size:24px}.window-toolbar,.window-footer{gap:4px}.window-title{overflow-wrap:anywhere}}

@@ -1,6 +1,6 @@
 import { describe,it,expect } from 'vitest';
 import { desktopReducer, projectIds } from '../../model';
-import { detectMessageLocale, parsePresentationInstruction, validatePresentationForContext } from './CrtAgentChat';
+import { detectMessageLocale, parsePresentationInstruction, validatePresentationForContext } from './MontyChat';
 describe('agent boundaries',()=>{
  it('opens independent projects without duplicates',()=>{
   let state=projectIds.reduce((s,id)=>desktopReducer(s,{type:'open',id:`project:${id}`}),[] as ReturnType<typeof desktopReducer>);

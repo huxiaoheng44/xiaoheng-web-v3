@@ -16,3 +16,13 @@ it('captures only registered semantic target events without private fields',()=>
  expect(snapshot).not.toHaveProperty('trajectory');
  expect(JSON.stringify(snapshot)).not.toMatch(/clientX|clientY|coordinates|rect|selector|textContent|path/);
 });
+
+it('omits a hover whose target disappeared during a guide window transition',()=>{
+ vi.stubGlobal('document',{hidden:false});
+ const context={language:'en' as const,contextVersion:0,activeWindow:'projects',activePanel:'collection',windows:['projects'],aboutTab:'profile',targets:[{id:'project-card:fast-ai-movie',available:true,capabilities:['guideTo'] as Array<'guideTo'>,names:{en:'FAST AI',zh:'FAST AI'}}]};
+ const tracker=new BehaviorTracker(()=>context);
+ tracker.hoverTarget({target:{closest:()=>({dataset:{agentId:'project-card:fast-ai-movie'}})}} as unknown as PointerEvent);
+ context.activeWindow='project:fast-ai-movie';context.activePanel='detail';context.targets=[];
+ const snapshot=tracker.snapshot({locale:'en',dnd:false,proactiveCount:0});
+ expect(snapshot.events).toEqual([]);
+});

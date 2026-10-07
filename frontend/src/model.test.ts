@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { desktopReducer } from './model';
-import { parsePresentationInstruction } from './features/crt-agent/CrtAgentChat';
+import { parsePresentationInstruction } from './features/monty/MontyChat';
 
 describe('desktop lifecycle', () => {
   it('restores minimized windows, preserves maximization and closes independently', () => {

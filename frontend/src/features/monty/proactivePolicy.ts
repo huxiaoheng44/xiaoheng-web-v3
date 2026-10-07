@@ -1,4 +1,4 @@
-import type { Behavior, Target } from './CrtAgentChat';
+import type { Behavior, Target } from './MontyChat';
 
 export const DEFAULT_PROACTIVE_POLICY = { firstEvaluationMs: 30_000, cooldownMs: 90_000, maxMessages: 2, maxUnanswered: 2, dwellSeconds: 5, allowLightInvite: true } as const;
 export type ProactivePolicy = typeof DEFAULT_PROACTIVE_POLICY;

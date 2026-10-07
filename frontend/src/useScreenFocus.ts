@@ -19,7 +19,7 @@ export function useScreenFocus(active: boolean) {
       const sx = (screenRect.left - stageRect.left) / currentScale;
       const sy = (screenRect.top - stageRect.top) / currentScale;
       const width = screenRect.width / currentScale, height = screenRect.height / currentScale;
-      // Keep equal left/right margins; the ghost lives over the physical bezel.
+      // Keep equal left/right margins; Monty lives over the physical bezel.
       const scale = Math.max(1, Math.min((innerWidth - 180) / width, (innerHeight - 40) / height, 2.4));
       const dx = (innerWidth - width * scale) / 2 - left - sx * scale;
       const dy = (innerHeight - height * scale) / 2 - top - sy * scale;

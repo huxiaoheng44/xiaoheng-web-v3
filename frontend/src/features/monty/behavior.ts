@@ -1,4 +1,4 @@
-import type { Behavior, BehaviorEvent, PageContext, Target } from './CrtAgentChat';
+import type { Behavior, BehaviorEvent, PageContext, Target } from './MontyChat';
 export class BehaviorTracker {
   private events:Behavior['events']=[];
   private lastActivity=performance.now();private entered=performance.now();private hover='';private lastView='';private dwellRecorded=false;private meaningful=false;private pageActivity=false;
@@ -13,5 +13,5 @@ export class BehaviorTracker {
   tick(context:PageContext){if(document.hidden)return;const view=`${context.activeWindow||'desktop'}:${context.activePanel}`;if(view!==this.lastView){this.lastView=view;this.events.push({type:'visit',target:view,duration:0});this.meaningful=true;}const elapsed=(performance.now()-this.entered)/1000;if(this.hover&&!this.dwellRecorded&&elapsed>=5){this.record('dwell',this.hover,elapsed);this.dwellRecorded=true;}}
   consumeMeaningfulInteraction(){const value=this.meaningful;this.meaningful=false;return value;}
   consumePageActivity(){const value=this.pageActivity;this.pageActivity=false;return value;}
-  snapshot({locale,dnd,proactiveCount}:{locale:PageContext['language'];dnd:boolean;proactiveCount:number}):Behavior{const context=this.context();const now=performance.now();const events=this.events.slice(-59);if(this.hover&&!document.hidden)events.push({type:'hover',...this.metadata(this.hover)!,duration:(now-this.entered)/1000});return {route:context.activeWindow||'desktop',window:context.activeWindow,activePanel:context.activePanel,locale,dnd,proactiveCount,events,idleSeconds:Math.min(7200,(now-this.lastActivity)/1000)};}
+  snapshot({locale,dnd,proactiveCount}:{locale:PageContext['language'];dnd:boolean;proactiveCount:number}):Behavior{const context=this.context();const now=performance.now();const events=this.events.slice(-59);const hover=this.hover?this.metadata(this.hover):null;if(hover&&!document.hidden)events.push({type:'hover',...hover,duration:(now-this.entered)/1000});return {route:context.activeWindow||'desktop',window:context.activeWindow,activePanel:context.activePanel,locale,dnd,proactiveCount,events,idleSeconds:Math.min(7200,(now-this.lastActivity)/1000)};}
 }

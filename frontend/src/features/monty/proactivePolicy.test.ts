@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_PROACTIVE_POLICY, decideProactive } from './proactivePolicy';
-import type { Behavior, Target } from './CrtAgentChat';
+import type { Behavior, Target } from './MontyChat';
 const target:Target={id:'project:drone-simulator',available:true,capabilities:['highlight','guideTo'],names:{en:'Drone Simulator',zh:'无人机仿真与控制'},projectId:'drone-simulator'};
 const base=(events:Behavior['events']=[]):Behavior=>({route:'projects',window:'projects',activePanel:'collection',locale:'en',dnd:false,proactiveCount:0,events,idleSeconds:1});
 const session={startedAt:0,lastMessageAt:null,proactiveCount:0,unanswered:0,lightInviteUsed:false};
