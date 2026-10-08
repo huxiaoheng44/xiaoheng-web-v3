@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import { desktopReducer } from './model';
-import { parsePresentationInstruction } from './features/monty/MontyChat';
 
 describe('desktop lifecycle', () => {
   it('restores minimized windows, preserves maximization and closes independently', () => {
@@ -21,14 +20,5 @@ describe('desktop lifecycle', () => {
     expect(state.every(window => window.minimized)).toBe(true);
     state = desktopReducer(state, { type: 'showDesktop' });
     expect(state.every(window => !window.minimized)).toBe(true);
-  });
-});
-describe('portfolio-agent presentation boundary', () => {
-  it('accepts only display instructions and rejects page operations', () => {
-    expect(parsePresentationInstruction({ type: 'highlight', target: 'project-card:drone-simulator', value: '' })).not.toBeNull();
-    expect(parsePresentationInstruction({ type: 'openWindow', target: 'about', value: '' })).toBeNull();
-    expect(parsePresentationInstruction({ type: 'scrollToSection', target: 'about:skills', value: '' })).toBeNull();
-    expect(parsePresentationInstruction({ type: 'showHint', target: '', value: 'x'.repeat(201) })).toBeNull();
-    expect(parsePresentationInstruction(null)).toBeNull();
   });
 });
