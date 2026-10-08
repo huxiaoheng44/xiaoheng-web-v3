@@ -153,12 +153,41 @@ def doom_exe():
     return cv
 
 
+def monty_head():
+    """monty.history: Monty's CRT head (cream bezel, phosphor eyes, amber antenna and ear)."""
+    cv = Canvas(S)
+    # antenna
+    cv.rect(16, 2, 16, 5, "k")
+    cv.rect(16, 0, 17, 1, "Y")
+    cv.set(17, 1, "A")
+    # head with rounded corners
+    cv.rect(2, 5, 20, 20, "C")
+    for x, y in ((2, 5), (20, 5), (2, 20), (20, 20)):
+        cv.set(x, y, None)
+    cv.rect(3, 5, 19, 5, "W")
+    cv.rect(2, 6, 2, 19, "W")
+    cv.rect(3, 20, 19, 20, "S")
+    cv.rect(20, 6, 20, 19, "S")
+    # screen + eyes
+    cv.rect(4, 8, 17, 17, "O")
+    cv.rect(5, 9, 16, 16, "D")
+    cv.rect(7, 11, 8, 13, "G")
+    cv.rect(13, 11, 14, 13, "G")
+    cv.rect(10, 15, 11, 15, "g")
+    # ear disc on the right
+    cv.rect(21, 10, 22, 15, "S")
+    cv.rect(22, 12, 22, 13, "A")
+    cv.outline()
+    return cv
+
+
+# The Profile icon (ID card) is drawn by draw_profile_icons.py.
 ICONS = {
     "projects": projects_folder,
-    "about": readme_txt,
-    "experience": experience_exe,
+    "readme": readme_txt,
     "contact": contact_mail,
     "doom": doom_exe,
+    "monty-history": monty_head,
 }
 
 if __name__ == "__main__":

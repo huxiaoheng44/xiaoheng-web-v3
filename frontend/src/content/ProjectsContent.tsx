@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Language } from '../model';
 import { projects, projectHtml, projectSummary, assetUrl } from './projects';
-import { Tags } from './AboutContent';
+import { Tags } from './ProfileContent';
 import { useSemanticTarget } from '../features/monty/DesktopContext';
 import { projectGuideTarget } from '../features/monty/GuideWorkflow';
 

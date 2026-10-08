@@ -47,7 +47,7 @@ def main():
             response=client.post('/api/chat',headers={'Authorization':'Bearer '+token},json={
                 'requestId':str(uuid.uuid4()),'message':query,
                 'pageContext':{'language':'zh','contextVersion':0,'activeWindow':None,'windows':[],
-                               'aboutTab':'profile','targets':[]}})
+                               'profileSection':'profile','targets':[]}})
             response.raise_for_status()
             events=[json.loads(line[6:]) for line in response.text.splitlines() if line.startswith('data: ')]
             assert expected in next(e['ids'] for e in events if e['type']=='projectChoices')

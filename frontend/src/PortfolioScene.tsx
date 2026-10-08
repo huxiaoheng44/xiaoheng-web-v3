@@ -1,7 +1,7 @@
 import { useEffect, useState, type Dispatch } from 'react';
 import { folders, labels, fileLabels, type DesktopAction, type FolderId, type Language, type WindowState, type WindowId, type ProjectId } from './model';
 import { MontyOverlay } from './MontyOverlay';
-import { AboutContent, ExperienceContent, ContactContent } from './content/AboutContent';
+import { ProfileContent, ContactContent } from './content/ProfileContent';
 import { ProjectsContent } from './content/ProjectsContent';
 import { ReadmeContent } from './content/ReadmeContent';
 import { projects } from './content/projects';
@@ -31,12 +31,8 @@ function useMonitorPower(){
 function DesktopIcon({id}:{id:FolderId}){return <img aria-hidden="true" className="desktop-icon" src={`/assets/desktop-icons/${id}.png`} alt="" width={36} height={36}/>;}
 function titleFor(id:WindowId,language:Language){if(id==='monty-history')return language==='zh'?'Monty 聊天记录':'Monty Chat History';if(id.startsWith('project:')){const project=projects.find(p=>p.id===id.slice(8));return (language==='zh'?project?.zh:project?.title)||id;}return fileLabels[id as FolderId][language];}
 function RegisteredFolder({id,language,active,dispatch}:{id:FolderId;language:Language;active?:WindowId;dispatch:Dispatch<DesktopAction>}){
- const target=useSemanticTarget({id:`folder:${id}`,names:labels[id],scope:{},capabilities:['highlight','guideTo'],completion:id==='projects'?{window:'projects',panel:'collection'}:{window:id,panel:id==='about'?'profile':''}});
+ const target=useSemanticTarget({id:`folder:${id}`,parentId:'desktop',names:labels[id],scope:{},capabilities:['highlight','guideTo'],completion:id==='projects'?{window:'projects',panel:'collection'}:{window:id,panel:id==='profile'?'profile':''}});
  return <button ref={target} data-guide={id} data-agent-id={`folder:${id}`} className={`folder ${active===id?'selected':''}`} onClick={()=>dispatch({type:'open',id})}><DesktopIcon id={id}/><span>{fileLabels[id][language]}</span></button>;
-}
-function RegisteredExperience({language}:{language:Language}){
- const target=useSemanticTarget({id:'experience:timeline',names:{en:'Work experience',zh:'工作经历'},scope:{window:'experience'},capabilities:['highlight','guideTo']});
- return <div ref={target} className="standalone-experience" data-agent-id="experience:timeline"><h1>{language==='en'?'Experience':'工作经历'}</h1><ExperienceContent language={language}/></div>;
 }
 export function DesktopFolders({language,active,dispatch}:{language:Language;active?:WindowId;dispatch:Dispatch<DesktopAction>}){
  return <nav className="desktop-folders" aria-label={language==='en'?'Desktop folders':'桌面文件夹'}>{folders.map(id=><RegisteredFolder key={id} id={id} language={language} active={active} dispatch={dispatch}/>)}</nav>;
@@ -46,11 +42,11 @@ export function DesktopWindow({window:win,language,dispatch,index,active}:{windo
  const minimizeTarget=useSemanticTarget({id:`window:minimize:${win.id}`,names:{en:`Minimize ${titleFor(win.id,'en')}`,zh:`最小化${titleFor(win.id,'zh')}`},scope:{window:win.id},capabilities:['highlight','guideTo'],completion:{minimizedWindow:win.id}});
  return <section data-agent-ui={win.id==='monty-history'?true:undefined} hidden={win.minimized} data-window-id={win.id} role="region" aria-label={title} className={`desktop-window ${win.maximized?'maximized':''} ${active?'active':''}`} style={{zIndex:index+1,'--offset':`${(index%4)*10}px`} as React.CSSProperties} onPointerDown={()=>{if(!active)dispatch({type:'open',id:win.id});}} onFocusCapture={()=>{if(!active)dispatch({type:'open',id:win.id});}}>
   <header className="window-title"><span aria-hidden="true">▣</span><span>/{title}</span><div className="window-controls">{(['minimize','maximize','close'] as const).map((action,i)=><button ref={action==='minimize'?minimizeTarget:undefined} data-agent-id={action==='minimize'?`window:minimize:${win.id}`:undefined} key={action} data-guide="control" aria-label={language==='en'?`${action} ${title}`:`${['最小化','最大化','关闭'][i]}${title}`} onClick={()=>dispatch({type:action,id:win.id})}>{['−',win.maximized?'▣':'□','×'][i]}</button>)}</div></header>
-  <div className="window-toolbar"><span>{win.id==='monty-history'?(language==='zh'?'本次会话':'THIS SESSION'):(language==='en'?'Directory':'目录')} / {title}</span><span>{win.id==='monty-history'?'MONTY.LOG':projectId?'PROJECT':win.id==='projects'?`${String(projects.length).padStart(2,'0')} PROJECTS`:win.id==='experience'?'04 ROLES':win.id==='about'?'PROFILE':win.id==='doom'?'SHAREWARE · 1993':'CONNECT'}</span></div>
+  <div className="window-toolbar"><span>{win.id==='monty-history'?(language==='zh'?'本次会话':'THIS SESSION'):(language==='en'?'Directory':'目录')} / {title}</span><span>{win.id==='monty-history'?'MONTY.LOG':projectId?'PROJECT':win.id==='projects'?`${String(projects.length).padStart(2,'0')} PROJECTS`:win.id==='profile'?'PROFILE':win.id==='readme'?'TEXT FILE':win.id==='doom'?'SHAREWARE · 1993':'CONNECT'}</span></div>
   <div className="content-scroll" tabIndex={0} aria-label={language==='en'?`${title} content`:`${title}内容`}>
-   {win.id==='about'&&<><ReadmeContent language={language}/><AboutContent language={language}/></>}
+   {win.id==='readme'&&<ReadmeContent language={language}/>}
    {(win.id==='projects'||projectId)&&<ProjectsContent language={language} visible={!win.minimized&&active} projectId={projectId} onSelect={id=>desktop.navigate(id?`project:${id as ProjectId}`:'projects')}/>}
-   {win.id==='experience'&&<RegisteredExperience language={language}/>}
+   {win.id==='profile'&&<ProfileContent language={language}/>}
    {win.id==='monty-history'&&<MontyHistory language={language} visible={active&&!win.minimized}/>}
    {win.id==='contact'&&<ContactContent language={language}/>}
    {win.id==='doom'&&<iframe className="doom-frame" src="/apps/doom/index.html" title="DOOM" sandbox="allow-scripts" allow="autoplay"/>}
@@ -61,7 +57,7 @@ function ShowDesktopButton({language,state,dispatch}:{language:Language;state:{w
  const target=useSemanticTarget({id:'desktop:show',names:{en:'Show desktop',zh:'显示桌面'},scope:{},capabilities:['highlight','guideTo']});
  const allHidden=state.windows.length>0&&state.windows.every(w=>w.minimized);
  const hint=language==='en'?(allHidden?'Restore windows':'Show desktop'):(allHidden?'恢复窗口':'显示桌面');
- return <button ref={target} data-agent-id="desktop:show" className="show-desktop" data-hint={hint} title={hint} aria-label={language==='en'?'Show desktop':'显示桌面'} aria-pressed={allHidden} disabled={!state.windows.length} onClick={()=>dispatch({type:'showDesktop'})}><span aria-hidden="true"/></button>;
+ return <button ref={target} data-agent-id="desktop:show" className="show-desktop" data-hint={hint} title={hint} aria-label={language==='en'?'Show desktop':'显示桌面'} aria-pressed={allHidden} disabled={!state.windows.length} onClick={()=>dispatch({type:'showDesktop'})}><svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" shapeRendering="crispEdges"><rect x="1.5" y="2.5" width="11" height="9" fill="none" stroke="currentColor"/><path d="M2 9.5h10M2 10.5h10" stroke="currentColor"/><path d="M4 5.5h3" stroke="currentColor"/></svg></button>;
 }
 export function CrtMonitor({language,setLanguage,active:on,powered=true,onEnter,onShutdown}:{language:Language;setLanguage:(value:Language)=>void;active:boolean;powered?:boolean;onEnter:()=>void;onShutdown:()=>void}){
  const {state,active,dispatch,reset}=useDesktop();const [now,setNow]=useState(new Date());const wallpaper=useWallpaper();

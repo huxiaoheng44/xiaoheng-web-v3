@@ -5,9 +5,6 @@
 .project-directory{display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:18px 12px;margin-top:24px;padding:8px}.project-file{position:relative;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding:8px 5px;border:1px solid transparent;background:transparent;color:#c8d4bb;text-align:center;font:inherit;font-size:9px;line-height:1.45}.project-file>img{width:54px;height:54px;object-fit:contain;image-rendering:pixelated}.project-file>small{font:8px/1.3 inherit;color:#829179}.project-file:hover,.project-file:focus-visible{border-color:#aab79c;background:#263120}.project-file-tooltip{position:absolute;z-index:4;left:50%;bottom:calc(100% + 8px);width:180px;transform:translateX(-50%);display:none;padding:8px;border:1px solid #b6c2a9;background:#0b100ef7;color:#dbe5d1;text-align:left;font-size:9px;line-height:1.55;box-shadow:3px 3px #0009}.project-file:hover .project-file-tooltip,.project-file:focus-visible .project-file-tooltip{display:block}
 .html-content{margin-top:22px}.html-content .hero{border-top:1px solid #3b4931;border-bottom:1px solid #3b4931;padding:16px 0;margin:18px 0}.html-content .hero h1{font-size:19px}.html-content .eyebrow,.html-content .lead,.html-content figcaption,.html-content .table-note,.html-content footer{color:#9dac91}.html-content .lead{font-size:11px}.html-content .tags,.html-content .flow{display:flex;flex-wrap:wrap;gap:5px;padding:0;list-style:none}.html-content .tags li,.html-content .flow li{margin:0;border:1px solid #3b4733;background:#182014;color:#b4c2a6;padding:3px 6px;font-size:8px}.html-content figure{margin:16px 0;border:1px solid #39482e;background:#0b1008}.html-content figure img,.html-content figure video{display:block;width:100%;height:auto;max-height:420px;object-fit:contain}.html-content figcaption{padding:7px 10px;font-size:9px}.html-content .pair,.html-content .grid,.html-content .stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.html-content .card,.html-content .stat,.html-content .callout{border:1px solid #3b4733;padding:10px;background:#182014}.html-content .card h4{margin:0 0 4px}.html-content .card p,.html-content .stat span{margin:0;font-size:9px}.html-content table{display:block;max-width:100%;overflow:auto;border-collapse:collapse}.html-content td,.html-content th{padding:7px;border:1px solid #47563a;text-align:left;vertical-align:top}.html-content .formula{overflow:auto;padding:8px;background:#080e05;text-align:center}.html-content footer{margin-top:24px;padding-top:12px;border-top:1px solid #3b4931;font-size:9px}@container(max-width:430px){.html-content .pair,.html-content .grid,.html-content .stats{grid-template-columns:1fr}.project-directory{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.project-file{min-height:0}.project-file-tooltip{left:0;transform:none;width:min(180px,calc(100vw - 64px))}}
 
-/* README.txt: plain-text file view above the profile */
-.readme-file{margin:0 0 18px;padding:14px 16px;font:11px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere;color:#d1d8c5;background:#0b100e;border:1px solid #3d4a37}
-.readme-divider{margin:4px 0 18px;font:10px/1 monospace;letter-spacing:2px;color:#7f8d76;text-align:center}
 
 /* Click-to-zoom for project figures: opens full-size outside the CRT (no scanlines, no 420px cap). */
 .html-content img{cursor:zoom-in}
@@ -16,3 +13,50 @@
 .image-viewer-close{position:fixed;top:16px;right:20px;width:36px;height:36px;font:22px/1 monospace;color:#d1d8c5;background:#0b100ef2;border:1px solid #59694f;cursor:pointer}
 @keyframes image-viewer-in{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.image-viewer{animation:none}}
+
+/* README: a structured, text-file flavoured document about the site and Monty. */
+.readme-doc{padding:26px 38px 40px;font-size:12px;line-height:1.7;color:#cdd6c2}
+.readme-doc>*{max-width:900px}
+.readme-doc section{margin-top:26px}
+.readme-doc h2{display:flex;align-items:center;gap:10px;margin:0 0 12px;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:#ccf781}
+.readme-doc h2::before{content:'##';color:#59694f}
+.readme-doc h2::after{content:'';flex:1;border-top:1px dashed #3d4a37}
+.readme-doc h3{margin:18px 0 8px;font-size:11px;letter-spacing:1px;color:#9fb08f;text-transform:uppercase}
+.readme-doc p{margin:0 0 10px}
+.readme-doc kbd{display:inline-block;padding:0 5px;font:inherit;font-size:.92em;line-height:1.5;color:#e2ead8;background:#1d2719;border:1px solid #59694f;box-shadow:1px 1px 0 #000}
+.readme-head{padding-bottom:16px;border-bottom:1px solid #3d4a37}
+.readme-head h1{margin:0;font-size:30px;letter-spacing:4px;color:#e9f0de}
+.readme-tagline{margin:4px 0 12px!important;font-size:11px;letter-spacing:1px;color:#8a9a7f}
+.readme-files{list-style:none;margin:0;padding:0;border:1px solid #3d4a37}
+.readme-files li{display:grid;grid-template-columns:24px 120px 1fr;gap:12px;align-items:center;padding:7px 10px}
+.readme-files li+li{border-top:1px solid #263120}
+.readme-files img{width:24px;height:24px;image-rendering:pixelated}
+.readme-files b{color:#e9f0de;font-weight:500}
+.readme-files span{color:#a9b79c}
+.readme-monty{display:flex;gap:14px;align-items:center;padding:12px 14px;background:#141b12;border:1px solid #3d4a37}
+.readme-monty p{margin:0}
+.readme-monty-sprite{flex:none;display:block;width:56px;height:56px;image-rendering:pixelated}
+.readme-abilities{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+.readme-abilities li{display:grid;grid-template-columns:auto 1fr;column-gap:8px;padding:10px 12px;background:#141b12;border:1px solid #2c3727}
+.readme-abilities b{color:#e9f0de;font-weight:500}
+.readme-abilities li>span:last-child{grid-column:1/-1;margin-top:4px;color:#a9b79c}
+.readme-num{color:#ccf781}
+.readme-pairs{margin:0;display:grid;gap:6px}
+.readme-pairs>div{display:grid;grid-template-columns:150px 1fr;gap:12px}
+.readme-pairs dt{color:#e9f0de}
+.readme-pairs dd{margin:0;color:#a9b79c}
+.readme-note{margin-top:16px;padding:10px 14px;border-left:3px solid #ccf781;background:#141b12}
+.readme-note b{display:block;margin-bottom:4px;color:#ccf781;letter-spacing:1px}
+.readme-boundary{margin:0!important;color:#e9f0de}
+.readme-tips{margin:0;padding-left:18px}
+.readme-tips li{margin:5px 0}
+.readme-tips li::marker{content:'› ';color:#ccf781}
+.readme-stack dd{overflow-wrap:anywhere}
+@media(max-width:700px){.readme-files li{grid-template-columns:24px 1fr}.readme-files span{grid-column:2}.readme-pairs>div{grid-template-columns:1fr;gap:0}}
+
+/* Profile: overview folders reuse the Projects directory look; section pages get an icon header. */
+.profile-directory{margin:22px 0 26px}
+.profile-folder>small{display:block;font-size:9px;color:#829179}
+.profile-section-head{display:flex;align-items:center;gap:14px;margin:18px 0 22px}
+.profile-section-head img{width:56px;height:56px;image-rendering:pixelated}
+.profile-section-head h1{margin:2px 0 0}

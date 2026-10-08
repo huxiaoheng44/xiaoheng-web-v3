@@ -15,6 +15,7 @@ function SystemStatus({language,now}:{language:Language;now:Date}) {
 }
 
 export function MontyTerminal({language,now,trailing,active=false}:{language:Language;now:Date;trailing?:React.ReactNode;active?:boolean}){
+ const terminalTarget=useSemanticTarget({id:'monty:terminal',names:{en:'Ask Monty',zh:'向 Monty 提问'},scope:{},capabilities:['highlight']});
  const agent=useAgent();const [message,setMessage]=useState('');
  const input=useRef<HTMLInputElement>(null);const offered=useRef(false);
  const [welcome,setWelcome]=useState(false);
@@ -28,7 +29,7 @@ export function MontyTerminal({language,now,trailing,active=false}:{language:Lan
  return <footer className="monty-terminal os-terminal" data-agent-ui>
   {active&&welcome&&agent.welcomeHost&&createPortal(<TerminalWelcome language={language} onSelect={choose} onDismiss={()=>setWelcome(false)}/>,agent.welcomeHost)}
   <label htmlFor="monty-command" className="terminal-user">xiaoheng@portfolio:~$</label>
-  <form onSubmit={submit}><input ref={input} id="monty-command" aria-label="Ask Monty" placeholder="ask Monty…" value={message} maxLength={4000} autoComplete="off" onChange={e=>{setDraft(null);setWelcome(false);setMessage(e.target.value);}} onKeyDown={e=>{if(e.key==='Escape'){setDraft(null);setWelcome(false);}}}/></form>
+  <form ref={terminalTarget} data-agent-id="monty:terminal" onSubmit={submit}><input ref={input} id="monty-command" aria-label="Ask Monty" placeholder="ask Monty…" value={message} maxLength={4000} autoComplete="off" onChange={e=>{setDraft(null);setWelcome(false);setMessage(e.target.value);}} onKeyDown={e=>{if(e.key==='Escape'){setDraft(null);setWelcome(false);}}}/></form>
   <SystemStatus language={language} now={now}/>
   {trailing}
   <span className="sr-only">{language==='zh'?'回车发送，悬停 Monty 查看帮助':'Enter to send. Hover Monty for help.'}</span>

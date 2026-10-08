@@ -178,7 +178,7 @@ def create_app(provider=None, knowledge=None):
             if decision is not None:
                 if decision.kind=='guide' and not body.guideStep: s.guide_topic=planner.topic(body.message)
                 destination=planner.topic(body.message) if not body.guideStep else ''
-                if destination not in {entry['id'] for entry in CATALOG} and not destination.startswith('folder:'): destination=''
+                if destination not in {entry['id'] for entry in CATALOG} and destination not in {f'profile-section:{section}' for section in ('experience', 'education', 'skills', 'research')} and not destination.startswith('folder:'): destination=''
                 return planned_response(s,decision,destination)
         budgeted=BudgetedProvider(s,lambda limit: provider or ChatProvider(TOOLS,limit))
         graph=make_graph(evidence,budgeted,store.spend)

@@ -70,10 +70,23 @@ class GuidePlanner:
     @staticmethod
     def topic(question: str) -> str:
         """Persist only a catalog project ID or coarse topic between steps."""
+        if re.search(r'关于网站|网站介绍|\b(?:readme|about (?:the |this )?(?:website|site))\b', question, re.I):
+            return 'folder:readme'
+        for entry in CATALOG:
+            if any(alias.casefold() in question.casefold() for alias in [entry['id'], *entry['aliases']]):
+                return entry['id']
+        for section, pattern in {
+            'education': r'教育|学历|\beducation\b|\bacademic background\b',
+            'skills': r'技能|技术栈|\b(?:skills?|toolkit)\b',
+            'research': r'研究经历|研究背景|研究与项目|\bresearch(?: experience| background| and projects)?\b',
+            'experience': r'工作经历|工作经验|职业经历|\b(?:work experience|career|experience)\b',
+        }.items():
+            if re.search(pattern, question, re.I):
+                return f'profile-section:{section}'
         for folder, pattern in {
             'contact': r'联系|邮箱|\bcontact\b',
-            'experience': r'工作经历|经历|\bexperience\b',
-            'about': r'关于(?:你|作者|页面|文件夹)|个人简介|自我介绍|\b(?:readme|about)\b',
+            'profile': r'工作经历|经历|个人资料|个人简介|自我介绍|关于(?:你|作者)|教育|学历|技能|\b(?:experience|profile|education|skills?|toolkit)\b|\babout (?:you|yourself|xiaoheng)\b',
+            'readme': r'关于(?:页面|网站|文件夹)|网站介绍|\b(?:readme|about)\b',
             'doom': r'游戏|\bdoom\b',
         }.items():
             if re.search(pattern, question, re.IGNORECASE):
@@ -123,9 +136,14 @@ class GuidePlanner:
         # Continue only with a registered card in that collection; this is
         # deliberately local metadata, never DOM text or a provider action.
         topic = topic if guide_step else self.topic(question)
-        destination = topic if topic.startswith('folder:') else 'folder:projects' if topic or _PROJECT_INTENT.search(question) or guide_step else ''
+        destination = 'folder:profile' if topic.startswith('profile-section:') else topic if topic.startswith('folder:') else 'folder:projects' if topic or _PROJECT_INTENT.search(question) or guide_step else ''
         if not destination:
             return _finish(locale)
+        if destination == 'folder:profile' and context.activeWindow == 'profile':
+            panel = topic.removeprefix('profile-section:') if topic.startswith('profile-section:') else 'profile'
+            if context.activePanel != panel:
+                target = f'profile-section:{panel}' if context.activePanel == 'profile' else 'profile:back'
+                return GuideDecision('guide', target_id=target) if self._eligible(context, target) else _finish(locale)
         if destination != 'folder:projects' and context.activeWindow == destination.removeprefix('folder:'):
             return GuideDecision('finish', message='已打开你要看的内容，可以开始浏览了。' if locale == 'zh' else 'The requested content is open. Enjoy exploring.')
         if destination == 'folder:projects' and context.activeWindow and context.activeWindow.startswith('project:') and context.activePanel == 'detail':

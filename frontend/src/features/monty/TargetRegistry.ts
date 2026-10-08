@@ -4,7 +4,7 @@ export type TargetCapability = 'highlight' | 'guideTo';
 export type TargetScope = { window?: string; panel?: string };
 export type TargetNames = { en: string; zh: string };
 export type TargetCompletion = { window: string; panel: string } | { minimizedWindow: string };
-export type TargetDefinition = { id: string; names: TargetNames; scope: TargetScope; capabilities: TargetCapability[]; projectId?: string; tag?: string; completion?: TargetCompletion };
+export type TargetDefinition = { id: string; names: TargetNames; scope: TargetScope; capabilities: TargetCapability[]; projectId?: string; tag?: string; parentId?: string; completion?: TargetCompletion };
 export type VisibilityDirection = 'visible' | 'above' | 'below' | 'left' | 'right' | 'unavailable';
 type TargetContext = Pick<PageContext, 'activeWindow' | 'activePanel'>;
 type RegisteredTarget = TargetDefinition & { element: HTMLElement };
@@ -61,15 +61,17 @@ export class TargetRegistry {
 
   snapshot(context: TargetContext): Target[] {
     return [...this.targets.values()].sort((a, b) => a.id.localeCompare(b.id)).flatMap(target => {
-      const guideable = this.matchesScope(target.scope, context) && target.element.isConnected && target.capabilities.includes('guideTo');
-      const visible = guideable && this.isVisible(target.element);
-      return guideable ? [{
+      const inScope = this.matchesScope(target.scope, context) && target.element.isConnected;
+      const guideable = inScope && target.capabilities.includes('guideTo');
+      const visible = inScope && this.isVisible(target.element);
+      return inScope ? [{
       id: target.id,
       available: visible,
       visible,
       guideable,
       capabilities: target.capabilities,
       names: target.names,
+      ...(target.parentId ? { parentId: target.parentId } : {}),
       ...(target.projectId ? { projectId: target.projectId } : {}),
       ...(target.tag ? { tag: target.tag } : {}),
     }] : [];
@@ -79,7 +81,7 @@ export class TargetRegistry {
   resolve(id: string, capability: TargetCapability, context: TargetContext) {
     const target = this.targets.get(id);
     if (!target || !target.capabilities.includes(capability)) return { element: null, reason: 'target-unregistered' as const };
-    if (!this.matchesScope(target.scope, context) || !target.element.isConnected || (capability === 'highlight' && !this.isVisible(target.element))) return { element: null, reason: 'target-unavailable' as const };
+    if (!this.matchesScope(target.scope, context) || !target.element.isConnected || (capability === 'highlight' && target.element.closest('[hidden]'))) return { element: null, reason: 'target-unavailable' as const };
     return { element: target.element };
   }
 

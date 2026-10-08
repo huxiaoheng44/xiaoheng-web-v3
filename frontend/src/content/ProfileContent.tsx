@@ -1,0 +1,94 @@
+import { useEffect, useRef } from 'react';
+import { useDesktop, useSemanticTarget } from '../features/monty/DesktopContext';
+import type { TargetScope } from '../features/monty/TargetRegistry';
+import type { Language } from '../model';
+import { experienceZh, researchZh, skillLabels } from './translations';
+
+const profile: {
+  location: string; email: string; linkedIn: string; summary: string;
+  languages: Record<string, string>;
+  experience: { date: string; company: string; location: string; role: string; summary: string; highlights: string[]; technologies: string[] }[];
+  education: { date: string; title: string; school: string; location: string; grade: string; courses: string[] }[];
+  projects: { date: string; title: string; org: string; summary: string; details: string[]; technologies: string[] }[];
+  skills: Record<string, string[]>;
+} = {
+  location: 'Munich, Germany', email: 'huxiaoheng33@gmail.com', linkedIn: 'https://www.linkedin.com/in/xiaohenghu',
+  summary: 'Software engineer with experience across fullstack product development, AI/LLM applications, internal developer platforms, CI/CD, cloud deployment, and MLOps-adjacent artifact/data workflows.',
+  languages: { English: 'C1 - Advanced', Chinese: 'Native', German: 'A2 - Basic' },
+  experience: [
+    { date: 'Apr 2026 - Jul 2026', company: 'Digital Product School / UnternehmerTUM & MULTIVAC', location: 'Munich, Germany', role: 'System Engineer, PingPong Vision', summary: 'Built and deployed a smart monitoring agent system for continuous machine-state tracking and alert-ready workflows.', highlights: ['Translated insights from 15+ factory visits into a smart monitoring agent concept.', 'Built persistent state storage, structured event logs, and abnormal-state detection.'], technologies: ['React', 'Vite', 'FastAPI', 'Flask', 'TimescaleDB', 'OpenCV', 'Docker'] },
+    { date: 'Dec 2024 - Mar 2026', company: 'Infineon Technologies', location: 'Neubiberg, Germany', role: 'Platform Engineer (Working Student)', summary: 'Worked on a Backstage-based internal developer platform and cloud-native platform operations.', highlights: ['Maintained a platform serving 20+ internal engineering teams.', 'Designed golden-path templates reused 100+ times.'], technologies: ['Backstage', 'OpenShift', 'Kubernetes', 'Helm', 'GitLab CI', 'Docker'] },
+    { date: 'Jul 2024 - Dec 2024', company: 'Innocoso', location: 'Oberhaching, Germany', role: 'Fullstack Developer (Working Student)', summary: 'Built an AI-augmented smart ERP platform with order workflows, RAG-backed Q&A, and dashboards.', highlights: ['Built order-management and RAG workflows for 200+ internal employees.', 'Implemented APIs, role-based access control, and operational dashboards.'], technologies: ['Python', 'Django', 'PostgreSQL', 'React', 'RAG', 'Docker'] },
+    { date: 'Sep 2021 - Jul 2022', company: 'Huawei', location: 'Hangzhou, China', role: 'Software Engineer (Compiler / LLVM / CI)', summary: 'Worked on scientific computation workloads, Linux compatibility, compiler build environments, and CI/CD.', highlights: ['Optimized scientific workloads and resolved Linux compatibility issues.', 'Maintained Jenkins and GitLab CI pipelines.'], technologies: ['C++', 'Fortran', 'LLVM', 'Linux', 'Jenkins', 'GitLab CI'] },
+  ],
+  education: [
+    { date: 'Oct 2023 - Mar 2026', title: 'M.Sc. Informatics', school: 'Technical University of Munich', location: 'Munich, Germany', grade: '2.2', courses: ['Cloud Information Systems', 'Natural Language Processing', 'Computer Vision II'] },
+    { date: 'Sep 2017 - Jul 2021', title: 'B.Sc. Software Engineering', school: 'Wuhan University of Technology', location: 'Wuhan, China', grade: '1.6 (German system)', courses: ['Data Structures & Algorithms', 'Operating Systems', 'Database Systems'] },
+  ],
+  projects: [
+    { date: 'Mar 2025 - Oct 2025', title: 'Structured Intermediate Representations for LLM Code Generation', org: 'Master Thesis, Technical University of Munich', summary: 'Researched structured intermediate representations for improving LLM code generation.', details: ['Designed a two-stage Problem → IR → Code pipeline.', 'Improved performance by 12–14% on complex tasks.'], technologies: ['LLM evaluation', 'YAML', 'Mermaid', 'Python'] },
+    { date: 'Mar 2026 - Apr 2026', title: 'Web Harvest RAG', org: 'Personal Project', summary: 'Built a config-driven full-stack RAG chatbot and retrieval experimentation lab.', details: ['Implemented ingestion, hybrid retrieval, and evaluation workflows.'], technologies: ['Next.js', 'FastAPI', 'RAG', 'BM25'] },
+    { date: 'Sep 2024 - Feb 2025', title: 'Multi-Agent System for Automated Software Development', org: 'TUM-DI-LAB & Reply', summary: 'Built a LangGraph/LangChain-based multi-agent system for software delivery.', details: ['Coordinated planning, task execution, and ticket workflows.'], technologies: ['LangGraph', 'LangChain', 'GraphQL', 'AWS'] },
+    { date: 'May 2024 - Oct 2024', title: 'Personal Website Development - huxiaoheng.com', org: 'Personal Project', summary: 'Built and deployed a full-stack portfolio website.', details: ['Built React, Express.js, MongoDB, Docker, Nginx, and GCP modules.'], technologies: ['React', 'Express.js', 'MongoDB', 'GCP'] },
+    { date: 'Oct 2023 - Feb 2024', title: 'Python Artifact Logger & Viewer Module', org: 'Personal Project', summary: 'Built an artifact tracking module and Flask viewer for experiment outputs.', details: ['Tracked local, cloud, and database-backed artifacts.'], technologies: ['Python', 'Flask', 'AWS S3'] },
+    { date: 'Feb 2023 - Aug 2023', title: 'Drone Simulator Project', org: 'Academic Project', summary: 'Built parts of a PX4 and seL4 drone-control simulation system.', details: ['Developed a C++ sensor-data proxy for the companion computer.'], technologies: ['C++', 'PX4', 'seL4', 'Raspberry Pi'] },
+  ],
+  skills: { programmingLanguages: ['Python', 'TypeScript', 'JavaScript', 'C++', 'Java'], backendAndApis: ['Django', 'Flask', 'Node.js', 'REST APIs', 'GraphQL'], frontend: ['React', 'Next.js', 'Tailwind CSS'], databasesAndData: ['PostgreSQL', 'MongoDB', 'BM25', 'Vector retrieval'], aiLlmEngineering: ['LangChain', 'LangGraph', 'RAG systems', 'LLM evaluation'], cloudDevOpsPlatform: ['AWS', 'Docker', 'Kubernetes', 'OpenShift', 'Backstage'], mlopsDataops: ['Artifact tracking', 'Experiment management', 'AWS S3'], collaborationAndTools: ['GitHub', 'Figma', 'Codex', 'CI/CD workflows'] },
+};
+
+function targetSlug(value:string,index:number){return `${value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'tag'}-${index}`;}
+function RegisteredTag({value,id,scope,projectId}:{value:string;id:string;scope:TargetScope;projectId?:string}){const target=useSemanticTarget({id,names:{en:value,zh:value},scope,capabilities:['highlight','guideTo'],...(projectId?{projectId}:{}),tag:value});return <span ref={target} data-agent-id={id}>{value}</span>;}
+export function Tags({ values, targetPrefix, scope, projectId }: { values: string[]; targetPrefix?: string; scope?: TargetScope; projectId?: string }) { return <div className="content-tags">{values.map((value,index)=>targetPrefix&&scope?<RegisteredTag key={value} value={value} id={`${targetPrefix}:${targetSlug(value,index)}`} scope={scope} projectId={projectId}/>:<span key={value}>{value}</span>)}</div>; }
+export function ExperienceContent({ language }: { language: Language }) {
+  return <div className="resume-timeline">{profile.experience.map((job, i) => <article className="resume-entry" key={job.company}><span className="content-kicker">{job.date} · {job.location}</span><h2>{job.company}</h2><h3>{language === 'zh' ? experienceZh[i].role : job.role}</h3><p>{language === 'zh' ? experienceZh[i].summary : job.summary}</p><details><summary>{language === 'en' ? 'Responsibilities & impact' : '工作内容与成果'}</summary><ul>{(language === 'zh' ? experienceZh[i].highlights : job.highlights).map(line => <li key={line}>{line}</li>)}</ul></details><Tags values={job.technologies} targetPrefix={`profile:experience:${i}:tag`} scope={{window:'profile',panel:'experience'}} /></article>)}</div>;
+}
+export function ContactContent({ language }: { language: Language }) {
+  return <div className="contact-content"><span className="content-kicker">LET’S CONNECT</span><h1>{language === 'en' ? 'Say hello.' : '来打个招呼。'}</h1><p>{language === 'en' ? 'For conversations about software, AI and useful things to build.' : '聊聊软件、AI，以及值得一起构建的东西。'}</p><a href={`mailto:${profile.email}`}>{profile.email} ↗</a><a href={profile.linkedIn} target="_blank" rel="noopener noreferrer">LinkedIn / Xiaoheng Hu ↗</a><p className="content-muted">{language === 'en' ? profile.location : '德国 · 慕尼黑'}</p></div>;
+}
+type SectionId = 'experience' | 'education' | 'skills' | 'research';
+const sections: { id: SectionId; en: string; zh: string; note: (language: Language) => string }[] = [
+  { id: 'experience', en: 'Experience', zh: '工作经历', note: language => language === 'en' ? `${profile.experience.length} roles` : `${profile.experience.length} 段经历` },
+  { id: 'education', en: 'Education', zh: '教育', note: language => language === 'en' ? `${profile.education.length} degrees` : `${profile.education.length} 个学位` },
+  { id: 'skills', en: 'Toolkit', zh: '技能', note: language => language === 'en' ? `${Object.keys(profile.skills).length} areas` : `${Object.keys(profile.skills).length} 个方向` },
+  { id: 'research', en: 'Research & projects', zh: '研究与项目', note: language => language === 'en' ? `${profile.projects.length} entries` : `${profile.projects.length} 项` },
+];
+const isSection = (value: string): value is SectionId => sections.some(section => section.id === value);
+
+function SectionFolder({ section, language, onOpen }: { section: typeof sections[number]; language: Language; onOpen: (id: SectionId) => void }) {
+  const target = useSemanticTarget({ id: `profile-section:${section.id}`, parentId: 'profile:overview', names: { en: section.en, zh: section.zh }, scope: { window: 'profile', panel: 'profile' }, capabilities: ['highlight', 'guideTo'], completion: { window: 'profile', panel: section.id } });
+  return <button ref={target} className="project-file profile-folder" data-agent-id={`profile-section:${section.id}`} onClick={() => onOpen(section.id)}>
+    <img src={`/assets/profile-icons/${section.id}@4x.png`} alt=""/><span>{language === 'en' ? section.en : section.zh}</span><small>{section.note(language)}</small>
+  </button>;
+}
+
+function ExperienceTimeline({ language }: { language: Language }) {
+  const target = useSemanticTarget({ id: 'profile:experience:timeline', names: { en: 'Work experience', zh: '工作经历' }, scope: { window: 'profile', panel: 'experience' }, capabilities: ['highlight', 'guideTo'] });
+  return <div ref={target} data-agent-id="profile:experience:timeline"><ExperienceContent language={language}/></div>;
+}
+
+/** Profile window: an overview with four sub-folders (like the Projects directory); each opens its own page. */
+export function ProfileContent({ language }: { language: Language }) {
+  const desktop = useDesktop();
+  const section = isSection(desktop.state.profileSection) ? desktop.state.profileSection : null;
+  const open = (id: SectionId | 'profile') => desktop.selectProfileSection(id);
+  const root = useRef<HTMLDivElement>(null);
+  useEffect(() => { const scroller = root.current?.closest('.content-scroll'); if (scroller) scroller.scrollTop = 0; }, [section]);
+  const current = sections.find(item => item.id === section);
+  const panel = useSemanticTarget({ id: `profile:${section ?? 'overview'}`, names: { en: current?.en ?? 'Profile', zh: current?.zh ?? '个人资料' }, scope: { window: 'profile', panel: section ?? 'profile' }, capabilities: ['highlight', 'guideTo'] });
+  const back = useSemanticTarget({ id: 'profile:back', names: { en: 'Back to Profile', zh: '返回个人资料' }, scope: { window: 'profile', panel: section ?? 'profile' }, capabilities: ['highlight', 'guideTo'], completion: { window: 'profile', panel: 'profile' } });
+  const scope = (panelId: SectionId) => ({ window: 'profile', panel: panelId });
+  if (!current) return <div ref={root} className="about-content profile-overview"><div ref={panel} data-agent-id="profile:overview">
+    <header className="profile-header"><span className="content-kicker">PROFILE / XIAOHENG HU</span><h1>胡晓亨 <span>Xiaoheng Hu</span></h1><p className="profile-role">{language === 'en' ? 'Software Engineer · AI & Fullstack · Platform' : '软件工程师 · AI 与全栈开发 · 平台工程'}</p><p className="content-muted">{language === 'en' ? profile.location : '德国 · 慕尼黑'} <span aria-hidden="true"> / </span><a href={`mailto:${profile.email}`}>Email ↗</a> <a href={profile.linkedIn} target="_blank" rel="noopener noreferrer">LinkedIn ↗</a></p></header>
+    <div className="project-directory profile-directory" role="list">{sections.map(item => <SectionFolder key={item.id} section={item} language={language} onOpen={open}/>)}</div>
+    <p className="profile-intro">{language === 'en' ? profile.summary : '我的经历横跨全栈产品开发、AI / 大模型应用、内部开发者平台、CI/CD 和云部署，也涉及实验产物追踪与数据工作流。喜欢把复杂技术连接到真实使用场景，构建能够交付、使用和持续维护的软件。'}</p><div className="profile-focus"><article><span>01 / BUILD</span><h2>Fullstack</h2><p>{language === 'en' ? 'Enterprise workflows, APIs, data models and operational dashboards.' : '企业业务流程、API、数据模型与运营看板。'}</p></article><article><span>02 / CONNECT</span><h2>AI & Agents</h2><p>{language === 'en' ? 'RAG, multi-agent systems and evaluation-driven LLM applications.' : 'RAG、多智能体协作与基于评估的大模型应用。'}</p></article><article><span>03 / SHIP</span><h2>Platform</h2><p>{language === 'en' ? 'Developer platforms, reproducible builds and cloud delivery.' : '开发者平台、可复现构建和云端交付。'}</p></article></div><h2>{language === 'en' ? 'Languages' : '语言'}</h2><Tags values={Object.entries(profile.languages).map(([name, level]) => `${name} · ${level}`)} targetPrefix="profile:overview:tag" scope={{window:'profile',panel:'profile'}} />
+  </div></div>;
+  return <div ref={root} className="about-content profile-section"><div ref={panel} data-agent-id={`profile:${current.id}`}>
+    <div className="project-detail-nav"><button ref={back} data-agent-id="profile:back" onClick={() => open('profile')}>← {language === 'en' ? 'Profile' : '个人资料'}</button></div>
+    <header className="profile-section-head"><img src={`/assets/profile-icons/${current.id}@4x.png`} alt=""/><div><span className="content-kicker">PROFILE / {current.en.toUpperCase()}</span><h1>{language === 'en' ? current.en : current.zh}</h1></div></header>
+    {current.id === 'experience' && <ExperienceTimeline language={language}/>}
+    {current.id === 'education' && profile.education.map((item, i) => <article className="resume-entry" key={item.school}><span className="content-kicker">{item.date} · {item.location}</span><h2>{language === 'zh' ? ['慕尼黑工业大学', '武汉理工大学'][i] : item.school}</h2><h3>{language === 'zh' ? ['信息学硕士 · M.Sc. Informatics', '软件工程学士 · B.Sc. Software Engineering'][i] : item.title}</h3><p>{language === 'en' ? 'Grade' : '成绩'}: {item.grade}</p><Tags values={item.courses} targetPrefix={`profile:education:${i}:tag`} scope={scope('education')} /></article>)}
+    {current.id === 'skills' && Object.entries(profile.skills).map(([key, values]) => <section className="skill-section" key={key}><h2>{skillLabels[key][language === 'en' ? 0 : 1]}</h2><Tags values={values} targetPrefix={`profile:skills:${key}:tag`} scope={scope('skills')} /></section>)}
+    {current.id === 'research' && profile.projects.map((item, i) => <article className="resume-entry" key={item.title}><span className="content-kicker">{item.date} · {item.org}</span><h2>{language === 'zh' ? researchZh[i].title : item.title}</h2><p>{language === 'zh' ? researchZh[i].summary : item.summary}</p><details><summary>{language === 'en' ? 'Project details' : '完整项目记录（英文）'}</summary><ul>{item.details.map(line => <li key={line}>{line}</li>)}</ul></details><Tags values={item.technologies} targetPrefix={`profile:research:${i}:tag`} scope={scope('research')} /></article>)}
+    <button className="content-back" onClick={() => open('profile')}>← {language === 'en' ? 'Back to profile' : '返回个人资料'}</button>
+  </div></div>;
+}

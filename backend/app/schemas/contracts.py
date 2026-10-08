@@ -19,6 +19,7 @@ class Target(Strict):
     capabilities: list[Literal['highlight', 'guideTo']] = Field(default_factory=list, max_length=2)
     names: TargetNames
     projectId: str | None = Field(default=None, max_length=100, pattern=r'^[a-z0-9-]+$')
+    parentId: str | None = Field(default=None, max_length=160, pattern=r'^[a-zA-Z0-9:_-]+$')
     tag: str | None = Field(default=None, max_length=120)
 
 class PageContext(Strict):
@@ -27,7 +28,7 @@ class PageContext(Strict):
     activeWindow: str | None = Field(default=None, max_length=100)
     activePanel: str = Field(default='', max_length=100)
     windows: list[str] = Field(default_factory=list, max_length=8)
-    aboutTab: str = Field(default='profile', max_length=30)
+    profileSection: str = Field(default='profile', max_length=30)
     targets: list[Target] = Field(default_factory=list, max_length=100)
 
 class BehaviorEvent(Strict):
@@ -60,11 +61,17 @@ class PresentationInstruction(Strict):
     """A display-only instruction. The client remains authoritative over targets."""
     type: Literal['speak', 'setState', 'highlight', 'guideTo', 'showHint', 'showRecommendation']
     target: str = Field(default='', max_length=160, pattern=r'^[a-zA-Z0-9:_-]*$')
+    targets: list[str] = Field(default_factory=list, max_length=20)
     value: str = Field(default='', max_length=200)
     @model_validator(mode='after')
     def allowed(self):
-        if self.type in PRESENTATION_CAPABILITIES and not self.target: raise ValueError('Target required')
+        if self.type in PRESENTATION_CAPABILITIES and not self.target and not self.targets: raise ValueError('Target required')
         if self.type in {'speak', 'showHint', 'showRecommendation'} and not self.value.strip(): raise ValueError('Text required')
         if self.type == 'setState' and self.value not in PRESENTATION_STATES: raise ValueError('Unknown presentation state')
         if self.type not in PRESENTATION_CAPABILITIES and self.target: raise ValueError('Target is not allowed for this instruction')
+        if self.targets:
+            if self.type != 'highlight' or self.target: raise ValueError('Lists are only allowed for highlight, without a single target')
+            if len(set(self.targets)) != len(self.targets): raise ValueError('Duplicate targets')
+            import re
+            if any(not re.fullmatch(r'[a-zA-Z0-9:_-]{1,160}', target) for target in self.targets): raise ValueError('Invalid target ID')
         return self

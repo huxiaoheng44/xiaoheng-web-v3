@@ -6,7 +6,7 @@ import type { TargetDefinition, VisibilityDirection } from './TargetRegistry';
 export function projectGuideTarget(id: string, names: TargetDefinition['names']): TargetDefinition {
   if (!catalog.some(project => project.id === id)) throw new Error(`Missing Monty guide catalog entry: ${id}`);
   return { id: `project-card:${id}`, names, scope: { window: 'projects', panel: 'collection' },
-    capabilities: ['highlight', 'guideTo'], projectId: id, completion: { window: `project:${id}`, panel: 'detail' } };
+    parentId: 'projects:collection', capabilities: ['highlight', 'guideTo'], projectId: id, completion: { window: `project:${id}`, panel: 'detail' } };
 }
 
 export type GuidePhase = 'scroll-cue' | 'travel-to-target' | 'waiting-for-click' | 'waiting-for-window' | 'unavailable';
