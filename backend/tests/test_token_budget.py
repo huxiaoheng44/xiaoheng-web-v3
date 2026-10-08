@@ -54,3 +54,11 @@ async def test_overlapping_requests_cannot_reserve_the_same_tokens(monkeypatch):
         with pytest.raises(ProviderFailure,match='exhausted'):await provider.complete([],lambda _:None)
     finally:release.set();await pending
     assert session.output_reserved==0
+
+
+def test_health_reports_the_session_reply_allowance(monkeypatch):
+    from fastapi.testclient import TestClient
+    from backend.app.api.routes import create_app
+    monkeypatch.setattr(config,'SESSION_OUTPUT_TOKENS',1234)
+    body=TestClient(create_app(provider=object(),knowledge=object())).get('/api/health').json()
+    assert body['sessionTokens']==1234 and body['configured'] is True

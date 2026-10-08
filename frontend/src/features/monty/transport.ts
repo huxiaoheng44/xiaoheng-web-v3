@@ -85,3 +85,14 @@ export function requestFailureMessage(error:unknown,locale:'zh'|'en') {
   if(error instanceof TypeError||failure?.code==='connection'||[408,500,502,503,504].includes(failure?.status??0))return zh?'连接暂时不稳定，请稍后再试。':'The connection is temporarily unstable. Please try again shortly.';
   return zh?'这次请求未能完成，请再试一次。':'This request could not be completed. Please try again.';
 }
+
+export type MontyHealth = { configured:boolean; model:string; sessionTokens:number|null; latency:number };
+/** Backend reachability for the status bar; never creates a session. */
+export async function fetchMontyHealth(signal?:AbortSignal):Promise<MontyHealth>{
+  if(import.meta.env.VITE_MONTY_STATIC_MODE==='true')throw new MontyRequestError('static');
+  const started=performance.now();
+  const r=await fetch(`${base}/api/health`,{signal,cache:'no-store'});
+  if(!r.ok)throw new MontyRequestError('http',r.status);
+  const data=await r.json();
+  return {configured:!!data.configured,model:typeof data.model==='string'?data.model:'',sessionTokens:Number.isFinite(data.sessionTokens)?data.sessionTokens:null,latency:Math.round(performance.now()-started)};
+}

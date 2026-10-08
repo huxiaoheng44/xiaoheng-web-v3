@@ -60,7 +60,7 @@ def create_app(provider=None, knowledge=None):
         return await call_next(request)
 
     @app.get('/api/health')
-    def health(): return {'ok':True,'configured':bool(provider or (config.KEY and config.MODEL)),'provider':config.PROVIDER,'model':config.MODEL,'retrieval':evidence.retrieval_status() if hasattr(evidence,'retrieval_status') else {'mode':'injected'}}
+    def health(): return {'ok':True,'configured':bool(provider or (config.KEY and config.MODEL)),'provider':config.PROVIDER,'model':config.MODEL,'retrieval':evidence.retrieval_status() if hasattr(evidence,'retrieval_status') else {'mode':'injected'},'sessionTokens':config.SESSION_OUTPUT_TOKENS}
 
     @app.post('/api/session')
     def session(request:Request):

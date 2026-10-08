@@ -21,12 +21,13 @@ export function MontyHistory({language,visible}:{language:Language;visible:boole
     {!lines.length&&<p className="monty-history-empty">{zh?'还没有聊天记录。在下方输入框和 Monty 打个招呼吧。':'No messages yet. Say hello to Monty in the command bar below.'}</p>}
     <ol className="monty-history-lines" aria-label={zh?'聊天记录':'Chat history'}>
       {lines.map(line=><li key={line.id} className={`history-line history-${line.role}`}>
+        {line.role!=='user'&&<span className="monty-sprite history-avatar" aria-hidden="true"/>}<div className="history-bubble">
         <header><strong>{line.role==='user'?(zh?'你':'YOU'):'MONTY'}</strong><time dateTime={new Date(line.createdAt).toISOString()}>{new Date(line.createdAt).toLocaleTimeString(zh?'zh-CN':'en-GB',{hour:'2-digit',minute:'2-digit'})}</time></header>
         {line.text&&<p>{line.text}</p>}
         {!!line.steps.length&&<ol className="history-guide-steps">{line.steps.map((step,index)=><li key={index}>{step}</li>)}</ol>}
         {!!line.sources.length&&<div className="history-sources"><span>{zh?'来源':'Sources'}</span>{line.sources.map(source=>source.url?<a key={source.id} href={source.url} target="_blank" rel="noreferrer">{source.title} ↗</a>:<span key={source.id}>{source.title}</span>)}</div>}
         {!!line.activity.length&&<details className="history-tools"><summary>{zh?'本次回复的活动':'Activity for this reply'}</summary><ul>{line.activity.map((tool,index)=><li key={index}>{toolNames[tool as keyof typeof toolNames]?.[language]??tool}</li>)}</ul></details>}
-      </li>)}
+      </div></li>)}
     </ol>
     {agent.busy&&<p className="history-pending" role="status">{zh?'Monty 正在回复…':'Monty is replying…'}</p>}
     <details className="history-observations"><summary>{zh?'当前会话活动摘要':'Current session activity'}</summary><ActivityPanel language={language} summary={agent.activity}/></details>
