@@ -1,0 +1,67 @@
+/* ---- xiaohengOS power cycle (PowerSequence.tsx): standby screen, POST boot log, shutdown log ---- */
+.boot-overlay{position:absolute;inset:0;z-index:50;overflow:hidden;container-type:size;background:#080c09;color:#b6c0aa;font-family:monospace}
+.boot-overlay::after{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(transparent 0 2px,#0003 2px 3px)}
+/* First standby screen of the visit: the tube warms up. */
+.boot-overlay.is-cold::before{content:'';position:absolute;inset:0;z-index:3;background:#cbd6c2;pointer-events:none;animation:crt-start .65s ease-out both}
+@keyframes crt-start{0%{transform:scale(.01,.003);opacity:1}40%{transform:scale(1,.003);opacity:.8}75%{transform:scale(1,1);opacity:.12}100%{transform:scale(1,1);opacity:0}}
+
+/* Monty on the standby screen: asleep in the middle, the BIOS "logo" in the top-right corner while booting. */
+.startup-agent{position:absolute;z-index:1;left:50%;top:42%;width:clamp(64px,22cqh,112px);aspect-ratio:1;translate:-50% -50%;filter:drop-shadow(0 0 18px #ccf78155) drop-shadow(0 8px 6px #0009);transition:left .42s steps(6,end),top .42s steps(6,end),width .42s steps(6,end),filter .3s}
+.startup-agent .monty-sprite{display:block;width:100%;height:100%}
+.is-cold .startup-agent{animation:startup-emerge .8s steps(8,end) both}
+@keyframes startup-emerge{0%{transform:translateY(35%) scale(.45);opacity:0}55%{transform:translateY(-10%) scale(1.08);opacity:1}100%{transform:none;opacity:1}}
+.startup-agent[data-anim=awake]{filter:drop-shadow(0 0 26px #ccf781aa) drop-shadow(0 8px 6px #0009)}
+.boot-overlay[data-step=post] .startup-agent,.boot-overlay[data-step=reveal] .startup-agent{left:calc(100% - max(44px,10cqw));top:max(40px,14cqh);width:clamp(44px,13cqh,72px)}
+/* While the desk Monty is out (boot wipe, shutdown flight) the standby one only marks the spot. */
+.boot-overlay[data-step=reveal] .startup-agent,.boot-overlay[data-phase=shutting]:not([data-step=sleep]) .startup-agent{visibility:hidden}
+/* Dozing: drifting z's. */
+.startup-agent[data-anim=dozing]::before,.startup-agent[data-anim=dozing]::after{content:'z';position:absolute;right:4%;top:4%;font:700 clamp(10px,3.4cqh,16px)/1 monospace;color:#86957e;opacity:0;animation:doze-z 2.8s steps(7,end) infinite}
+.startup-agent[data-anim=dozing]::after{content:'Z';font-size:clamp(12px,4.4cqh,21px);animation-delay:-1.4s}
+@keyframes doze-z{0%{transform:translate(0,0);opacity:0}20%{opacity:.9}100%{transform:translate(70%,-160%);opacity:0}}
+
+/* Standby controls. */
+.boot-skip{position:absolute;z-index:1;left:50%;top:calc(42% + clamp(64px,22cqh,112px)/2 + max(22px,6cqh));translate:-50% 0;display:grid;place-items:center;width:46px;height:46px;padding:0;border-radius:50%;background:transparent;border:1px solid #87947c;color:#c6cebb;cursor:pointer;animation:boot-fade .3s steps(3,end) .25s both}
+.boot-skip:hover,.boot-skip:focus-visible{color:#ccf781;border-color:#ccf781;box-shadow:0 0 12px #ccf78155}
+.boot-skip:focus-visible{outline:2px solid #c6cebb}
+.boot-copyright{position:absolute;left:0;right:0;bottom:7%;z-index:1;text-align:center;font:10px/1 monospace;letter-spacing:.12em;color:#86957e;animation:boot-fade .3s ease .4s both}
+.boot-hint{position:absolute;left:0;right:0;bottom:4%;z-index:1;text-align:center;font:9px/1 monospace;letter-spacing:.1em;color:#4e5b48;animation:boot-fade .3s ease .7s both}
+@keyframes boot-fade{from{opacity:0}to{opacity:1}}
+
+/* Power pressed: one hard flicker while Monty wakes. */
+.boot-overlay[data-step=wake]{animation:boot-flicker .24s steps(3,end)}
+@keyframes boot-flicker{0%{filter:brightness(2.2)}50%{filter:brightness(.6)}100%{filter:none}}
+
+/* POST / shutdown log: each line types itself in, one after another. */
+.boot-log{position:absolute;z-index:1;left:max(14px,6cqw);top:max(14px,9cqh);right:max(70px,20cqw);margin:0;display:flex;flex-direction:column;font:clamp(8px,2.1cqw,14px)/1.8 monospace;white-space:pre;overflow:hidden}
+.boot-line{display:block;clip-path:inset(0 100% 0 0);animation:boot-type .16s steps(18,end) calc(var(--i) * var(--gap) + 60ms) forwards}
+.boot-line.is-head{color:#e4ecd8}
+.boot-line.is-say{color:#ccf781;margin-top:.6em}
+@keyframes boot-type{to{clip-path:inset(0)}}
+.boot-bar{width:min(100%,32ch);height:1em;margin:.45em 0;border:1px solid #64715d;padding:1px}
+.boot-bar i{display:block;height:100%;background:repeating-linear-gradient(90deg,#ccf781 0 7px,transparent 7px 10px);transform:scaleX(0);transform-origin:left;animation:boot-load .5s steps(14,end) calc(var(--i) * var(--gap) + 160ms) forwards}
+@keyframes boot-load{to{transform:scaleX(1)}}
+.boot-caret{display:inline-block;width:.6em;height:1em;margin-left:.35em;vertical-align:-.15em;background:#ccf781;animation:blink 1s steps(1) infinite}
+
+/* Boot hand-off: the screen wipes off top-down in interlaced steps, a phosphor edge leading. */
+.boot-overlay[data-step=reveal]{animation:boot-wipe .4s steps(8,end) forwards}
+.boot-overlay[data-step=reveal]::before{content:'';position:absolute;left:0;right:0;top:0;z-index:3;height:3px;background:#ccf781;box-shadow:0 0 14px 2px #ccf781aa;animation:boot-edge .4s steps(8,end) forwards}
+@keyframes boot-wipe{from{clip-path:inset(0 0 0 0)}to{clip-path:inset(100% 0 0 0)}}
+@keyframes boot-edge{from{top:0}to{top:100%}}
+
+/* Shutdown: windows fold away on the live desktop, then the screen dims under the shutdown log. */
+.boot-overlay[data-phase=shutting]{background:transparent}
+.boot-overlay[data-phase=shutting]::after{opacity:0}
+.boot-overlay[data-phase=shutting]:is([data-step=log],[data-step=sleep]){animation:boot-dim .3s steps(4,end) forwards}
+.boot-overlay[data-phase=shutting]:is([data-step=log],[data-step=sleep])::after{opacity:1;transition:opacity .3s steps(3,end)}
+@keyframes boot-dim{from{background:#080c0900}to{background:#080c09}}
+.boot-overlay[data-step=sleep] .boot-log{animation:boot-fade .35s steps(4,end) .4s reverse both}
+.boot-safe{position:absolute;z-index:1;left:6%;right:6%;top:calc(42% + clamp(64px,22cqh,112px)/2 + max(22px,6cqh));margin:0;text-align:center;font:clamp(9px,2.2cqw,15px)/1.6 monospace;color:#f6b13a;text-shadow:0 0 8px #f6b13a66;animation:boot-fade .25s steps(2,end) .3s both}
+.monitor-screen[data-power=shutting] .desktop-window{transform-origin:50% 50%;animation:window-fold .22s steps(4,end) calc(var(--close-order,0) * 80ms) forwards}
+@keyframes window-fold{60%{transform:scale(1,.04);opacity:1}100%{transform:scale(0,.02);opacity:0}}
+
+/* The desk Monty flying in to (or out of) the standby spot: grows or shrinks to that sprite's size, no captions. */
+.monty-avatar{transform:scale(var(--power-scale,1));transition:transform .5s steps(8,end)}
+.monty-overlay[data-parking=true] :is(.monty-bubble,.monty-caption,.monty-speech,.monty-scroll-arrow){display:none}
+.monty-overlay[data-parking=true] .monty-avatar{pointer-events:none}
+
+@media(prefers-reduced-motion:reduce){.startup-agent,.monty-avatar{transition:none}.boot-line,.boot-bar i{clip-path:none;transform:none}}

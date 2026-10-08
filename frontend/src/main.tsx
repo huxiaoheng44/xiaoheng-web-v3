@@ -7,6 +7,7 @@ import './screen-focus.css';
 import './content/content.css';
 import './monty-sprite.css';
 import './scene-motion.css';
+import './boot-sequence.css';
 import './features/monty/monty.css';
 import './typography.css';
 

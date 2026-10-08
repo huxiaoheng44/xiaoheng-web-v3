@@ -4,27 +4,9 @@
 .stage::before,.stage::after{content:'';position:absolute;pointer-events:none;z-index:4;left:calc(var(--mug-x) - 3%);top:calc(var(--mug-y) - 5%);width:1.5%;height:8%;background:#cbd0c4;clip-path:polygon(40% 0,70% 0,70% 20%,45% 20%,45% 40%,75% 40%,75% 60%,50% 60%,50% 80%,30% 80%,30% 100%,5% 100%,5% 75%,25% 75%,25% 55%,50% 55%,50% 45%,20% 45%,20% 15%,40% 15%);opacity:0;animation:coffee-steam 3.8s linear infinite}
 .stage::after{left:calc(var(--mug-x) - .5%);height:6%;animation-delay:-1.9s}
 @keyframes coffee-steam{0%{transform:translate(0,15%) scaleX(.7);opacity:0}25%{opacity:.45}65%{opacity:.25}100%{transform:translate(25%,-65%) scaleX(1.2);opacity:0}}
-.boot-overlay{position:absolute;inset:3px;z-index:50;overflow:hidden;background:#080c09;color:#c6cebb;display:grid;place-items:center}
-.boot-overlay::before{content:'';position:absolute;inset:0;background:#cbd6c2;pointer-events:none;animation:crt-start .65s ease-out both}
-.boot-center{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;min-width:min(76%,330px)}.boot-copy{font-family:monospace;font-size:clamp(9px,1.1vw,15px);line-height:1.8;animation:boot-text .3s ease .45s both}
-.boot-brand{font-size:1.65em;letter-spacing:-.04em}.boot-brand>span{display:block;font-size:.4em;letter-spacing:.2em;color:#86957e}.boot-copy p{margin:2em 0 1em}.boot-copy small{font-size:.75em;letter-spacing:.1em;color:#86957e}
-.boot-progress{height:8px;border:1px solid #64715d;padding:1px;margin-bottom:1em}.boot-progress>span{display:block;height:100%;background:repeating-linear-gradient(90deg,#b6c0aa 0 7px,transparent 7px 10px);transform-origin:left;animation:boot-load 1.3s steps(12,end) .5s both}
-.boot-skip{position:static;background:transparent;color:#c6cebb;border:1px solid #87947c;padding:7px 20px;font:10px monospace;cursor:pointer;animation:boot-text .3s ease .6s both}.boot-skip:focus-visible{outline:2px solid #c6cebb}.startup-agent{width:64px;height:64px;filter:drop-shadow(0 8px 6px #0009);animation:startup-emerge .8s steps(8,end) both}.startup-agent .monty-sprite{display:block;width:100%;height:100%}
-@keyframes crt-start{0%{transform:scale(.01,.003);opacity:1}40%{transform:scale(1,.003);opacity:.8}75%{transform:scale(1,1);opacity:.12}100%{transform:scale(1,1);opacity:0}}
-@keyframes boot-text{from{opacity:0}to{opacity:1}}
-@keyframes boot-load{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-@keyframes boot-exit{from{opacity:1}to{opacity:0}}
-@keyframes startup-emerge{0%{transform:translateY(35%) scale(.45);opacity:0}55%{transform:translateY(-10%) scale(1.08);opacity:1}100%{transform:translateY(0) scale(1);opacity:1}}
 @media(min-width:701px) and (max-width:1000px){.stage{--keyboard-x:37%;--keyboard-w:59%;--mouse-w:10%}}
-@media(max-width:700px){.stage::before,.stage::after{display:none}.boot-copy{font-size:11px}}
-@media(prefers-reduced-motion:reduce){.stage::before,.stage::after{animation:none;opacity:0}.boot-overlay,.boot-copy,.boot-progress>span{animation:none}.boot-overlay::before{display:none}}
-/* Minimal boot screen: logo, power button, copyright (Windows-7-style). */
-.boot-center{gap:clamp(26px,5vh,48px);min-width:0}
-.startup-agent{width:clamp(72px,9vw,112px);height:clamp(72px,9vw,112px);filter:drop-shadow(0 0 18px #ccf78155) drop-shadow(0 8px 6px #0009)}
-.boot-skip{display:grid;place-items:center;width:46px;height:46px;padding:0;border-radius:50%;border:1px solid #87947c;color:#c6cebb}
-.boot-skip:hover,.boot-skip:focus-visible{color:#ccf781;border-color:#ccf781;box-shadow:0 0 12px #ccf78155}
-.boot-copyright{position:absolute;left:0;right:0;bottom:7%;z-index:1;text-align:center;font:10px/1 monospace;letter-spacing:.12em;color:#86957e;animation:boot-text .3s ease .6s both}
-@media(prefers-reduced-motion:reduce){.boot-copyright{animation:none}}
+@media(max-width:700px){.stage::before,.stage::after{display:none}}
+@media(prefers-reduced-motion:reduce){.stage::before,.stage::after{animation:none;opacity:0}}
 
 /* ---- Living desk: monitor power, afterglow, desk lamp, darkness, prop hover ---- */
 /* Bezel power button (sprite px 285-298 / 213-225 of 320x251) with its LED. */

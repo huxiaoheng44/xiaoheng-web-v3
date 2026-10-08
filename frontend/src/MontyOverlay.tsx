@@ -7,10 +7,9 @@ import { MontySettings } from './features/monty/MontySettings';
 import type { SemanticState } from './features/monty/agentState';
 import { guideProgress } from './features/monty/GuideWorkflow';
 import { stateLabel, visualState } from './features/monty/visualState';
+import { applyMontyFrame, loadMontyAtlas, type MontyAtlas } from './features/monty/montyAtlas';
 
 type Mode = 'idle' | 'move' | 'look' | 'point';
-type MontyFrame = { x:number; y:number; w:number; h:number; duration_ms:number; offset:[number,number] };
-type MontyAtlas = { sheet:{ width:number; height:number }; frames:MontyFrame[]; animations:Record<string,{ frames:number[]; fps:number; loop:boolean }> };
 
 export function animationName(mode:Mode, facingLeft:boolean, speaking:boolean, scanning:boolean, state:SemanticState) {
   if (speaking) return 'speaking';
@@ -23,7 +22,9 @@ export function animationName(mode:Mode, facingLeft:boolean, speaking:boolean, s
   return 'idle';
 }
 function modeForState(state:SemanticState):Mode { return state==='guiding'?'point':state==='observing'||state==='thinking'||state==='waking'?'look':'idle'; }
-export function MontyOverlay({ language, launchFromCenter = false }: { language: Language; launchFromCenter?: boolean }) {
+type Spot = () => DOMRect | null;
+/** `launchFrom`: the on-screen Monty it takes over from at boot. `parkAt`: where to fly back to at shutdown. */
+export function MontyOverlay({ language, launchFrom, parkAt }: { language: Language; launchFrom?: Spot; parkAt?: Spot }) {
   const agent = useAgent();
   const desktop = useDesktop();
   const guideLocale = useRef(agent.guideLocale);guideLocale.current=agent.guideLocale;
@@ -43,13 +44,27 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
   settings.current = { dnd: agent.dnd };
   const host = useRef<HTMLDivElement>(null);
   const bubble = useRef<HTMLDivElement>(null);
-  useEffect(() => { void fetch('/assets/monty.json?v=monty-v3').then(r => r.ok ? r.json() : Promise.reject()).then((value:MontyAtlas) => { atlas.current = value; }).catch(() => undefined); }, []);
+  const parkRef = useRef(parkAt); parkRef.current = parkAt;
+  useEffect(() => { void loadMontyAtlas().then(value => { atlas.current = value; }); }, []);
+  useEffect(() => { if (parkAt) { setChatOpen(false); setSettingsOpen(false); } }, [parkAt]);
   useEffect(() => {
     const element = host.current!;
     const hint = bubble.current!;
-    const homeFor = (size:number) => ({ x: innerWidth - size - (innerWidth<=700?34:64), y: innerHeight - size - (innerWidth<=700?48:74) });
+    const REST_KEY = 'monty-position';
+    const loadRest = (): { fx:number; fy:number } | null => { try { const value = JSON.parse(localStorage.getItem(REST_KEY) ?? 'null'); return value && Number.isFinite(value.fx) && Number.isFinite(value.fy) ? value : null; } catch { return null; } };
+    let rest = loadRest();
+    const clampX = (value:number, size:number) => Math.max(10, Math.min(value, innerWidth - size - 15));
+    const clampY = (value:number, size:number) => Math.max(10, Math.min(value, innerHeight - size - 24));
+    const homeFor = (size:number) => rest
+      ? { x: clampX(rest.fx * (innerWidth - size), size), y: clampY(rest.fy * (innerHeight - size), size) }
+      : { x: innerWidth - size - (innerWidth<=700?34:64), y: innerHeight - size - (innerWidth<=700?48:74) };
     const initialSize=innerWidth <= 700 ? 62 : 100;
-    let x = launchFromCenter ? (innerWidth-initialSize)/2 : homeFor(initialSize).x, y = launchFromCenter ? (innerHeight-initialSize)/2 : homeFor(initialSize).y;
+    const launch = launchFrom?.();
+    let x = launch ? launch.left + launch.width/2 - initialSize/2 : homeFor(initialSize).x, y = launch ? launch.top + launch.height/2 - initialSize/2 : homeFor(initialSize).y;
+    // The sprite starts at the size of the Monty it replaces and settles to its own size on the way home.
+    const avatarScale = (scale:number) => element.style.setProperty('--power-scale', String(Math.round(scale * 1000) / 1000));
+    let launchSettle = 0;
+    if (launch) { avatarScale(launch.width / initialSize); launchSettle = requestAnimationFrame(() => { launchSettle = requestAnimationFrame(() => avatarScale(1)); }); }
     let lastActivity = performance.now(), lastTime = 0, frameId = 0, animationKey = '', animationStarted = 0;
     let previousHint = '';
     let previousProgress = '';
@@ -63,6 +78,38 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
     const onFocus = () => { lastActivity = performance.now(); };
     const onActivity = () => { lastActivity = performance.now(); };
     const onLeave = () => undefined;
+    // Dragging: press and move > 5px. The drop point becomes Monty's new home (also after a guide ends).
+    const avatar = element.querySelector<HTMLElement>('.monty-avatar')!;
+    let drag: { id:number; dx:number; dy:number; startX:number; startY:number; moved:boolean } | null = null;
+    let dragX = 0, dragY = 0, suppressClick = false;
+    const onDragStart = (event: PointerEvent) => {
+      if (event.button !== 0) return;
+      drag = { id: event.pointerId, dx: event.clientX - x, dy: event.clientY - y, startX: event.clientX, startY: event.clientY, moved: false };
+      avatar.setPointerCapture(event.pointerId);
+    };
+    const onDragMove = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) > 5) { drag.moved = true; element.classList.add('is-dragging'); }
+      if (drag.moved) { dragX = event.clientX - drag.dx; dragY = event.clientY - drag.dy; }
+    };
+    const onDragEnd = (event: PointerEvent) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      if (drag.moved) {
+        const size = innerWidth <= 700 ? 62 : 100;
+        rest = { fx: x / Math.max(1, innerWidth - size), fy: y / Math.max(1, innerHeight - size) };
+        try { localStorage.setItem(REST_KEY, JSON.stringify(rest)); } catch { /* storage unavailable: keep it for this visit */ }
+        suppressClick = true; element.classList.remove('is-dragging');
+      }
+      drag = null; lastActivity = performance.now();
+    };
+    const onAvatarClick = (event: MouseEvent) => { if (suppressClick) { suppressClick = false; event.preventDefault(); event.stopImmediatePropagation(); } };
+    const onResetPosition = () => { rest = null; try { localStorage.removeItem(REST_KEY); } catch { /* ignore */ } };
+    avatar.addEventListener('pointerdown', onDragStart);
+    avatar.addEventListener('pointermove', onDragMove);
+    avatar.addEventListener('pointerup', onDragEnd);
+    avatar.addEventListener('pointercancel', onDragEnd);
+    avatar.addEventListener('click', onAvatarClick, true);
+    window.addEventListener('monty-reset-position', onResetPosition);
     const setHint = (text: string) => { if (previousHint !== text) { hint.textContent = text; hint.hidden = !text; previousHint = text; } };
     const tick = (time: number) => {
       const dt = Math.min((time - lastTime) / 1000 || .016, .05); lastTime = time;
@@ -114,31 +161,30 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
       }
       element.dataset.agentState = command.until > performance.now() ? (command.state || stateRef.current) : stateRef.current;
 
+      const park = parkRef.current?.();
+      element.dataset.parking = String(!!park);
+      if (park) { tx = park.left + park.width/2 - size/2; ty = park.top + park.height/2 - size/2; avatarScale(park.width / size); }
       if (!command.target && !guidingTarget && Math.hypot(tx - x, ty - y) > 8) mode = 'move';
-      tx = Math.max(10, Math.min(tx, maxX)); ty = Math.max(55, Math.min(ty, maxY));
-      x += (tx - x) * (reduced?1:Math.min(1, dt * 2.4));
-      y += (ty - y) * (reduced?1:Math.min(1, dt * 2.4));
-      x = Math.max(10, Math.min(x, maxX)); y = Math.max(10, Math.min(y, maxY));
+      if (drag?.moved) { tx = clampX(dragX, size); ty = clampY(dragY, size); x = tx; y = ty; mode = 'move'; }
+      if (!park) { tx = Math.max(10, Math.min(tx, maxX)); ty = Math.max(55, Math.min(ty, maxY)); }
+      const follow = reduced ? 1 : Math.min(1, dt * (park ? 7 : 2.4));
+      x += (tx - x) * follow;
+      y += (ty - y) * follow;
+      if (!park) { x = Math.max(10, Math.min(x, maxX)); y = Math.max(10, Math.min(y, maxY)); }
       element.style.transform = `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`;
       const currentAtlas = atlas.current;
       const key=animationName(mode, tx < x, speakingRef.current, scanningRef.current, stateRef.current);if(key!==animationKey){animationKey=key;animationStarted=time;}
       const animation = currentAtlas?.animations[key];
       const sequence = animation?.frames ?? [0];
       const elapsedFrame=Math.floor((time-animationStarted) / (1000 / (animation?.fps ?? 6)));const frameIndex=animation?.loop?elapsedFrame%sequence.length:Math.min(elapsedFrame,sequence.length-1);
-      const sprite = currentAtlas?.frames[sequence[frameIndex] ?? 0];
-      if (sprite && currentAtlas) {
-        element.style.setProperty('--frame-x', `${sprite.x * 100 / (currentAtlas.sheet.width - sprite.w)}%`);
-        element.style.setProperty('--frame-y', `${sprite.y * 100 / (currentAtlas.sheet.height - sprite.h)}%`);
-        element.style.setProperty('--sprite-offset-x', `${sprite.offset[0]}px`);
-        element.style.setProperty('--sprite-offset-y', `${sprite.offset[1]}px`);
-      }
+      if (currentAtlas) applyMontyFrame(element, currentAtlas, sequence[frameIndex] ?? 0);
       element.dataset.mode = mode;
       element.dataset.reduced = String(reduced);
       element.classList.remove('face-right');
       element.classList.toggle('bubble-right', x < 200);
       element.classList.toggle('speech-below', y < innerHeight / 2);
       highlighted.forEach(target=>{if(!target.isConnected)highlighted.delete(target);});
-      setHint(message);
+      setHint(park ? '' : message);
       frameId = requestAnimationFrame(tick);
     };
     const visibility = () => { cancelAnimationFrame(frameId); if (!document.hidden) { lastTime = 0; frameId = requestAnimationFrame(tick); } };
@@ -152,7 +198,11 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
     frameId = requestAnimationFrame(tick);
     return () => {
       window.removeEventListener('monty-cue', onCue); window.removeEventListener('monty-dnd', onDnd);
-      cancelAnimationFrame(frameId);
+      window.removeEventListener('monty-reset-position', onResetPosition);
+      avatar.removeEventListener('pointerdown', onDragStart); avatar.removeEventListener('pointermove', onDragMove);
+      avatar.removeEventListener('pointerup', onDragEnd); avatar.removeEventListener('pointercancel', onDragEnd);
+      avatar.removeEventListener('click', onAvatarClick, true);
+      cancelAnimationFrame(frameId); cancelAnimationFrame(launchSettle);
       highlighted.forEach(target=>target.classList.remove('agent-highlight'));highlighted.clear();
       document.removeEventListener('pointermove', onPointer); document.removeEventListener('pointerdown', onActivity);
       document.removeEventListener('keydown', onActivity); document.removeEventListener('focusin', onFocus); document.removeEventListener('focusout', onLeave);
@@ -161,7 +211,7 @@ export function MontyOverlay({ language, launchFromCenter = false }: { language:
   }, []);
   return <div className="monty-overlay" ref={host} data-agent-ui data-visual-state={visual.marker} data-waking-effect={visual.wakingEffect}>
    <div ref={agent.setWelcomeHost}/><div className="monty-bubble" ref={bubble} hidden aria-hidden="true"/>{!agent.welcomeVisible&&(desktop.active!=='monty-history'||agent.guideProgress)&&<MontySpeech language={language} open={chatOpen}/>}
-      <button className="monty-avatar" aria-label={language==='zh'?'和 Monty 聊天':'Chat with Monty'} aria-expanded={chatOpen} onClick={()=>{setChatOpen(value=>!value);setSettingsOpen(false);}}><span className="monty-sprite"/></button><span className="monty-scroll-arrow" aria-hidden="true"/><span className="monty-caption">monty.exe</span>
+      <button className="monty-avatar" aria-label={language==='zh'?'和 Monty 聊天':'Chat with Monty'} title={language==='zh'?'点击聊天，拖动可移动 Monty':'Click to chat, drag to move Monty'} aria-expanded={chatOpen} onClick={()=>{setChatOpen(value=>!value);setSettingsOpen(false);}}><span className="monty-sprite"/></button><span className="monty-scroll-arrow" aria-hidden="true"/><span className="monty-caption">monty.exe</span>
    {chatOpen&&<div className="agent-settings-control"><button className="activity-toggle" aria-label={language==='zh'?'打开 Monty 设置':'Open Monty settings'} aria-expanded={settingsOpen} onClick={()=>setSettingsOpen(value=>!value)}>⚙</button><button className="activity-toggle history-toggle" aria-label={language==='zh'?'打开聊天记录':'Open chat history'} title={language==='zh'?'聊天记录':'Chat history'} onClick={()=>{desktop.open('monty-history');setSettingsOpen(false);}}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M6 4h13v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-1h11v1a3 3 0 0 0 6 0M6 4a3 3 0 0 0-3 3v2h3V4Zm0 0v13M9 8h7M9 11h7M9 14h5"/></svg></button>{settingsOpen&&<MontySettings language={language}/>}</div>}
    <span className="sr-only" role="status">{stateLabel(agent.state,language)}</span>
   </div>;
