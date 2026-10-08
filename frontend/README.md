@@ -4,4 +4,4 @@
 
 The client sends a session-only semantic summary, never coordinates, paths, DOM text, selectors, input text, prompts, reasoning or tokens. It cannot execute navigation, scrolling, clicks, input, window opening or tab changes.
 
-From `frontend/`, run `npm ci`, then `npm run dev`, `npm run test`, `npm run test:browser`, or `npm run build`. Asset tools live in `frontend/tooling/`; `npm run assets:monty` packs the Monty atlas. `npm run test:live-dnd` requires local DeepSeek configuration.
+From `frontend/`, run `npm ci`, then `npm run dev`, `npm run test`, or `npm run build`. Asset tools live in `frontend/tooling/`; `npm run assets:monty` packs the Monty atlas.

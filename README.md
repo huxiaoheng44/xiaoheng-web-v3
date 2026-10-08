@@ -46,7 +46,6 @@ GitHub refresh depends on API/network rate limits. DeepSeek requires local `back
 
 ```powershell
 cd frontend
-npm run test:browser
 npm run test
 npm run build
 cd ../backend

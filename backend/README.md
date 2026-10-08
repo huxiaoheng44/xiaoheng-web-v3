@@ -29,3 +29,7 @@ Monty history is a client-side log of the current page session. Closing its desk
 
 
 Guide execution now lives in the frontend `LocalGuide` module. A textual request resolves a destination once (`guidePlan`); choosing a project from the displayed list needs no additional request. The frontend handles window recovery, scrolling cues, persistent highlighting, and the arrival summary from catalog metadata. Legacy server guide-step responses remain supported for older clients, but the current client does not use them.
+
+Profile uses the window ID `profile`. Guide destinations `profile-section:experience`, `profile-section:education`, `profile-section:skills`, and `profile-section:research` wait for the requested panel; a wrong subpage first guides the visitor back to Profile. `folder:profile` reaches its overview. README (`folder:readme`) contains the site introduction and Monty information.
+
+Agent behavior tests are temporarily removed while the interaction design is being revised. Infrastructure tests for retrieval, source filtering, provider handling, and token budgets remain available.
