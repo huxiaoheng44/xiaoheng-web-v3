@@ -5,7 +5,6 @@ import { ActivityPanel } from './ActivityPanel';
 
 const toolNames = {
   searchKnowledge: { en: 'Searched the knowledge base', zh: '检索知识库' },
-  readKnowledge: { en: 'Read a source', zh: '阅读资料' },
   present: { en: 'Presented guidance', zh: '展示导览提示' },
 };
 

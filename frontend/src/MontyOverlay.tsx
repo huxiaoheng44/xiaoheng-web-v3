@@ -124,7 +124,7 @@ export function MontyOverlay({ language, launchFrom, parkAt }: { language: Langu
       if (command.until > performance.now()) {
         if (command.text) message = command.text;
         element.dataset.gesture = command.gesture || '';
-        const anchor = command.target ? desktopRef.current.targetRegistry.resolve(command.target,'guideTo',desktopRef.current.snapshot()).element : null;
+        const anchor = command.target ? desktopRef.current.targetRegistry.resolve(command.target,command.listTour?'highlight':'guideTo',desktopRef.current.snapshot()).element : null;
         if (anchor && visibleTarget(anchor)) {
 
           guidingTarget = true;
@@ -149,10 +149,11 @@ export function MontyOverlay({ language, launchFrom, parkAt }: { language: Langu
         if(command.target){
           const direction=desktopRef.current.targetRegistry.direction(command.target,desktopRef.current.snapshot());
           const name=desktopRef.current.targetRegistry.names(command.target)?.[guideLocale.current]??command.target;
-          const progress=guideProgress(direction,mode==='point',!!command.waiting,name,guideLocale.current,command.target);
+          const progress=guideProgress(direction,mode==='point',!!command.waiting,name,guideLocale.current,command.target,command);
           element.dataset.guidePhase=progress.phase;
           const serialized=JSON.stringify(progress);
           if(serialized!==previousProgress){previousProgress=serialized;window.dispatchEvent(new CustomEvent('monty-guide-progress',{detail:progress}));}
+          if(command.listTour)window.dispatchEvent(new CustomEvent('monty-tour-frame',{detail:{target:command.target,ready:direction==='visible'&&mode==='point'&&!drag?.moved&&!document.hidden,now:time}}));
         }
       } else {
         element.dataset.gesture = '';delete element.dataset.visibilityDirection;delete element.dataset.guidePhase;
@@ -211,7 +212,7 @@ export function MontyOverlay({ language, launchFrom, parkAt }: { language: Langu
   }, []);
   return <div className="monty-overlay" ref={host} data-agent-ui data-visual-state={visual.marker} data-waking-effect={visual.wakingEffect}>
    <div ref={agent.setWelcomeHost}/><div className="monty-bubble" ref={bubble} hidden aria-hidden="true"/>{!agent.welcomeVisible&&(desktop.active!=='monty-history'||agent.guideProgress)&&<MontySpeech language={language} open={chatOpen}/>}
-      <button className="monty-avatar" aria-label={language==='zh'?'和 Monty 聊天':'Chat with Monty'} title={language==='zh'?'点击聊天，拖动可移动 Monty':'Click to chat, drag to move Monty'} aria-expanded={chatOpen} onClick={()=>{setChatOpen(value=>!value);setSettingsOpen(false);}}><span className="monty-sprite"/></button><span className="monty-scroll-arrow" aria-hidden="true"/><span className="monty-caption">monty.exe</span>
+      <button className="monty-avatar" aria-label={language==='zh'?'和 Monty 聊天':'Chat with Monty'} title={language==='zh'?'点击聊天，拖动可移动 Monty':'Click to chat, drag to move Monty'} aria-expanded={chatOpen} onClick={()=>{setChatOpen(value=>!value);setSettingsOpen(false);}}><span className="monty-sprite"/></button><span className="monty-scroll-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="32" height="32" shapeRendering="crispEdges"><path d="M9 2h6v11h5v3h-3v3h-3v3h-4v-3H7v-3H4v-3h5z" fill="currentColor"/></svg></span><span className="monty-caption">monty.exe</span>
    {chatOpen&&<div className="agent-settings-control"><button className="activity-toggle" aria-label={language==='zh'?'打开 Monty 设置':'Open Monty settings'} aria-expanded={settingsOpen} onClick={()=>setSettingsOpen(value=>!value)}>⚙</button><button className="activity-toggle history-toggle" aria-label={language==='zh'?'打开聊天记录':'Open chat history'} title={language==='zh'?'聊天记录':'Chat history'} onClick={()=>{desktop.open('monty-history');setSettingsOpen(false);}}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true"><path d="M6 4h13v14a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3v-1h11v1a3 3 0 0 0 6 0M6 4a3 3 0 0 0-3 3v2h3V4Zm0 0v13M9 8h7M9 11h7M9 14h5"/></svg></button>{settingsOpen&&<MontySettings language={language}/>}</div>}
    <span className="sr-only" role="status">{stateLabel(agent.state,language)}</span>
   </div>;

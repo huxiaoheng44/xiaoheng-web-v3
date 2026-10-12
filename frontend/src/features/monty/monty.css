@@ -48,12 +48,13 @@
 .monty-speech.is-guiding{width:240px;padding:7px 9px;max-height:112px;font-size:11px;pointer-events:none}
 .monty-speech.is-guiding p{margin:0}
 .monty-speech.is-guiding .typing-caret{display:none}
-.monty-scroll-arrow{display:none;position:absolute;right:-22px;top:28%;font:32px/1 monospace;color:#d3ecac;text-shadow:0 2px #0b100e}
-.monty-overlay[data-guide-phase=scroll-cue] .monty-scroll-arrow{display:block}
-.monty-overlay[data-visibility-direction=above] .monty-scroll-arrow::before{content:'↑'}
-.monty-overlay[data-visibility-direction=below] .monty-scroll-arrow::before{content:'↓'}
-.monty-overlay[data-visibility-direction=left] .monty-scroll-arrow::before{content:'←'}
-.monty-overlay[data-visibility-direction=right] .monty-scroll-arrow::before{content:'→'}
+.monty-scroll-arrow{display:none;position:absolute;left:calc(50% - 20px);top:-46px;width:40px;height:40px;align-items:center;justify-content:center;color:#d3ecac;background:#0b100ef2;border:1px solid #829e62;box-shadow:0 2px 0 #000;pointer-events:none}
+.monty-overlay[data-guide-phase=scroll-cue] .monty-scroll-arrow{display:flex;animation:monty-scroll-pulse 1s ease-in-out infinite}
+.monty-overlay[data-visibility-direction=above] .monty-scroll-arrow svg{transform:rotate(180deg)}
+.monty-overlay[data-visibility-direction=left] .monty-scroll-arrow svg{transform:rotate(90deg)}
+.monty-overlay[data-visibility-direction=right] .monty-scroll-arrow svg{transform:rotate(-90deg)}
+@keyframes monty-scroll-pulse{50%{border-color:#dcffa8;box-shadow:0 0 9px #b8f27966}}
+@media(prefers-reduced-motion:reduce){.monty-overlay[data-guide-phase=scroll-cue] .monty-scroll-arrow{animation:none}}
 @media(prefers-reduced-motion:reduce){.monty-speech{transition:none}.typing-caret{animation:none}}
 
 .agent-settings-control{display:flex;flex-direction:column;gap:6px}

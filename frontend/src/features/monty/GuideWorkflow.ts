@@ -9,22 +9,30 @@ export function projectGuideTarget(id: string, names: TargetDefinition['names'])
     parentId: 'projects:collection', capabilities: ['highlight', 'guideTo'], projectId: id, completion: { window: `project:${id}`, panel: 'detail' } };
 }
 
-export type GuidePhase = 'scroll-cue' | 'travel-to-target' | 'waiting-for-click' | 'waiting-for-window' | 'unavailable';
+export type GuidePhase = 'scroll-cue' | 'travel-to-target' | 'waiting-for-click' | 'waiting-for-window' | 'presenting' | 'unavailable';
 export type GuideProgress = { phase: GuidePhase; text: string; direction: VisibilityDirection };
+export type GuideCopy = { step?: number; introduction?: string; position?: string; finished?: boolean };
 
-/** Layout stays local. This module produces presentation only, never page actions. */
-export function guideProgress(direction: VisibilityDirection, arrived: boolean, waiting: boolean, name: string, locale: Language, targetId = ''): GuideProgress {
+/** All directions come from local layout; this never operates the page. */
+export function guideProgress(direction: VisibilityDirection, arrived: boolean, waiting: boolean, name: string, locale: Language, targetId = '', copy: GuideCopy = {}): GuideProgress {
   const zh = locale === 'zh';
-  if(targetId==='desktop:show')return {phase:waiting?'waiting-for-window':arrived?'waiting-for-click':'travel-to-target',direction,text:zh?'请点击「显示桌面」，收起这些窗口后继续。':'Click “Show desktop” to put these windows away and continue.'};
-  if (targetId.startsWith('window:minimize:')) {
-    if (waiting) return { phase: 'waiting-for-window', direction, text: zh ? '正在等待窗口收起，再继续带你过去…' : 'Waiting for the window to minimize, then we’ll continue…' };
-    return { phase: arrived ? 'waiting-for-click' : 'travel-to-target', direction, text: zh ? `请点击「${name}」，先收起这个窗口，再继续前往目标。` : `Click “${name}” to put this window away, then we’ll continue to your destination.` };
+  const prefix = copy.step ? (zh ? `第 ${copy.step} 步：` : `Step ${copy.step}: `) : '';
+  const phase = waiting ? 'waiting-for-window' : arrived ? 'waiting-for-click' : 'travel-to-target';
+  if (direction === 'unavailable') return { phase: 'unavailable', direction, text: zh ? '请返回刚才的窗口，继续导览。' : 'Return to the previous window to continue the tour.' };
+  if (direction !== 'visible') {
+    const words = { above: ['上', 'up'], below: ['下', 'down'], left: ['左', 'left'], right: ['右', 'right'] }[direction];
+    return { phase: 'scroll-cue', direction, text: zh ? `请向${words[0]}滚动，继续查看「${name}」。` : `Scroll ${words[1]} to continue with ${name}.` };
   }
-  if (waiting) return { phase: 'waiting-for-window', direction, text: zh ? '正在等待内容打开…' : 'Waiting for the content to open…' };
-  if (direction === 'visible') return arrived
-    ? { phase: 'waiting-for-click', direction, text: zh ? `找到了「${name}」，请点击继续。` : `Found ${name}. Click it to continue.` }
-    : { phase: 'travel-to-target', direction, text: zh ? `正在指向「${name}」…` : `Moving to ${name}…` };
-  if (direction === 'unavailable') return { phase: 'unavailable', direction, text: zh ? '请先打开对应内容后再继续。' : 'Please open the relevant content to continue.' };
-  const words = { above: ['上', 'up'], below: ['下', 'down'], left: ['左', 'left'], right: ['右', 'right'] }[direction];
-  return { phase: 'scroll-cue', direction, text: zh ? `请向${words[0]}滚动，找到「${name}」后我会指给你看。` : `Scroll ${words[1]} to find ${name}. I’ll point to it when it appears.` };
+  if (copy.introduction) {
+    const text = copy.finished
+      ? (zh ? '介绍完了，点击任意高亮项即可继续浏览。' : 'That’s the overview. Click any highlighted item to explore it.')
+      : arrived ? `${copy.position}. ${copy.introduction}`
+      : (zh ? `接下来介绍「${name}」。` : `Next, let’s look at ${name}.`);
+    return { phase: arrived ? 'presenting' : 'travel-to-target', direction, text };
+  }
+  let text = zh ? `${prefix}点击「${name}」继续。` : `${prefix}click ${name} to continue.`;
+  if (targetId === 'desktop:show') text = zh ? `${prefix}点击「显示桌面」，先收起当前窗口。` : `${prefix}click “Show desktop” to put the open windows away.`;
+  else if (targetId.startsWith('window:minimize:')) text = zh ? `${prefix}点击「${name}」，再继续前往目标。` : `${prefix}click “${name}” to continue to your destination.`;
+  if (waiting) text = zh ? '正在打开，马上继续。' : 'Opening — we’ll continue in a moment.';
+  return { phase, direction, text };
 }

@@ -5,14 +5,15 @@ import type { Language } from '../../model';
 import { useDesktop } from './DesktopContext';
 import { MontyTransport, MontyRequestError, requestFailureMessage } from './transport';
 import { BehaviorTracker } from './behavior';
-import { detectMessageLocale, validatePresentationForContext, type TokenUsage, type Source } from './MontyChat';
+import { detectMessageLocale, presentationDestination, validatePresentationForContext, type PresentationItem, type PresentationTask, type TokenUsage, type Source } from './MontyChat';
 import { decideProactive, type ProactiveSession } from './proactivePolicy';
 import { idleTransition, interactionTransition, responseTransition, type SemanticState } from './agentState';
 import { activitySummary } from './activity';
 import { LocalGuide } from './LocalGuide';
+import { ListTour } from './ListTour';
 import type { GuideProgress } from './GuideWorkflow';
 
-export type MontyCue={target?:string;gesture?:string;text?:string;state?:string;until:number;persistent?:boolean;waiting?:boolean};
+export type MontyCue={target?:string;gesture?:string;text?:string;state?:string;until:number;persistent?:boolean;waiting?:boolean;step?:number;introduction?:string;position?:string;finished?:boolean;listTour?:boolean};
 /** A persistent cue stays visible until the client cancels or replaces it. */
 export function cue(value:Partial<MontyCue>){window.dispatchEvent(new CustomEvent('monty-cue',{detail:{...value,until:value.persistent?Number.POSITIVE_INFINITY:Object.keys(value).length?performance.now()+6000:0}}));}
 type Line={id:string;role:'user'|'monty';text:string;sources:Source[];createdAt:number;activity:string[];steps:string[]};
@@ -25,8 +26,8 @@ function useController(language:Language){
   const [welcomeHost,setWelcomeHost]=useState<HTMLDivElement|null>(null);
   useEffect(()=>{if(welcomeVisible){proactive.current.lightInviteUsed=true;proactive.current.lastMessageAt=performance.now();}},[welcomeVisible]);
   const [usage,setUsage]=useState<TokenUsage|null>(null);
-  const [lines,setLines]=useState<Line[]>([]);const [status,setStatus]=useState('');const [busy,setBusy]=useState(false);const [open,setOpen]=useState(false);const [dnd,setDnd]=useState(false);const [state,setState]=useState<SemanticState>('idle');const [scanning,setScanning]=useState(false);const [tools,setTools]=useState<Array<'searchKnowledge'|'readKnowledge'|'present'>>([]);const [activityLocale,setActivityLocale]=useState<Language>(language);
-  const options=useRef({dnd,welcomeVisible,choosing:false});options.current={dnd,welcomeVisible,choosing:projectChoices.length>0};const generation=useRef(0);const trace=useRef<Array<{kind:string;instruction?:string;reason?:string}>>([]);const guide=useRef<{targetId:string;startedAt:number;awaiting?:boolean}|null>(null);const localGuide=useRef(new LocalGuide());const plannedLine=useRef('');
+  const [lines,setLines]=useState<Line[]>([]);const [status,setStatus]=useState('');const [busy,setBusy]=useState(false);const [open,setOpen]=useState(false);const [dnd,setDnd]=useState(false);const [state,setState]=useState<SemanticState>('idle');const [scanning,setScanning]=useState(false);const [tools,setTools]=useState<Array<'searchKnowledge'|'present'>>([]);const [activityLocale,setActivityLocale]=useState<Language>(language);
+  const options=useRef({dnd,welcomeVisible,choosing:false});options.current={dnd,welcomeVisible,choosing:projectChoices.length>0};const generation=useRef(0);const trace=useRef<Array<{kind:string;instruction?:string;reason?:string}>>([]);const guide=useRef<{targetId:string;startedAt:number;awaiting?:boolean}|null>(null);const localGuide=useRef(new LocalGuide());const listTour=useRef(new ListTour());const guideStep=useRef(0);const plannedLine=useRef('');const pendingPresentation=useRef<PresentationTask|null>(null);
   const [guideProgress,setGuideProgress]=useState<GuideProgress|null>(null);
   const guideLocale=useRef<Language>(language);
   useEffect(()=>{const update=(event:Event)=>{const progress=(event as CustomEvent<GuideProgress|null>).detail;setGuideProgress(progress);if(progress)setLines(prev=>prev.map(line=>line.id===activeLine.current&&line.steps.at(-1)!==progress.text?{...line,steps:[...line.steps,progress.text]}:line));};window.addEventListener('monty-guide-progress',update);return()=>window.removeEventListener('monty-guide-progress',update);},[]);
@@ -42,12 +43,50 @@ function useController(language:Language){
     const context=desk.current.snapshot();
     marked.current.forEach(id=>{const element=desk.current.targetRegistry.resolve(id,'highlight',context).element;element?.classList.add('agent-highlight');});
   }
-  const stop=()=>{marked.current=[];markedWindow.current=null;setProjectChoices([]);generation.current++;task.current?.abort();task.current=null;localGuide.current.cancel();plannedLine.current='';guide.current=null;setGuideProgress(null);if(run.current)void transport.current.cancel(run.current);run.current='';setBusy(false);setScanning(false);semanticState.current='idle';setState('idle');cue({});document.querySelectorAll('.agent-highlight').forEach(e=>e.classList.remove('agent-highlight'));};
+  const stop=()=>{pendingPresentation.current=null;listTour.current.cancel();guideStep.current=0;marked.current=[];markedWindow.current=null;setProjectChoices([]);generation.current++;task.current?.abort();task.current=null;localGuide.current.cancel();plannedLine.current='';guide.current=null;setGuideProgress(null);if(run.current)void transport.current.cancel(run.current);run.current='';setBusy(false);setScanning(false);semanticState.current='idle';setState('idle');cue({});document.querySelectorAll('.agent-highlight').forEach(e=>e.classList.remove('agent-highlight'));};
+  function showListItem(force=false){
+    const tour=listTour.current;
+    if(!tour.active)return;
+    if(tour.owner&&!desk.current.state.windows.some(w=>w.id===tour.owner)){stop();return;}
+    if((desk.current.active??null)!==tour.owner){
+      tour.pause();guide.current=null;setGuideProgress(null);cue({});return;
+    }
+    const item=tour.current;
+    if(!force&&guide.current?.targetId===item.target)return;
+    guide.current={targetId:item.target,startedAt:performance.now()};
+    setSemanticState('guiding',false);
+    cue({target:item.target,state:'guiding',persistent:true,listTour:true,introduction:item.introduction,position:tour.position,finished:tour.finishedPresenting});
+  }
+  function catalogItems(ids:string[]):PresentationItem[]{
+    const locale=guideLocale.current;
+    return ids.map(target=>{
+      const project=catalog.find(p=>`project-card:${p.id}`===target);
+      const name=desk.current.targetRegistry.names(target)?.[locale]??target;
+      return {target,introduction:project?`${project.title} — ${project.description[locale]}.`:(locale==='zh'?`「${name}」：点击可以打开并浏览。`:`${name}: click to open and explore.`)};
+    });
+  }
+  function beginListTour(items:PresentationItem[],lineId:string){
+    pendingPresentation.current=null;localGuide.current.cancel();plannedLine.current=lineId;activeLine.current=lineId;
+    listTour.current.start(items,desk.current.active??null);
+    markedWindow.current=desk.current.active??null;marked.current=items.map(item=>item.target);refreshHighlights();
+    setProjectChoices([]);showListItem(true);
+  }
+  const tourFrame=useRef((_target:string,_ready:boolean,_now:number)=>{});
+  tourFrame.current=(target,ready,now)=>{if(listTour.current.tick(target,ready,now))showListItem(true);};
+  useEffect(()=>{
+    const frame=(event:Event)=>{const {target,ready,now}=(event as CustomEvent<{target:string;ready:boolean;now:number}>).detail;tourFrame.current(target,ready,now);};
+    const pause=()=>listTour.current.pause();
+    window.addEventListener('monty-tour-frame',frame);document.addEventListener('visibilitychange',pause);
+    return()=>{window.removeEventListener('monty-tour-frame',frame);document.removeEventListener('visibilitychange',pause);};
+  },[]);
   function updateLocalGuide(){
     refreshHighlights();
+    if(listTour.current.active){showListItem();return;}
     const result=localGuide.current.update(desk.current.state);
     if(!result)return;
     if(result.done){
+      if(pendingPresentation.current){beginListTour(pendingPresentation.current.items,activeLine.current);return;}
+      if(result.tour?.length){beginListTour(catalogItems(result.tour),activeLine.current);return;}
       guide.current=null;setGuideProgress(null);cue({});setSemanticState('idle',false);
       document.querySelectorAll('.agent-highlight').forEach(e=>e.classList.remove('agent-highlight'));
       markedWindow.current=desk.current.active??null;marked.current=result.highlights??[];refreshHighlights();
@@ -56,7 +95,7 @@ function useController(language:Language){
     const target=result.step.target;
     if(guide.current?.targetId===target)return;
     guide.current={targetId:target,startedAt:performance.now()};
-    setSemanticState('guiding',false);cue({target,state:'guiding',persistent:true});
+    guideStep.current++;setSemanticState('guiding',false);cue({target,state:'guiding',persistent:true,step:guideStep.current});
   }
   function beginLocalGuide(destination:string,lineId:string){
     if(!localGuide.current.start(destination,guideLocale.current))return;
@@ -80,6 +119,10 @@ function useController(language:Language){
       if(e.type==='click'){element?.classList.remove('agent-highlight');marked.current=marked.current.filter(target=>target!==id);}
       const active=guide.current;
       if((e.target as Element)?.closest?.('.power-control')){stop();return;}
+      if(e.type==='click'&&id&&(listTour.current.contains(id)||pendingPresentation.current?.items.some(item=>item.target===id))){
+        const name=desk.current.targetRegistry.names(id)?.[guideLocale.current]??id;
+        stop();patchLine(activeLine.current,line=>({...line,text:guideLocale.current==='zh'?`你选择了「${name}」，接下来可以自由浏览。`:`You selected ${name}. Enjoy exploring!`}));return;
+      }
       if(active){
         if(e.type==='click'&&id===active.targetId){
           guide.current={...active,awaiting:true};cue({target:id,state:'guiding',persistent:true,waiting:true});
@@ -90,34 +133,30 @@ function useController(language:Language){
       }
       if((e.target as Element)?.closest?.('[data-agent-ui]'))return;
       desk.current.touch();
-      if(e.type==='click'&&task.current)stop();
+      if(e.type==='click'&&task.current&&!listTour.current.active)stop();
     };
     const onKey=(e:KeyboardEvent)=>{if(e.key==='Escape'){e.preventDefault();stop();}};
     document.addEventListener('pointermove',wakeFromRest,{passive:true});document.addEventListener('pointerdown',wakeFromRest,{passive:true});document.addEventListener('keydown',wakeFromRest);
     document.addEventListener('click',onInput,true);document.addEventListener('keydown',onKey,true);
-    const hide=()=>{if(document.hidden&&!guide.current)stop();};document.addEventListener('visibilitychange',hide);
+    const hide=()=>{if(document.hidden&&!guide.current&&!listTour.current.active)stop();};document.addEventListener('visibilitychange',hide);
     return()=>{document.removeEventListener('pointermove',wakeFromRest);document.removeEventListener('pointerdown',wakeFromRest);document.removeEventListener('keydown',wakeFromRest);document.removeEventListener('click',onInput,true);document.removeEventListener('keydown',onKey,true);document.removeEventListener('visibilitychange',hide);task.current?.abort();void transport.current.clear();};
   },[]);
   // The tracker is session-local and always records only registered semantic targets.
   useEffect(()=>{const instance=new BehaviorTracker(()=>desk.current.snapshot());tracker.current=instance;return instance.attach();},[]);
 
   function record(kind:string,instruction?:string,reason?:string){trace.current=[...trace.current.slice(-19),{kind,instruction,reason}];}
-  function applyPresentation(raw:unknown,lineId:string,signal:AbortSignal){
-    const context=desk.current.snapshot();const validated=validatePresentationForContext(raw,context.targets);
-    const instruction=validated.instruction;
+  function applyPresentation(raw:unknown,lineId:string){
     if(plannedLine.current===lineId)return;
-    if(!instruction){record('ignored-instruction',undefined,validated.reason);return;}
-    if(instruction.type==='highlight'||instruction.type==='guideTo'){
-      if(instruction.type==='highlight'&&instruction.targets?.length){markedWindow.current=desk.current.active??null;marked.current=[...new Set([...marked.current,...instruction.targets])];refreshHighlights();return;}
-      const resolved=desk.current.targetRegistry.resolve(instruction.target,instruction.type,context);
-      const element=resolved.element;
-      if(!element){record('ignored-instruction',instruction.type,resolved.reason);return;}
-      if(instruction.type==='highlight'){markedWindow.current=desk.current.active??null;marked.current=[...new Set([...marked.current,instruction.target])];element.classList.add('agent-highlight');signal.addEventListener('abort',()=>element.classList.remove('agent-highlight'),{once:true});}
-      else {const goal=instruction.target.startsWith('project-card:')?instruction.target.slice(13):instruction.target;if(catalog.some(p=>p.id===goal)||goal.startsWith('folder:')||goal.startsWith('profile-section:'))beginLocalGuide(goal,lineId);else{guide.current={targetId:instruction.target,startedAt:performance.now()};setSemanticState('guiding',false);cue({target:instruction.target,state:'guiding',persistent:true});}}
-    } else if(instruction.type==='speak'||instruction.type==='showRecommendation'){setSemanticState('speaking');patchLine(lineId,l=>({...l,text:l.text+(l.text?'\n':'')+instruction.value}));}
-    else if(instruction.type==='showHint') cue({text:instruction.value});
-    else setSemanticState(instruction.value as SemanticState);
-    record('presentation',instruction.type);
+    const validated=validatePresentationForContext(raw,desk.current.snapshot().targets);
+    if(!validated.task){record('ignored-presentation',undefined,validated.reason);return;}
+    const presentation=validated.task;
+    const destination=presentationDestination(presentation.items[0].target);
+    if(destination){
+      // Route to the containing view first. Only user actions advance LocalGuide.
+      pendingPresentation.current=presentation;
+      beginLocalGuide(destination,lineId);
+    }else beginListTour(presentation.items,lineId);
+    record('presentation','present');
   }
 
   async function consume(path:string,body:unknown,lineId:string,controller:AbortController,current:number){
@@ -130,11 +169,11 @@ function useController(language:Language){
         if(item.type==='run')run.current=item.runId;
         if(item.type==='guidePlan')beginLocalGuide(item.destination,lineId);
         if(item.type==='projectChoices'){setProjectChoices(catalog.filter(entry=>Array.isArray(item.ids)&&item.ids.includes(entry.id)).map(entry=>entry.id));patchLine(lineId,l=>({...l,text:item.message}));}
-        if(item.type==='delta'){setScanning(false);setSemanticState('speaking');patchLine(lineId,l=>({...l,text:l.text+item.text}));}
-        if(item.type==='status'){setScanning(false);setStatus(item.text);setSemanticState('thinking');}
+        if(item.type==='delta'){setScanning(false);if(!guide.current&&!localGuide.current.active&&!listTour.current.active)setSemanticState('speaking');patchLine(lineId,l=>({...l,text:l.text+item.text}));}
+        if(item.type==='status'){setScanning(false);setStatus(item.text);if(!guide.current&&!localGuide.current.active&&!listTour.current.active)setSemanticState('thinking');}
         if(item.type==='source')patchLine(lineId,l=>({...l,sources:[...l.sources.filter(s=>s.id!==item.source.id),item.source]}));
-        if(item.type==='activity'){patchLine(lineId,line=>({...line,activity:[...line.activity,item.name]}));setTools(previous=>[...previous.slice(-7),item.name]);setScanning(item.name==='searchKnowledge'||item.name==='readKnowledge');}
-        if(item.type==='presentation')applyPresentation(item.instruction,lineId,controller.signal);
+        if(item.type==='activity'){patchLine(lineId,line=>({...line,activity:[...line.activity,item.name]}));setTools(previous=>[...previous.slice(-7),item.name]);setScanning(item.name==='searchKnowledge');}
+        if(item.type==='presentation')applyPresentation(item.task,lineId);
         if(item.type==='error'){record('stream-error');throw new MontyRequestError(item.code||'request-failed');}
         if(item.type==='done'&&!item.waiting){run.current='';task.current=null;setBusy(false);setScanning(false);setStatus('');if(semanticState.current!=='guiding')setSemanticState('idle',false);}
       }
@@ -155,14 +194,14 @@ function useController(language:Language){
     const id=crypto.randomUUID();activeLine.current=id;setLines(prev=>[...prev,...(!observe?[{id:crypto.randomUUID(),role:'user' as const,text:message,sources:[],createdAt:Date.now(),activity:[],steps:[]}]:[]),{id,role:'monty',text:'',sources:[],createdAt:Date.now(),activity:[],steps:[]}]);
     const offer=!observe?offers.find(o=>Object.values(o.question).some(q=>q.toLocaleLowerCase()===message.trim().toLocaleLowerCase())):undefined;
     if(offer){task.current=null;setBusy(false);setWelcomeVisible(false);beginLocalGuide(offer.destination,id);return;}
-    try{await consume(observe?'/observe':'/chat',{requestId:crypto.randomUUID(),message:outgoing,messageLocale:observe?undefined:guideLocale.current,pageContext:desk.current.snapshot(),dnd:options.current.dnd,behavior},id,controller,current);}catch(error){if(!controller.signal.aborted&&current===generation.current){if(plannedLine.current===id&&localGuide.current.active){task.current=null;run.current='';setBusy(false);setScanning(false);setStatus('');return;}record('stream-failure');stop();if(observe){setLines(prev=>prev.filter(line=>line.id!==id));setStatus('');}else{const safe=requestFailureMessage(error,guideLocale.current);setStatus(safe);patchLine(id,l=>({...l,text:l.text+(l.text?'\n':'')+safe}));}}}
+    try{await consume(observe?'/observe':'/chat',{requestId:crypto.randomUUID(),message:outgoing,messageLocale:observe?undefined:guideLocale.current,pageContext:desk.current.snapshot(),dnd:options.current.dnd,behavior},id,controller,current);}catch(error){if(!controller.signal.aborted&&current===generation.current){if(plannedLine.current===id&&(localGuide.current.active||listTour.current.active)){task.current=null;run.current='';setBusy(false);setScanning(false);setStatus('');return;}record('stream-failure');stop();if(observe){setLines(prev=>prev.filter(line=>line.id!==id));setStatus('');}else{const safe=requestFailureMessage(error,guideLocale.current);setStatus(safe);patchLine(id,l=>({...l,text:l.text+(l.text?'\n':'')+safe}));}}}
   }
   const startRef=useRef(start);startRef.current=start;
-  useEffect(()=>{const timer=setInterval(()=>{const t=tracker.current;if(!t)return;const context=desk.current.snapshot();t.tick(context);if(guide.current)return;const behavior=t.snapshot({locale:language,dnd:options.current.dnd,proactiveCount:proactive.current.proactiveCount});const next=idleTransition(semanticState.current,behavior.idleSeconds);if(next!==semanticState.current)setSemanticState(next);const meaningful=t.consumeMeaningfulInteraction(),pageActivity=t.consumePageActivity();if(semanticState.current==='sleeping'&&meaningful)transitionInteraction('interaction');else if(semanticState.current==='dozing'&&pageActivity)transitionInteraction('interaction');if(document.hidden||options.current.dnd||options.current.welcomeVisible||options.current.choosing||task.current||guide.current||document.querySelector('.monitor-screen:not([data-power="on"])'))return;if(document.activeElement?.matches('input,textarea,[contenteditable="true"]')||[...document.querySelectorAll('video')].some(v=>!v.paused&&!v.ended))return;void startRef.current('',true);},1000);return()=>clearInterval(timer);},[language]);
+  useEffect(()=>{const timer=setInterval(()=>{const t=tracker.current;if(!t)return;const context=desk.current.snapshot();t.tick(context);if(guide.current||listTour.current.active)return;const behavior=t.snapshot({locale:language,dnd:options.current.dnd,proactiveCount:proactive.current.proactiveCount});const next=idleTransition(semanticState.current,behavior.idleSeconds);if(next!==semanticState.current)setSemanticState(next);const meaningful=t.consumeMeaningfulInteraction(),pageActivity=t.consumePageActivity();if(semanticState.current==='sleeping'&&meaningful)transitionInteraction('interaction');else if(semanticState.current==='dozing'&&pageActivity)transitionInteraction('interaction');if(document.hidden||options.current.dnd||options.current.welcomeVisible||options.current.choosing||task.current||guide.current||document.querySelector('.monitor-screen:not([data-power="on"])'))return;if(document.activeElement?.matches('input,textarea,[contenteditable="true"]')||[...document.querySelectorAll('video')].some(v=>!v.paused&&!v.ended))return;void startRef.current('',true);},1000);return()=>clearInterval(timer);},[language]);
   const behavior=tracker.current?.snapshot({locale:activityLocale,dnd,proactiveCount:proactive.current.proactiveCount});
   const activity=activitySummary(state,behavior,desk.current.snapshot().targets,tools,lines.flatMap(line=>line.sources));
   return {startGuide,projectChoices,welcomeVisible,welcomeHost,setWelcomeHost,setWelcomeVisible,usage,refreshUsage:async()=>{const current=generation.current;try{const quota=await transport.current.quota();if(current===generation.current)setUsage(quota);}catch{/* The history remains readable while offline. */}},guideProgress,guideLocale:guideLocale.current,lines,status,busy,open,setOpen,dnd,start,stop,state,scanning,activity,activityLocale,
-    debug:()=>({behavior:tracker.current?.snapshot({locale:language,dnd,proactiveCount:proactive.current.proactiveCount})??null,context:desk.current.snapshot(),runId:run.current,activitySafeTrace:trace.current,localGuide:localGuide.current.snapshot()}),
+    debug:()=>({behavior:tracker.current?.snapshot({locale:language,dnd,proactiveCount:proactive.current.proactiveCount})??null,context:desk.current.snapshot(),runId:run.current,activitySafeTrace:trace.current,localGuide:localGuide.current.snapshot(),listTour:{active:listTour.current.active,target:listTour.current.current?.target,position:listTour.current.position,finished:listTour.current.finishedPresenting}}),
     setDnd:(value:boolean)=>{setDnd(value);window.dispatchEvent(new CustomEvent('monty-dnd',{detail:value}));},
     clear:async()=>{stop();activeLine.current='';setLines([]);setStatus('');setUsage(null);await transport.current.clear();},
   };

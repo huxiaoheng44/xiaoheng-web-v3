@@ -1,0 +1,12 @@
+[
+  {
+    "parentId": "desktop",
+    "destination": "tour:desktop",
+    "targets": ["folder:projects", "folder:readme", "folder:profile", "folder:contact", "folder:doom", "folder:monty-history"]
+  },
+  {
+    "parentId": "profile:overview",
+    "destination": "folder:profile",
+    "targets": ["profile-section:experience", "profile-section:education", "profile-section:skills", "profile-section:research"]
+  }
+]

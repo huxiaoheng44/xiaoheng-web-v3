@@ -4,6 +4,7 @@ from ..core.config import ROOT
 
 CATALOG = json.loads((ROOT / 'content/guide-catalog.json').read_text(encoding='utf-8'))
 TOPICS = {
+    'agent': r'\bagents?\b|智能体',
     'full-stack': r'full[ -]?stack|全栈',
     'llm': r'(?<![a-z])llms?(?![a-z])|large language models?|大(?:语言)?模型|语言模型|gemini|多模态|multimodal',
     'ocr': r'\bocr\b|文字识别',

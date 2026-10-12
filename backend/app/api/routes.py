@@ -135,11 +135,11 @@ def create_app(provider=None, knowledge=None):
                 yield event({'type':'guidePlan','destination':destination})
             if decision.kind == 'choices':
                 yield event({'type':'projectChoices','ids':decision.choices,'message':decision.message})
-            elif decision.kind == 'guide':
+            elif decision.kind == 'guide' and not destination:
                 yield event({'type':'activity','kind':'tool','name':'present'})
-                yield event({'type':'presentation','instruction':{'type':'guideTo','target':decision.target_id,'value':''}})
-            else:
-                yield event({'type':'presentation','instruction':{'type':'speak','target':'','value':decision.message}})
+                yield event({'type':'presentation','task':{'items':[{'target':decision.target_id,'introduction':decision.message or 'Click here to continue. / 点击这里继续。'}]}})
+            elif decision.message and not destination:
+                yield event({'type':'delta','text':decision.message})
             yield event({'type':'done','waiting':False,'cancelled':False})
             if s.run is run: s.run=None
         return StreamingResponse(stream(),media_type='text/event-stream',headers={'Cache-Control':'no-store','X-Accel-Buffering':'no'})

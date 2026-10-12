@@ -1,5 +1,4 @@
-import type { PresentationState } from './MontyChat';
-export type SemanticState = PresentationState;
+export type SemanticState = 'idle' | 'observing' | 'thinking' | 'speaking' | 'guiding' | 'dozing' | 'sleeping' | 'waking';
 export function interactionTransition(current:SemanticState, kind:'message'|'interaction'):SemanticState[]{
   if(current==='sleeping')return ['waking','idle'];
   if(current==='dozing'&&kind==='interaction')return ['observing'];

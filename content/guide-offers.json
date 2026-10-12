@@ -12,15 +12,15 @@
     }
   },
   {
-    "id": "ai",
-    "destination": "tour:ai",
+    "id": "agent",
+    "destination": "tour:agent",
     "label": {
-      "en": "Explore AI projects",
-      "zh": "探索 AI 相关项目"
+      "en": "Explore Agent projects",
+      "zh": "探索 Agent 相关项目"
     },
     "question": {
-      "en": "Explore AI projects",
-      "zh": "探索 AI 相关项目"
+      "en": "Explore Agent projects",
+      "zh": "探索 Agent 相关项目"
     }
   },
   {

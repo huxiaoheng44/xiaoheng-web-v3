@@ -29,7 +29,8 @@
       "vision",
       "llm",
       "multimodal",
-      "ocr"
+      "ocr",
+      "agent"
     ],
     "title": "PingPong Vision",
     "description": {
@@ -47,7 +48,8 @@
       "ai",
       "rag",
       "web",
-      "llm"
+      "llm",
+      "agent"
     ],
     "title": "Web Harvest RAG",
     "description": {
@@ -65,7 +67,8 @@
       "ai",
       "rag",
       "web",
-      "llm"
+      "llm",
+      "agent"
     ],
     "title": "You Don’t Need RAG",
     "description": {
