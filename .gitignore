@@ -2,6 +2,7 @@ content/videos/*
 !content/videos/3D.mp4
 !content/videos/DroneDemo.mp4
 !content/videos/FASTAIMOVIE.mp4
+!content/videos/pingpong.mp4
 dist/
 .openai/
 *.tar.gz
