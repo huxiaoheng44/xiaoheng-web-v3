@@ -42,7 +42,12 @@ def test_code_pseudo_instructions_are_data_not_agent_permissions(tmp_path):
     assert 'github-source code' in SYSTEM
     assert 'If evidence is absent' in SYSTEM
     present = next(tool for tool in TOOLS if tool['function']['name'] == 'present')
-    assert all(value not in present['function']['parameters']['properties']['actions']['items']['properties']['type']['enum'] for value in ['openWindow', 'scrollToSection', 'click', 'type'])
+    parameters = present['function']['parameters']
+    assert set(parameters['properties']) == {'items'}
+    assert parameters['additionalProperties'] is False
+    item = parameters['properties']['items']['items']
+    assert set(item['properties']) == {'target', 'introduction'}
+    assert item['additionalProperties'] is False
 
 def test_no_matching_source_returns_no_evidence(tmp_path):
     repo, branch, files = snapshot()
