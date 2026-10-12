@@ -14,6 +14,8 @@ export const projects: Project[] = [
 ];
 export function assetUrl(path: string): string | undefined { return contentAssets[`../../../content/${path.replace(/^\//, '')}`]; }
 function documentFor(project: Project, language: Language) { return documents[`../../../content/html/${language}/${project.document}.html`] ?? ''; }
-function htmlAssetUrl(path: string): string | undefined { if (path.startsWith('../assets/')) return assetUrl(`html/assets/${path.slice(10)}`); if (path.startsWith('../../videos/')) return assetUrl(`videos/${path.slice(12)}`); return undefined; }
+const htmlAssetPrefixes: [string, string][] = [['../assets/', 'html/assets/'], ['../../videos/', 'videos/']];
+/** Map a path written inside content/html/{en,zh}/*.html to its bundled URL. */
+function htmlAssetUrl(path: string): string | undefined { const match = htmlAssetPrefixes.find(([prefix]) => path.startsWith(prefix)); return match ? assetUrl(match[1] + path.slice(match[0].length)) : undefined; }
 export function projectHtml(project: Project, language: Language): string { const main = documentFor(project, language).match(/<main\b[^>]*>([\s\S]*?)<\/main>/i)?.[1] ?? ''; return main.replace(/<nav\b[^>]*class=["']topbar["'][^>]*>[\s\S]*?<\/nav>/i, '').replace(/\bsrc=(["'])([^"']+)\1/gi, (attribute, quote, source) => { const url = htmlAssetUrl(source); return url ? `src=${quote}${url}${quote}` : /^(\.\.\/|\/)/.test(source) ? '' : attribute; }); }
 export function projectSummary(project: Project, language: Language): string { return documentFor(project, language).match(/<p\b[^>]*class=["']lead["'][^>]*>([\s\S]*?)<\/p>/i)?.[1].replace(/<[^>]*>/g, '').trim() ?? ''; }
