@@ -153,3 +153,6 @@
 .battery-text{font-size:9px;min-width:3.2ch;text-align:left}
 @media(prefers-reduced-motion:reduce){.monty-link .is-lit,.battery-reserved,.battery-fill{animation:none!important;transition:none}}
 @media(max-width:700px){.system-status{gap:7px}.battery-text{display:none}}
+
+/* The float/bounce moves only the robot; the overlay (and its speech bubbles) stays put. */
+.monty-avatar{transform:translate(var(--bob-x,0px),var(--bob-y,0px))}

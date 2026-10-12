@@ -45,6 +45,7 @@ export function MontyOverlay({ language, launchFrom, parkAt }: { language: Langu
   const host = useRef<HTMLDivElement>(null);
   const bubble = useRef<HTMLDivElement>(null);
   const parkRef = useRef(parkAt); parkRef.current = parkAt;
+  useEffect(() => { agent.freshStart(); }, []); // eslint-disable-line react-hooks/exhaustive-deps -- once, when Monty takes over after power-on
   useEffect(() => { void loadMontyAtlas().then(value => { atlas.current = value; }); }, []);
   useEffect(() => { if (parkAt) { setChatOpen(false); setSettingsOpen(false); } }, [parkAt]);
   useEffect(() => {
@@ -117,7 +118,9 @@ export function MontyOverlay({ language, launchFrom, parkAt }: { language: Langu
       const size = mobile ? 62 : 100;
       const home = homeFor(size);
       let tx = home.x, ty = home.y, mode: Mode = modeForState(stateRef.current), message = '';
-      if(!reduced){tx += Math.sin(time / 5400) * 8; ty += Math.sin(time / 1800) * 5;}
+      // Idle float is applied to the sprite only (--bob-x/y), so speech bubbles attached to the overlay stay still.
+      let bobX = 0, bobY = 0;
+      if(!reduced){bobX = Math.sin(time / 5400) * 8; bobY = Math.sin(time / 1800) * 5;}
       const maxX = Math.max(10, innerWidth - size - 15), maxY = Math.max(10, innerHeight - size - 24);
       if (dnd || settings.current.dnd) message = '';
       let guidingTarget = false;
@@ -143,7 +146,7 @@ export function MontyOverlay({ language, launchFrom, parkAt }: { language: Langu
           // A clipped target keeps its highlight while the visitor scrolls.
           const bounds=anchor?.closest('.content-scroll')?.getBoundingClientRect();
           if(bounds){tx=Math.min(maxX,bounds.right+12);ty=Math.max(55,Math.min(maxY,(bounds.top+bounds.bottom-size)/2));}
-          if(!reduced&&(direction==='above'||direction==='below'))ty+=Math.sin(time/280)*10;
+          if(!reduced&&(direction==='above'||direction==='below'))bobY+=Math.sin(time/280)*10;
           mode='look';
         }
         if(command.target){
@@ -173,6 +176,9 @@ export function MontyOverlay({ language, launchFrom, parkAt }: { language: Langu
       y += (ty - y) * follow;
       if (!park) { x = Math.max(10, Math.min(x, maxX)); y = Math.max(10, Math.min(y, maxY)); }
       element.style.transform = `translate3d(${Math.round(x)}px,${Math.round(y)}px,0)`;
+      if (drag?.moved) { bobX = 0; bobY = 0; }
+      element.style.setProperty('--bob-x', `${Math.round(bobX)}px`);
+      element.style.setProperty('--bob-y', `${Math.round(bobY)}px`);
       const currentAtlas = atlas.current;
       const key=animationName(mode, tx < x, speakingRef.current, scanningRef.current, stateRef.current);if(key!==animationKey){animationKey=key;animationStarted=time;}
       const animation = currentAtlas?.animations[key];

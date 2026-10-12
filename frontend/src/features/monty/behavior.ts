@@ -1,5 +1,7 @@
 import type { Behavior, BehaviorEvent, PageContext, Target } from './MontyChat';
 export class BehaviorTracker {
+  /** Restart the idle clock, e.g. when the computer is powered on. */
+  markActive(){this.lastActivity=performance.now();}
   private events:Behavior['events']=[];
   private lastActivity=performance.now();private entered=performance.now();private hover='';private lastView='';private dwellRecorded=false;private meaningful=false;private pageActivity=false;
   constructor(private readonly context:()=>PageContext) {}
